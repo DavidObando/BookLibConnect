@@ -1,14 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using core.audiamus.aux;
 using core.audiamus.aux.ex;
 using core.audiamus.booksdb;
 using core.audiamus.connect;
 using core.audiamus.connect.ui.mac.ViewModels;
+using core.audiamus.util;
 using static core.audiamus.aux.Logging;
 
 namespace core.audiamus.connect.app.mac {
@@ -17,6 +21,8 @@ namespace core.audiamus.connect.app.mac {
     private readonly MainWindowViewModel _viewModel;
     private readonly UserSettings _userSettings;
     private bool _initDone;
+    private CancellationTokenSource _cts;
+    private WindowNotificationManager _notificationManager;
 
     public MainWindow () {
       InitializeComponent ();
@@ -39,6 +45,11 @@ namespace core.audiamus.connect.app.mac {
 
     private async Task initAsync () {
       using var _ = new LogGuard (3, this);
+
+      _notificationManager = new WindowNotificationManager (this) {
+        Position = NotificationPosition.BottomRight,
+        MaxItems = 3
+      };
 
       _viewModel.SetBusy (true, "Initializing...");
 
@@ -86,6 +97,10 @@ namespace core.audiamus.connect.app.mac {
 
             // Wire download button to move selected books to Downloads tab
             _viewModel.BookLibrary.DownloadRequested += onDownloadRequested;
+
+            // Wire the download pipeline
+            _viewModel.Conversion.RunRequested += onRunDownloadPipeline;
+            _viewModel.Conversion.CancelRequested += onCancelDownload;
           }
         }
 
@@ -128,11 +143,141 @@ namespace core.audiamus.connect.app.mac {
       var books = selectedBooks.ToList ();
       Log (3, this, () => $"download requested for {books.Count} book(s)");
 
-      _viewModel.Conversion.Clear ();
       foreach (var bookVm in books)
         _viewModel.Conversion.AddConversion (bookVm.Book);
 
-      _viewModel.StatusMessage = $"{books.Count} book(s) queued for download.";
+      _viewModel.StatusMessage = $"{_viewModel.Conversion.QueuedCount} book(s) queued for download.";
+    }
+
+    private void onCancelDownload () {
+      Log (3, this, () => "cancel requested");
+      _cts?.Cancel ();
+    }
+
+    private async Task onRunDownloadPipeline (IReadOnlyList<ConversionItemViewModel> items) {
+      using var lg = new LogGuard (3, this, () => $"#items={items.Count}");
+
+      _cts = new CancellationTokenSource ();
+      var api = _viewModel.Api;
+      if (api is null) {
+        _viewModel.StatusMessage = "Error: API not initialized.";
+        return;
+      }
+
+      var conversions = items
+        .Select (i => i.Conversion)
+        .Where (c => c is not null)
+        .ToList ();
+
+      if (conversions.Count == 0) {
+        _viewModel.StatusMessage = "No downloadable items in queue.";
+        return;
+      }
+
+      // Lookup from Conversion to UI item for progress updates
+      var lookup = items.ToDictionary (i => i.Asin);
+
+      int totalItems = conversions.Count;
+      int completedItems = 0;
+
+      var progress = new Progress<ProgressMessage> (msg => {
+        Dispatcher.UIThread.Post (() => {
+          if (msg.IncItem.HasValue)
+            completedItems += msg.IncItem.Value;
+
+          double pct = totalItems > 0 ? (double)completedItems / totalItems : 0;
+          _viewModel.Conversion.UpdateOverallProgress (pct,
+            $"Processing {completedItems} of {totalItems}...");
+        });
+      });
+
+      Action<Conversion> onStateChanged = conv => {
+        Dispatcher.UIThread.Post (() => {
+          if (conv?.Book?.Asin is null)
+            return;
+          if (!lookup.TryGetValue (conv.Book.Asin, out var itemVm))
+            return;
+
+          itemVm.UpdateState (conv.State);
+
+          // Check if this item has reached a terminal success state
+          bool done = conv.State is EConversionState.local_unlocked
+            or EConversionState.exported
+            or EConversionState.converted;
+
+          if (done) {
+            string title = conv.Book.Title ?? conv.Book.Asin;
+            string stateLabel = conv.State switch {
+              EConversionState.exported => "downloaded and exported",
+              _ => "downloaded and decrypted"
+            };
+            _notificationManager?.Show (
+              new Notification (
+                "Download Complete",
+                $"\"{title}\" has been {stateLabel}.",
+                NotificationType.Success
+              ));
+            _viewModel.Conversion.RemoveConversion (conv.Book.Asin);
+            lookup.Remove (conv.Book.Asin);
+          }
+        });
+      };
+
+      // Build the export action
+      bool doExport = _userSettings.ExportSettings?.ExportToAax ?? false;
+      AaxExporter exporter = null;
+      if (doExport) {
+        exporter = new AaxExporter (_userSettings.ExportSettings, _userSettings.DownloadSettings);
+      }
+
+      _viewModel.StatusMessage = "Downloading...";
+
+      try {
+        using var job = new DownloadDecryptJob<SimpleCancellation> (
+          api,
+          _userSettings.DownloadSettings,
+          onStateChanged
+        );
+
+        ConvertDelegate<SimpleCancellation> convertAction = null;
+        if (doExport && exporter is not null) {
+          convertAction = (book, ctx, callback) => {
+            exporter.Export (book, new SimpleConversionContext (null, ctx.CancellationToken), callback);
+          };
+        }
+
+        var context = new SimpleCancellation (_cts.Token);
+
+        await job.DownloadDecryptAndConvertAsync (
+          conversions,
+          progress,
+          context,
+          convertAction
+        );
+
+        _viewModel.StatusMessage = _cts.IsCancellationRequested
+          ? "Download cancelled."
+          : "Download complete.";
+
+      } catch (OperationCanceledException) {
+        _viewModel.StatusMessage = "Download cancelled.";
+      } catch (Exception ex) {
+        Log (1, this, () => $"pipeline error: {ex.Message}");
+        _viewModel.StatusMessage = $"Download error: {ex.Message}";
+      } finally {
+        _cts?.Dispose ();
+        _cts = null;
+
+        // Refresh states for any items still in the queue (errors, cancelled, etc.)
+        foreach (var kvp in lookup) {
+          var item = items.FirstOrDefault (i => i.Asin == kvp.Key);
+          if (item?.Conversion is not null)
+            item.UpdateState (item.Conversion.State);
+        }
+
+        _viewModel.Conversion.UpdateOverallProgress (1.0, "Finished");
+        _viewModel.Conversion.UpdateQueuedCount ();
+      }
     }
 
     private bool getAccountAlias (AccountAliasContext ctxt) {

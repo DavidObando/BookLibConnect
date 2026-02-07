@@ -21,7 +21,8 @@
     </StackPanel>
 
     <!-- Book list -->
-    <DataGrid ItemsSource="{Binding Books}"
+    <DataGrid x:Name="booksGrid"
+              ItemsSource="{Binding Books}"
               SelectedItem="{Binding SelectedBook}"
               AutoGenerateColumns="False"
               CanUserResizeColumns="True"
@@ -44,10 +45,17 @@
                             Binding="{Binding Narrator}"
                             IsReadOnly="True"
                             Width="150" />
-        <DataGridTextColumn Header="Duration"
-                            Binding="{Binding Duration}"
-                            IsReadOnly="True"
-                            Width="80" />
+        <DataGridTemplateColumn Header="Duration"
+                                SortMemberPath="RunTimeLengthSeconds"
+                                Width="80">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Duration}"
+                         VerticalAlignment="Center"
+                         Margin="4,0" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
         <DataGridTextColumn Header="Purchased"
                             Binding="{Binding PurchaseDate, StringFormat='{}{0:yyyy-MM-dd}'}"
                             IsReadOnly="True"

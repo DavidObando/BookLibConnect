@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -23,6 +24,10 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
 
     [ObservableProperty]
     private int _selectedCount;
+
+    // Sort state remembered within the session
+    public int? SortColumnIndex { get; set; }
+    public ListSortDirection? SortDirection { get; set; }
 
     public event EventHandler<IEnumerable<BookItemViewModel>> DownloadRequested;
 
