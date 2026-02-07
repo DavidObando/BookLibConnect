@@ -21,17 +21,29 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
     [ObservableProperty]
     private bool _downloadSelectEnabled;
 
-    public event EventHandler<IEnumerable<BookItemViewModel>> SelectionChanged;
+    [ObservableProperty]
+    private int _selectedCount;
+
+    public event EventHandler<IEnumerable<BookItemViewModel>> DownloadRequested;
 
     public void LoadBooks (IEnumerable<Book> books) {
       Books.Clear ();
       foreach (var book in books) {
-        Books.Add (new BookItemViewModel (book));
+        var vm = new BookItemViewModel (book);
+        vm.PropertyChanged += (s, e) => {
+          if (e.PropertyName == nameof (BookItemViewModel.IsSelected))
+            UpdateSelectedCount ();
+        };
+        Books.Add (vm);
       }
+      UpdateSelectedCount ();
     }
 
     public IEnumerable<BookItemViewModel> GetSelectedBooks () =>
       Books.Where (b => b.IsSelected);
+
+    public void UpdateSelectedCount () =>
+      SelectedCount = Books.Count (b => b.IsSelected);
 
     [RelayCommand]
     private void SelectAll () {
@@ -43,6 +55,13 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
     private void DeselectAll () {
       foreach (var book in Books)
         book.IsSelected = false;
+    }
+
+    [RelayCommand]
+    private void DownloadSelected () {
+      var selected = GetSelectedBooks ().ToList ();
+      if (selected.Count > 0)
+        DownloadRequested?.Invoke (this, selected);
     }
   }
 

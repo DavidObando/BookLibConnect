@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -82,6 +83,9 @@ namespace core.audiamus.connect.app.mac {
             var books = _viewModel.Api.GetBooks ();
             if (books is not null)
               _viewModel.BookLibrary.LoadBooks (books);
+
+            // Wire download button to move selected books to Downloads tab
+            _viewModel.BookLibrary.DownloadRequested += onDownloadRequested;
           }
         }
 
@@ -109,6 +113,7 @@ namespace core.audiamus.connect.app.mac {
 
       var wizardVm = new ProfileWizardViewModel ();
       wizardVm.SetClient (client);
+      wizardVm.SetSettings (_userSettings.DownloadSettings, _userSettings.ExportSettings);
 
       var wizardWindow = new SetupWizardWindow (wizardVm);
       await wizardWindow.ShowWizardAsync (this);
@@ -117,6 +122,17 @@ namespace core.audiamus.connect.app.mac {
         Log (1, this, () => "wizard: no profile was created");
         _viewModel.StatusMessage = "Warning: No profile was created. You can create one later via Settings.";
       }
+    }
+
+    private void onDownloadRequested (object sender, IEnumerable<BookItemViewModel> selectedBooks) {
+      var books = selectedBooks.ToList ();
+      Log (3, this, () => $"download requested for {books.Count} book(s)");
+
+      _viewModel.Conversion.Clear ();
+      foreach (var bookVm in books)
+        _viewModel.Conversion.AddConversion (bookVm.Book);
+
+      _viewModel.StatusMessage = $"{books.Count} book(s) queued for download.";
     }
 
     private bool getAccountAlias (AccountAliasContext ctxt) {

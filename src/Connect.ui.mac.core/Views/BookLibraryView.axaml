@@ -12,6 +12,12 @@
                Width="250" />
       <Button Content="Select All" Command="{Binding SelectAllCommand}" />
       <Button Content="Deselect All" Command="{Binding DeselectAllCommand}" />
+      <Border Width="1" Background="LightGray" Margin="4,2" />
+      <Button Content="Download Selected"
+              Command="{Binding DownloadSelectedCommand}"
+              Classes="accent" />
+      <TextBlock Text="{Binding SelectedCount, StringFormat='{}{0} selected'}"
+                 VerticalAlignment="Center" Foreground="Gray" FontSize="12" />
     </StackPanel>
 
     <!-- Book list -->
@@ -20,31 +26,35 @@
               AutoGenerateColumns="False"
               CanUserResizeColumns="True"
               CanUserSortColumns="True"
-              IsReadOnly="True"
               GridLinesVisibility="Horizontal"
               Margin="8">
       <DataGrid.Columns>
         <DataGridCheckBoxColumn Header="&#x2713;"
                                 Binding="{Binding IsSelected}"
-                                IsReadOnly="False"
                                 Width="40" />
         <DataGridTextColumn Header="Title"
                             Binding="{Binding Title}"
+                            IsReadOnly="True"
                             Width="*" />
         <DataGridTextColumn Header="Author"
                             Binding="{Binding Author}"
+                            IsReadOnly="True"
                             Width="200" />
         <DataGridTextColumn Header="Narrator"
                             Binding="{Binding Narrator}"
+                            IsReadOnly="True"
                             Width="150" />
         <DataGridTextColumn Header="Duration"
                             Binding="{Binding Duration}"
+                            IsReadOnly="True"
                             Width="80" />
         <DataGridTextColumn Header="Purchased"
                             Binding="{Binding PurchaseDate, StringFormat='{}{0:yyyy-MM-dd}'}"
+                            IsReadOnly="True"
                             Width="100" />
         <DataGridTextColumn Header="State"
                             Binding="{Binding ConversionState}"
+                            IsReadOnly="True"
                             Width="100" />
       </DataGrid.Columns>
     </DataGrid>

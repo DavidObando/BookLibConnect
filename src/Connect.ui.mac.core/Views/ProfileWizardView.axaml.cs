@@ -1,6 +1,9 @@
+using System;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using core.audiamus.connect.ui.mac.ViewModels;
 
 namespace core.audiamus.connect.ui.mac.Views {
@@ -11,10 +14,8 @@ namespace core.audiamus.connect.ui.mac.Views {
 
     protected override void OnLoaded (RoutedEventArgs e) {
       base.OnLoaded (e);
-      // Wire up the clipboard copy via the view since clipboard needs TopLevel access
       if (DataContext is ProfileWizardViewModel vm) {
-        vm.CopyLoginUrlCommand.Execute (null);
-        // Hook the CopyLoginUrl to actually copy to clipboard
+        // Hook clipboard copy for login URL
         var btn = this.FindControl<Button> ("btnCopyUrl");
         if (btn is not null) {
           btn.Click += async (s, args) => {
@@ -23,7 +24,30 @@ namespace core.audiamus.connect.ui.mac.Views {
               await topLevel.Clipboard.SetTextAsync (vm.LoginUrl);
           };
         }
+
+        // Wire folder picker for download directory
+        vm.BrowseDownloadDirectoryRequested += () => browseFolderAsync ("Select Download Folder");
+
+        // Wire folder picker for export directory
+        vm.BrowseExportDirectoryRequested += () => browseFolderAsync ("Select Export Folder");
       }
+    }
+
+    private async Task<string> browseFolderAsync (string title) {
+      var topLevel = TopLevel.GetTopLevel (this);
+      if (topLevel is null)
+        return null;
+
+      var folders = await topLevel.StorageProvider.OpenFolderPickerAsync (
+        new FolderPickerOpenOptions {
+          Title = title,
+          AllowMultiple = false
+        });
+
+      if (folders.Count > 0)
+        return folders[0].Path.LocalPath;
+
+      return null;
     }
   }
 }

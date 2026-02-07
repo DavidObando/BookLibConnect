@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,12 +19,14 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
     public static OneBasedConverter OneBasedConverter { get; } = new ();
 
     private AudibleClient _client;
+    private DownloadSettings _downloadSettings;
+    private ExportSettings _exportSettings;
 
     [ObservableProperty]
     private int _currentStep;
 
     [ObservableProperty]
-    private int _totalSteps = 4;
+    private int _totalSteps = 6;
 
     [ObservableProperty]
     private string _stepTitle;
@@ -76,7 +79,18 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
     [ObservableProperty]
     private string _customerName;
 
-    // Step 3: Completion
+    // Step 3: Download directory
+    [ObservableProperty]
+    private string _downloadDirectory;
+
+    // Step 4: Export to AAX
+    [ObservableProperty]
+    private bool _exportToAax;
+
+    [ObservableProperty]
+    private string _exportDirectory;
+
+    // Step 5: Completion
     [ObservableProperty]
     private string _completionMessage;
 
@@ -94,6 +108,18 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
     /// </summary>
     public event EventHandler WizardCompleted;
 
+    /// <summary>
+    /// Event raised when the user wants to browse for a download directory.
+    /// The view code-behind handles the folder picker and sets the result.
+    /// </summary>
+    public event Func<Task<string>> BrowseDownloadDirectoryRequested;
+
+    /// <summary>
+    /// Event raised when the user wants to browse for an export directory.
+    /// The view code-behind handles the folder picker and sets the result.
+    /// </summary>
+    public event Func<Task<string>> BrowseExportDirectoryRequested;
+
     public ProfileWizardViewModel () {
       CurrentStep = 0;
       UpdateStepState ();
@@ -101,6 +127,20 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
 
     public void SetClient (AudibleClient client) {
       _client = client;
+    }
+
+    public void SetSettings (DownloadSettings downloadSettings, ExportSettings exportSettings) {
+      _downloadSettings = downloadSettings;
+      _exportSettings = exportSettings;
+
+      string musicDir = Path.Combine (
+        Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Music", "BookLibConnect");
+
+      DownloadDirectory = downloadSettings?.DownloadDirectory
+        ?? Path.Combine (musicDir, "Downloads");
+      ExportToAax = exportSettings?.ExportToAax ?? false;
+      ExportDirectory = exportSettings?.ExportDirectory
+        ?? Path.Combine (musicDir, "Exports");
     }
 
     partial void OnSelectedRegionChanged (ERegion value) {
@@ -112,6 +152,8 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
     [RelayCommand]
     private void Next () {
       if (CurrentStep < TotalSteps - 1) {
+        // Apply settings before advancing
+        applyCurrentStepSettings ();
         CurrentStep++;
         UpdateStepState ();
         if (CurrentStep == 1)
@@ -129,12 +171,14 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
 
     [RelayCommand]
     private void Skip () {
+      applyAllSettings ();
       IsComplete = true;
       WizardCompleted?.Invoke (this, EventArgs.Empty);
     }
 
     [RelayCommand]
     private void Finish () {
+      applyAllSettings ();
       IsComplete = true;
       WizardCompleted?.Invoke (this, EventArgs.Empty);
     }
@@ -156,6 +200,24 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
     }
 
     [RelayCommand]
+    private async Task BrowseDownloadDirectory () {
+      if (BrowseDownloadDirectoryRequested is not null) {
+        string path = await BrowseDownloadDirectoryRequested.Invoke ();
+        if (!path.IsNullOrWhiteSpace ())
+          DownloadDirectory = path;
+      }
+    }
+
+    [RelayCommand]
+    private async Task BrowseExportDirectory () {
+      if (BrowseExportDirectoryRequested is not null) {
+        string path = await BrowseExportDirectoryRequested.Invoke ();
+        if (!path.IsNullOrWhiteSpace ())
+          ExportDirectory = path;
+      }
+    }
+
+    [RelayCommand]
     private async Task SubmitResponseUrl () {
       if (PastedResponseUrl.IsNullOrWhiteSpace ())
         return;
@@ -172,7 +234,7 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
       try {
         var callbacks = new Callbacks {
           DeregisterDeviceConfirmCallback = deregisterDeviceConfirmation,
-          GetAccountAliasFunc = getAccountAlias
+          GetAccountAliasFunc = getAccountAliasFromWizard
         };
 
         var result = await _client.ConfigParseExternalLoginResponseAsync (uri, callbacks);
@@ -182,26 +244,16 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
         var key = result.NewProfileKey;
         switch (result.Result) {
           case EAuthorizeResult.succ:
-            ProfileKey = key;
-            CompletionMessage = $"Profile created successfully!\n\n" +
-              $"Region: {key?.Region}\n" +
-              $"Account: {key?.AccountName}\n" +
-              $"Device: {key?.DeviceName}";
-            RegistrationSucceeded = true;
-            CurrentStep = 3;
-            UpdateStepState ();
-            break;
-
           case EAuthorizeResult.deregistrationFailed:
             ProfileKey = key;
-            CompletionMessage = $"Profile created successfully!\n\n" +
-              $"Region: {key?.Region}\n" +
-              $"Account: {key?.AccountName}\n" +
-              $"Device: {key?.DeviceName}\n\n" +
-              $"Note: A previous device registration \"{result.PrevDeviceName}\" could not be removed.";
+            CustomerName = key?.AccountName;
+            AccountAlias = key?.AccountName;
             RegistrationSucceeded = true;
-            CurrentStep = 3;
+            // Advance to account alias step
+            CurrentStep = 2;
             UpdateStepState ();
+            if (result.Result == EAuthorizeResult.deregistrationFailed)
+              LoginErrorMessage = $"Note: A previous device \"{result.PrevDeviceName}\" could not be deregistered.";
             break;
 
           case EAuthorizeResult.authorizationFailed:
@@ -239,25 +291,85 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
       }
     }
 
+    private void applyCurrentStepSettings () {
+      switch (CurrentStep) {
+        case 2: // Account alias
+          if (_client is not null && ProfileKey is not null && !AccountAlias.IsNullOrWhiteSpace ())
+            _client.SetAccountAlias (ProfileKey, AccountAlias);
+          break;
+        case 3: // Download directory
+          if (_downloadSettings is not null && !DownloadDirectory.IsNullOrWhiteSpace ())
+            _downloadSettings.DownloadDirectory = DownloadDirectory;
+          break;
+        case 4: // Export settings
+          if (_exportSettings is not null) {
+            _exportSettings.ExportToAax = ExportToAax;
+            if (ExportToAax && !ExportDirectory.IsNullOrWhiteSpace ())
+              _exportSettings.ExportDirectory = ExportDirectory;
+          }
+          break;
+      }
+    }
+
+    private void applyAllSettings () {
+      // Apply account alias
+      if (_client is not null && ProfileKey is not null && !AccountAlias.IsNullOrWhiteSpace ())
+        _client.SetAccountAlias (ProfileKey, AccountAlias);
+
+      // Apply download directory
+      if (_downloadSettings is not null && !DownloadDirectory.IsNullOrWhiteSpace ())
+        _downloadSettings.DownloadDirectory = DownloadDirectory;
+
+      // Apply export settings
+      if (_exportSettings is not null) {
+        _exportSettings.ExportToAax = ExportToAax;
+        if (ExportToAax && !ExportDirectory.IsNullOrWhiteSpace ())
+          _exportSettings.ExportDirectory = ExportDirectory;
+      }
+
+      // Build completion message
+      var key = ProfileKey;
+      if (key is not null) {
+        CompletionMessage = $"Setup complete!\n\n" +
+          $"Region: {key.Region}\n" +
+          $"Account: {AccountAlias ?? key.AccountName}\n" +
+          $"Device: {key.DeviceName}" +
+          (!DownloadDirectory.IsNullOrWhiteSpace () ? $"\nDownload folder: {DownloadDirectory}" : "") +
+          (ExportToAax ? $"\nExport folder: {ExportDirectory}" : "");
+      } else {
+        CompletionMessage = "Setup skipped. You can configure settings later.";
+      }
+    }
+
     private void UpdateStepState () {
-      CanGoBack = CurrentStep > 0 && CurrentStep < 3;
-      CanGoNext = CurrentStep < 1; // Only allow Next from step 0 to step 1
+      CanGoBack = CurrentStep > 0 && CurrentStep < 5;
+      CanGoNext = CurrentStep switch {
+        0 => true,                  // Marketplace → can always proceed
+        1 => false,                 // Login → must submit URL to proceed
+        2 => RegistrationSucceeded, // Alias → can proceed after login
+        3 => true,                  // Download dir → can proceed
+        4 => true,                  // Export → can proceed
+        _ => false
+      };
       StepTitle = CurrentStep switch {
         0 => "Select Marketplace",
         1 => "Sign In to Audible",
         2 => "Account Alias",
-        3 => "Complete",
+        3 => "Download Folder",
+        4 => "Export Settings",
+        5 => "Setup Complete",
         _ => string.Empty
       };
     }
 
     private bool deregisterDeviceConfirmation (IProfileKeyEx key) => false;
 
-    private bool getAccountAlias (AccountAliasContext ctxt) {
-      // Auto-accept the alias context; user can rename later
-      // Use the customer name as the initial alias
+    private bool getAccountAliasFromWizard (AccountAliasContext ctxt) {
+      // Pre-populate from context; the user will edit on step 2
       if (ctxt.Alias.IsNullOrWhiteSpace ())
         ctxt.Alias = ctxt.CustomerName;
+      CustomerName = ctxt.CustomerName;
+      AccountAlias = ctxt.Alias;
       return true;
     }
   }

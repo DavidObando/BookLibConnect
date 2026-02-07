@@ -1,5 +1,8 @@
+using System;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using core.audiamus.aux.ex;
 using core.audiamus.connect;
 
 namespace core.audiamus.connect.ui.mac.ViewModels {
@@ -8,6 +11,12 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
     private readonly DownloadSettings _downloadSettings;
     private readonly ExportSettings _exportSettings;
     private readonly ConfigSettings _configSettings;
+
+    /// <summary>
+    /// Event raised when the user wants to browse for a folder.
+    /// The view code-behind handles the native folder picker and returns the selected path.
+    /// </summary>
+    public event Func<string, Task<string>> BrowseFolderRequested;
 
     public SettingsViewModel (DownloadSettings downloadSettings, ExportSettings exportSettings, ConfigSettings configSettings) {
       _downloadSettings = downloadSettings;
@@ -20,15 +29,6 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
       get => _downloadSettings.AutoUpdateLibrary;
       set {
         _downloadSettings.AutoUpdateLibrary = value;
-        OnPropertyChanged ();
-        _downloadSettings.OnChange ();
-      }
-    }
-
-    public bool AutoOpenDownloadDialog {
-      get => _downloadSettings.AutoOpenDownloadDialog;
-      set {
-        _downloadSettings.AutoOpenDownloadDialog = value;
         OnPropertyChanged ();
         _downloadSettings.OnChange ();
       }
@@ -67,6 +67,7 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
       set {
         _exportSettings.ExportToAax = value;
         OnPropertyChanged ();
+        _exportSettings.OnChange ();
       }
     }
 
@@ -75,6 +76,7 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
       set {
         _exportSettings.ExportDirectory = value;
         OnPropertyChanged ();
+        _exportSettings.OnChange ();
       }
     }
 
@@ -84,6 +86,25 @@ namespace core.audiamus.connect.ui.mac.ViewModels {
       set {
         _configSettings.EncryptConfiguration = value;
         OnPropertyChanged ();
+        _configSettings.OnChange ();
+      }
+    }
+
+    [RelayCommand]
+    private async Task BrowseDownloadDirectory () {
+      if (BrowseFolderRequested is not null) {
+        string path = await BrowseFolderRequested.Invoke ("Select Download Folder");
+        if (!path.IsNullOrWhiteSpace ())
+          DownloadDirectory = path;
+      }
+    }
+
+    [RelayCommand]
+    private async Task BrowseExportDirectory () {
+      if (BrowseFolderRequested is not null) {
+        string path = await BrowseFolderRequested.Invoke ("Select Export Folder");
+        if (!path.IsNullOrWhiteSpace ())
+          ExportDirectory = path;
       }
     }
   }
