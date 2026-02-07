@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>core.audiamus.connect.ui.mac</RootNamespace>
+    <AssemblyName>audiamus.connect.ui.mac.core</AssemblyName>
+    <Authors>audiamus</Authors>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Copyright>Copyright © 2025 - $([System.DateTime]::UtcNow.Year) audiamus ($([System.DateTime]::UtcNow.ToString("s")))</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.7" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AuxLib.core\AuxLib.core.csproj" />
+    <ProjectReference Include="..\BooksDatabase.core\BooksDatabase.core.csproj" />
+    <ProjectReference Include="..\CommonTypes.lib.core\CommonTypes.lib.core.csproj" />
+    <ProjectReference Include="..\Connect.lib.core\Connect.lib.core.csproj" />
+  </ItemGroup>
+
+</Project>

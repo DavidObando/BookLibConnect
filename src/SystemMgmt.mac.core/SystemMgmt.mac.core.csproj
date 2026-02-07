@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>core.audiamus.sysmgmt.mac</RootNamespace>
+    <AssemblyName>audiamus.sysmgmt.mac.core</AssemblyName>
+    <Authors>audiamus</Authors>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Copyright>Copyright © 2025 - $([System.DateTime]::UtcNow.Year) audiamus ($([System.DateTime]::UtcNow.ToString("s")))</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommonTypes.lib.core\CommonTypes.lib.core.csproj" />
+  </ItemGroup>
+
+</Project>

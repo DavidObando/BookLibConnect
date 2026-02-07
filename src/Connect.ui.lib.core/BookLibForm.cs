@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -43,6 +44,7 @@ namespace core.audiamus.connect.ui {
     public event BookSelectionChangedEventHandler BookDownloadSelectionChanged;
     public event ConversionUpdatedEventHandler ConversionUpdated;
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool DownloadSelectEnabled {
       get => bookLibdgvControl1.DownloadSelectEnabled;
       set => bookLibdgvControl1.DownloadSelectEnabled = value;

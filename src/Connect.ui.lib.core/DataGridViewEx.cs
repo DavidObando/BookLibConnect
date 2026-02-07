@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using core.audiamus.aux;
@@ -20,6 +21,7 @@ namespace core.audiamus.connect.ui {
     public event EventHandler EndSorting;
     public event EventHandler SortingCompleteToSetVerticalPosition;
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public new ISortableBindingList DataSource {
       get => base.DataSource as ISortableBindingList;
       set {
@@ -29,6 +31,7 @@ namespace core.audiamus.connect.ui {
       }
     }
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool ClientAreaEnabled {
       get => _clientAreaEnabled;
       set {

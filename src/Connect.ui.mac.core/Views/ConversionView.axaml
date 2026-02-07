@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:core.audiamus.connect.ui.mac.ViewModels"
+             x:Class="core.audiamus.connect.ui.mac.Views.ConversionView"
+             x:DataType="vm:ConversionViewModel">
+
+  <DockPanel>
+    <!-- Controls -->
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="8">
+      <Button Content="Cancel" Command="{Binding CancelCommand}" />
+    </StackPanel>
+
+    <!-- Conversion list -->
+    <DataGrid ItemsSource="{Binding Conversions}"
+              AutoGenerateColumns="False"
+              CanUserResizeColumns="True"
+              IsReadOnly="True"
+              GridLinesVisibility="Horizontal"
+              Margin="8">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Title"
+                            Binding="{Binding Title}"
+                            Width="*" />
+        <DataGridTextColumn Header="Author"
+                            Binding="{Binding Author}"
+                            Width="200" />
+        <DataGridTextColumn Header="State"
+                            Binding="{Binding StatusText}"
+                            Width="120" />
+        <DataGridTemplateColumn Header="Progress" Width="150">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <ProgressBar Value="{Binding Progress}"
+                           Minimum="0" Maximum="1"
+                           Height="16"
+                           Margin="4" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+  </DockPanel>
+
+</UserControl>

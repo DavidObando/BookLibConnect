@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:core.audiamus.connect.ui.mac.ViewModels"
+             x:Class="core.audiamus.connect.ui.mac.Views.BookLibraryView"
+             x:DataType="vm:BookLibraryViewModel">
+
+  <DockPanel>
+    <!-- Toolbar -->
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="8">
+      <TextBox Watermark="Filter books..."
+               Text="{Binding FilterText}"
+               Width="250" />
+      <Button Content="Select All" Command="{Binding SelectAllCommand}" />
+      <Button Content="Deselect All" Command="{Binding DeselectAllCommand}" />
+    </StackPanel>
+
+    <!-- Book list -->
+    <DataGrid ItemsSource="{Binding Books}"
+              SelectedItem="{Binding SelectedBook}"
+              AutoGenerateColumns="False"
+              CanUserResizeColumns="True"
+              CanUserSortColumns="True"
+              IsReadOnly="True"
+              GridLinesVisibility="Horizontal"
+              Margin="8">
+      <DataGrid.Columns>
+        <DataGridCheckBoxColumn Header="&#x2713;"
+                                Binding="{Binding IsSelected}"
+                                IsReadOnly="False"
+                                Width="40" />
+        <DataGridTextColumn Header="Title"
+                            Binding="{Binding Title}"
+                            Width="*" />
+        <DataGridTextColumn Header="Author"
+                            Binding="{Binding Author}"
+                            Width="200" />
+        <DataGridTextColumn Header="Narrator"
+                            Binding="{Binding Narrator}"
+                            Width="150" />
+        <DataGridTextColumn Header="Duration"
+                            Binding="{Binding Duration}"
+                            Width="80" />
+        <DataGridTextColumn Header="Purchased"
+                            Binding="{Binding PurchaseDate, StringFormat='{}{0:yyyy-MM-dd}'}"
+                            Width="100" />
+        <DataGridTextColumn Header="State"
+                            Binding="{Binding ConversionState}"
+                            Width="100" />
+      </DataGrid.Columns>
+    </DataGrid>
+  </DockPanel>
+
+</UserControl>

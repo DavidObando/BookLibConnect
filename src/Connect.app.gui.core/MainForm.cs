@@ -13,6 +13,7 @@ using core.audiamus.aux.win;
 using core.audiamus.aux.win.ex;
 using core.audiamus.booksdb;
 using core.audiamus.connect.ui;
+using core.audiamus.sysmgmt;
 using core.audiamus.util;
 using static core.audiamus.aux.ApplEnv;
 using static core.audiamus.aux.Logging;
@@ -186,7 +187,7 @@ namespace core.audiamus.connect.app.gui {
     private async Task init () {
       using var _ = new LogGuard (3, this);
 
-      AudibleClient = new AudibleClient (UserSettings.ConfigSettings, UserSettings.DownloadSettings) {
+      AudibleClient = new AudibleClient (UserSettings.ConfigSettings, UserSettings.DownloadSettings, new WinHardwareIdProvider ()) {
         WeakConfigEncryptionCallback = weakConfigEncryptionCallback
       };
 

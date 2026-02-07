@@ -38,8 +38,9 @@ namespace core.audiamus.util {
     PackageInfoLocal _defaultPackageInfo;
 
     static OnlineUpdate () {
-      string downloads = Environment.ExpandEnvironmentVariables (@"%USERPROFILE%\Downloads");
-      if (string.IsNullOrWhiteSpace (downloads))
+      string downloads = Path.Combine (
+        Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Downloads");
+      if (string.IsNullOrWhiteSpace (downloads) || !Directory.Exists (downloads))
         downloads = ApplEnv.TempDirectory;
       DownloadDir = downloads;
     }
