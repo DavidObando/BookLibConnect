@@ -41,6 +41,14 @@ echo "=== BookLibConnect macOS Build ==="
 echo "Configuration: $CONFIGURATION"
 echo "Runtime:       $RUNTIME"
 echo "Output:        $OUTPUT_DIR"
+# Resolve version from Nerdbank.GitVersioning
+if command -v nbgv &> /dev/null; then
+  APP_VERSION=$(nbgv get-version -v SimpleVersion --project "$SRC_DIR/Connect.app.mac.core" 2>/dev/null || echo "1.0.0")
+else
+  # Fallback: read base version from version.json
+  APP_VERSION=$(grep '"version"' "$REPO_ROOT/version.json" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1.0/')
+fi
+echo "Version:       $APP_VERSION"
 echo ""
 
 # Clean output
@@ -70,8 +78,8 @@ mkdir -p "$RESOURCES_DIR"
 # Copy published output into MacOS/
 cp -R "$OUTPUT_DIR/publish/"* "$MACOS_DIR/"
 
-# Copy Info.plist
-cp "$INFO_PLIST" "$CONTENTS/Info.plist"
+# Copy Info.plist and stamp the version
+sed "s/__VERSION__/$APP_VERSION/g" "$INFO_PLIST" > "$CONTENTS/Info.plist"
 
 # Copy icon if it exists; generate from PNG if needed
 ICON_FILE="$SRC_DIR/Connect.app.mac.core/audio.icns"
@@ -105,7 +113,7 @@ chmod +x "$MACOS_DIR/$EXECUTABLE_NAME"
 echo "==> .app bundle created at: $APP_BUNDLE"
 
 # Create DMG
-DMG_NAME="BookLibConnect-${RUNTIME}"
+DMG_NAME="BookLibConnect-${APP_VERSION}-${RUNTIME}"
 DMG_PATH="$OUTPUT_DIR/${DMG_NAME}.dmg"
 DMG_STAGING="$OUTPUT_DIR/dmg-staging"
 
