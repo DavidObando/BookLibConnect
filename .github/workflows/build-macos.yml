@@ -1,0 +1,88 @@
+name: Build macOS
+
+on:
+  push:
+    branches: [ main, macos ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build-macos:
+    strategy:
+      matrix:
+        include:
+          - runtime: osx-arm64
+            label: macOS-ARM64
+            runner: macos-latest
+          - runtime: osx-x64
+            label: macOS-x64
+            runner: macos-latest
+
+    name: Build ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        working-directory: src
+        run: dotnet restore BookLibConnect.macOS.slnf
+
+      - name: Build
+        working-directory: src
+        run: dotnet build BookLibConnect.macOS.slnf --configuration Release --no-restore
+
+      - name: Create .app bundle and DMG
+        run: ./build/build-macos.sh --configuration Release --runtime ${{ matrix.runtime }} --output ./artifacts
+
+      - name: Upload .app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: BookLibConnect-${{ matrix.runtime }}-app
+          path: ./artifacts/Book Lib Connect.app
+          retention-days: 30
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: BookLibConnect-${{ matrix.runtime }}-dmg
+          path: ./artifacts/*.dmg
+          retention-days: 30
+
+  release:
+    name: Create Release
+    needs: build-macos
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release-assets
+
+      - name: List assets
+        run: find ./release-assets -type f
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            ./release-assets/**/*.dmg

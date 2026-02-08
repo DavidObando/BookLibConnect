@@ -3,6 +3,7 @@ bin/
 obj/
 publish/
 out/
+artifacts/
 
 ## User-specific files ##
 *.rsuser
