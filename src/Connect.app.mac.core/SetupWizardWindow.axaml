@@ -1,0 +1,15 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:core.audiamus.connect.ui.mac.ViewModels"
+        xmlns:views="using:core.audiamus.connect.ui.mac.Views"
+        x:Class="core.audiamus.connect.app.mac.SetupWizardWindow"
+        x:DataType="vm:ProfileWizardViewModel"
+        Title="Book Lib Connect — Setup Wizard"
+        Width="650" Height="550"
+        MinWidth="550" MinHeight="450"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+  <views:ProfileWizardView DataContext="{Binding}" />
+
+</Window>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Resources;
@@ -43,8 +44,10 @@ namespace core.audiamus.connect.ui {
     public event EventHandler Close;
     public event EventHandler Resync;
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public IEnumerable<Book> Books { set => setDataSource (value); }
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public IDownloadSettings Settings {
       private get => _settings;
       set {
@@ -53,6 +56,7 @@ namespace core.audiamus.connect.ui {
       }
     }
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool DownloadSelectEnabled {
       get => panelDownloadSelect.Enabled;
       set => panelDownloadSelect.Enabled = value;

@@ -1,0 +1,21 @@
+{
+  "solution": {
+    "path": "AaxAudioConverter 2.x.sln",
+    "projects": [
+      "Audible.json.core/Audible.json.core.csproj",
+      "AuxLib.core/AuxLib.core.csproj",
+      "AuxWin.DialogBox.core/AuxWin.DialogBox.core.csproj",
+      "AuxWin.lib.core/AuxWin.lib.core.csproj",
+      "AuxWin32Lib.core/AuxWin32Lib.core.csproj",
+      "BooksDatabase.core/BooksDatabase.core.csproj",
+      "CommonTypes.lib.core/CommonTypes.lib.core.csproj",
+      "CommonUtil.lib.core/CommonUtil.lib.core.csproj",
+      "Connect.app.gui.core/Connect.app.gui.core.csproj",
+      "Connect.lib.core/Connect.lib.core.csproj",
+      "Connect.ui.lib.core/Connect.ui.lib.core.csproj",
+      "PropGridLib.core/PropGridLib.core.csproj",
+      "SystemMgmt.core/SystemMgmt.core.csproj",
+      "TreeDecomposition.core/TreeDecomposition.core.csproj"
+    ]
+  }
+}

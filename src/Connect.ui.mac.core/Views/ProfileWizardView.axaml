@@ -1,0 +1,176 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:core.audiamus.connect.ui.mac.ViewModels"
+             x:Class="core.audiamus.connect.ui.mac.Views.ProfileWizardView"
+             x:DataType="vm:ProfileWizardViewModel">
+
+  <DockPanel Margin="16">
+    <!-- Title and step indicator -->
+    <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,16">
+      <TextBlock Text="{Binding StepTitle}"
+                 FontSize="20" FontWeight="Bold" />
+      <TextBlock FontSize="12" Foreground="Gray">
+        <TextBlock.Text>
+          <MultiBinding StringFormat="Step {0} of {1}">
+            <Binding Path="CurrentStep" Converter="{x:Static vm:ProfileWizardViewModel.OneBasedConverter}" />
+            <Binding Path="TotalSteps" />
+          </MultiBinding>
+        </TextBlock.Text>
+      </TextBlock>
+    </StackPanel>
+
+    <!-- Navigation buttons -->
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+      <Button Content="Skip"
+              Command="{Binding SkipCommand}"
+              IsVisible="{Binding !IsComplete}" />
+      <Button Content="Back"
+              Command="{Binding BackCommand}"
+              IsVisible="{Binding CanGoBack}" />
+      <Button Content="Next"
+              Command="{Binding NextCommand}"
+              IsVisible="{Binding CanGoNext}" />
+      <Button Content="Done"
+              Command="{Binding FinishCommand}"
+              IsVisible="{Binding IsComplete}"
+              Classes="accent" />
+    </StackPanel>
+
+    <!-- Step content area -->
+    <Border BorderBrush="LightGray" BorderThickness="1"
+            CornerRadius="4" Padding="16">
+      <ScrollViewer>
+        <Panel>
+          <!-- Step 0: Marketplace -->
+          <StackPanel Spacing="12" IsVisible="{Binding CurrentStep, Converter={x:Static vm:ProfileWizardViewModel.StepConverter}, ConverterParameter=0}">
+            <TextBlock Text="Create an initial profile for your Amazon/Audible account and your region."
+                       TextWrapping="Wrap" />
+            <TextBlock Text="This will register this app as a device with Amazon and allow you to download your books."
+                       TextWrapping="Wrap" Foreground="Gray" />
+            <StackPanel Spacing="4" Margin="0,8,0,0">
+              <TextBlock Text="Select your Audible marketplace:" />
+              <ComboBox ItemsSource="{Binding AvailableRegions}"
+                        SelectedItem="{Binding SelectedRegion}"
+                        Width="200" />
+            </StackPanel>
+            <CheckBox Content="Use pre-Amazon account"
+                      IsChecked="{Binding UsePreAmazonAccount}"
+                      IsEnabled="{Binding PreAmazonAllowed}" />
+            <TextBlock Text="You can add additional profiles for different accounts or regions later."
+                       TextWrapping="Wrap" Foreground="Gray" FontSize="12" Margin="0,8,0,0" />
+          </StackPanel>
+
+          <!-- Step 1: Login -->
+          <StackPanel Spacing="12" IsVisible="{Binding CurrentStep, Converter={x:Static vm:ProfileWizardViewModel.StepConverter}, ConverterParameter=1}">
+            <TextBlock Text="Sign in to your Audible account:" TextWrapping="Wrap" FontWeight="SemiBold" />
+            <TextBlock Text="1. Click 'Open in Browser' to open the Audible sign-in page."
+                       TextWrapping="Wrap" />
+            <TextBlock Text="2. Sign in with your Amazon/Audible credentials in the browser."
+                       TextWrapping="Wrap" />
+            <TextBlock Text="3. After signing in, copy the final URL from the browser's address bar and paste it below."
+                       TextWrapping="Wrap" />
+
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+              <Button Content="Open in Browser"
+                      Command="{Binding OpenLoginInBrowserCommand}" />
+              <Button Content="Copy URL"
+                      Command="{Binding CopyLoginUrlCommand}"
+                      Name="btnCopyUrl" />
+            </StackPanel>
+
+            <TextBlock Text="✓ Login URL opened/copied"
+                       Foreground="Green" FontSize="12"
+                       IsVisible="{Binding LoginUrlCopied}" />
+
+            <StackPanel Spacing="4" Margin="0,8,0,0"
+                        IsVisible="{Binding IsLoggingIn}">
+              <TextBlock Text="Paste the final URL from the browser after signing in:" />
+              <TextBox Text="{Binding PastedResponseUrl}"
+                       Watermark="https://www.amazon.com/..."
+                       AcceptsReturn="False" />
+              <Button Content="Submit"
+                      Command="{Binding SubmitResponseUrlCommand}"
+                      HorizontalAlignment="Left"
+                      IsEnabled="{Binding !IsProcessingResponse}" />
+            </StackPanel>
+
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsProcessingResponse}"
+                         Width="200" HorizontalAlignment="Left" Margin="0,4,0,0" />
+
+            <TextBlock Text="{Binding LoginErrorMessage}"
+                       Foreground="Red" TextWrapping="Wrap"
+                       IsVisible="{Binding LoginErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </StackPanel>
+
+          <!-- Step 2: Account alias -->
+          <StackPanel Spacing="12" IsVisible="{Binding CurrentStep, Converter={x:Static vm:ProfileWizardViewModel.StepConverter}, ConverterParameter=2}">
+            <TextBlock Text="Choose a friendly name for this account." TextWrapping="Wrap" />
+            <TextBlock Text="This alias helps identify the account when you have multiple profiles."
+                       TextWrapping="Wrap" Foreground="Gray" />
+            <StackPanel Spacing="4" Margin="0,8,0,0">
+              <TextBlock Text="Account name:" />
+              <TextBlock Text="{Binding CustomerName}" FontWeight="SemiBold" />
+            </StackPanel>
+            <StackPanel Spacing="4">
+              <TextBlock Text="Account alias:" />
+              <TextBox Text="{Binding AccountAlias}"
+                       Watermark="e.g. My Audible US"
+                       Width="300" />
+            </StackPanel>
+          </StackPanel>
+
+          <!-- Step 3: Download directory -->
+          <StackPanel Spacing="12" IsVisible="{Binding CurrentStep, Converter={x:Static vm:ProfileWizardViewModel.StepConverter}, ConverterParameter=3}">
+            <TextBlock Text="Select the folder where downloaded audiobooks will be saved."
+                       TextWrapping="Wrap" />
+            <TextBlock Text="You can change this later in Settings."
+                       TextWrapping="Wrap" Foreground="Gray" />
+            <StackPanel Spacing="4" Margin="0,8,0,0">
+              <TextBlock Text="Download folder:" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBox Text="{Binding DownloadDirectory}"
+                         Watermark="Select a folder..."
+                         Width="350"
+                         IsReadOnly="True" />
+                <Button Content="Browse…"
+                        Command="{Binding BrowseDownloadDirectoryCommand}" />
+              </StackPanel>
+            </StackPanel>
+          </StackPanel>
+
+          <!-- Step 4: Export to AAX -->
+          <StackPanel Spacing="12" IsVisible="{Binding CurrentStep, Converter={x:Static vm:ProfileWizardViewModel.StepConverter}, ConverterParameter=4}">
+            <TextBlock Text="Optionally export downloaded books as AAX files to a separate folder."
+                       TextWrapping="Wrap" />
+            <TextBlock Text="This creates a copy of each downloaded book in AAX format."
+                       TextWrapping="Wrap" Foreground="Gray" />
+            <CheckBox Content="Export to AAX"
+                      IsChecked="{Binding ExportToAax}"
+                      Margin="0,8,0,0" />
+            <StackPanel Spacing="4" IsVisible="{Binding ExportToAax}">
+              <TextBlock Text="Export folder:" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBox Text="{Binding ExportDirectory}"
+                         Watermark="Select a folder..."
+                         Width="350"
+                         IsReadOnly="True" />
+                <Button Content="Browse…"
+                        Command="{Binding BrowseExportDirectoryCommand}" />
+              </StackPanel>
+            </StackPanel>
+          </StackPanel>
+
+          <!-- Step 5: Complete -->
+          <StackPanel Spacing="12" IsVisible="{Binding CurrentStep, Converter={x:Static vm:ProfileWizardViewModel.StepConverter}, ConverterParameter=5}">
+            <TextBlock Text="✓" FontSize="48" Foreground="Green"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="{Binding CompletionMessage}" TextWrapping="Wrap"
+                       HorizontalAlignment="Center" />
+          </StackPanel>
+        </Panel>
+      </ScrollViewer>
+    </Border>
+  </DockPanel>
+
+</UserControl>

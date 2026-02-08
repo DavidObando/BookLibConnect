@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>core.audiamus.connect.app.mac</RootNamespace>
+    <AssemblyName>BookLibConnect.Mac</AssemblyName>
+    <Authors>audiamus</Authors>
+    <Copyright>Copyright © 2025 - $([System.DateTime]::UtcNow.Year) audiamus ($([System.DateTime]::UtcNow.ToString("s")))</Copyright>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AuxLib.core\AuxLib.core.csproj" />
+    <ProjectReference Include="..\BooksDatabase.core\BooksDatabase.core.csproj" />
+    <ProjectReference Include="..\CommonTypes.lib.core\CommonTypes.lib.core.csproj" />
+    <ProjectReference Include="..\CommonUtil.lib.core\CommonUtil.lib.core.csproj" />
+    <ProjectReference Include="..\Connect.lib.core\Connect.lib.core.csproj" />
+    <ProjectReference Include="..\Connect.ui.mac.core\Connect.ui.mac.core.csproj" />
+    <ProjectReference Include="..\SystemMgmt.mac.core\SystemMgmt.mac.core.csproj" />
+    <ProjectReference Include="..\TreeDecomposition.core\TreeDecomposition.core.csproj" />
+  </ItemGroup>
+
+</Project>

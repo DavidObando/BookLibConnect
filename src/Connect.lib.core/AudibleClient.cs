@@ -7,13 +7,13 @@ using core.audiamus.aux;
 using core.audiamus.aux.ex;
 using core.audiamus.common;
 using core.audiamus.connect.ex;
-using core.audiamus.sysmgmt;
 using static core.audiamus.aux.Logging;
 
 namespace core.audiamus.connect {
   public class AudibleClient {
 
     private IAudibleApi _audibleApi;
+    private IHardwareIdProvider _hardwareIdProvider;
     private AudibleLogin AudibleLogin { get; }
     private Authorize Authorize { get; }
     private BookLibrary BookLibrary { get; }
@@ -48,9 +48,10 @@ namespace core.audiamus.connect {
 
     internal AudibleApi FullApi => _audibleApi as AudibleApi;
 
-    public AudibleClient (ConfigSettings configSettings, IAuthorizeSettings authSettings, string dbDir = null) {
+    public AudibleClient (ConfigSettings configSettings, IAuthorizeSettings authSettings, IHardwareIdProvider hardwareIdProvider = null, string dbDir = null) {
       Log (3, this);
 
+      _hardwareIdProvider = hardwareIdProvider;
       ConfigSettings = configSettings;
       if (ConfigSettings is not null)
         ConfigSettings.ChangedSettings += settings_ChangedSettings;
@@ -236,15 +237,15 @@ namespace core.audiamus.connect {
       string uid = ApplEnv.UserName.Rot13 ();
       sb.Append (uid);
       
-      string cid = HardwareId.GetCpuId ();
+      string cid = _hardwareIdProvider?.GetCpuId ();
       if (cid.IsNullOrWhiteSpace ())
         weak = true;
       else
         sb.Append (cid);
       
-      string mbId = HardwareId.GetMotherboardId ();
+      string mbId = _hardwareIdProvider?.GetMotherboardId ();
       if (mbId.IsNullOrWhiteSpace ())
-        mbId = MotherboardInfo.PNPDeviceID;
+        mbId = _hardwareIdProvider?.GetMotherboardPnpDeviceId ();
       if (mbId.IsNullOrWhiteSpace ())
         weak = true;
       else

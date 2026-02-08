@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -415,27 +413,41 @@ namespace core.audiamus.aux.ex {
   }
 
   public static class ExImage {
+    private static readonly byte[] __jpegHeader = { 0xFF, 0xD8, 0xFF };
+    private static readonly byte[] __pngHeader = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+    private static readonly byte[] __gifHeader = { 0x47, 0x49, 0x46 };
+    private static readonly byte[] __bmpHeader = { 0x42, 0x4D };
+    private static readonly byte[] __tiffLe = { 0x49, 0x49, 0x2A, 0x00 };
+    private static readonly byte[] __tiffBe = { 0x4D, 0x4D, 0x00, 0x2A };
+
     public static string FindImageFormat (this byte[] bytes) {
+      if (bytes is null || bytes.Length < 8)
+        return null;
       try {
-        using (var ms = new MemoryStream (bytes)) {
-          using (var bitmap = new Bitmap (ms)) {
-            if (bitmap.RawFormat.Equals (ImageFormat.Jpeg))
-              return ".jpg";
-            else if (bitmap.RawFormat.Equals (ImageFormat.Png))
-              return ".png";
-            else if (bitmap.RawFormat.Equals (ImageFormat.Gif))
-              return ".gif";
-            else if (bitmap.RawFormat.Equals (ImageFormat.Bmp))
-              return ".bmp";
-            else if (bitmap.RawFormat.Equals (ImageFormat.Tiff))
-              return ".tif";
-            else
-              return null;
-          }
-        }
+        if (startsWith (bytes, __jpegHeader))
+          return ".jpg";
+        if (startsWith (bytes, __pngHeader))
+          return ".png";
+        if (startsWith (bytes, __gifHeader))
+          return ".gif";
+        if (startsWith (bytes, __bmpHeader))
+          return ".bmp";
+        if (startsWith (bytes, __tiffLe) || startsWith (bytes, __tiffBe))
+          return ".tif";
+        return null;
       } catch (Exception) {
         return null;
       }
+    }
+
+    private static bool startsWith (byte[] data, byte[] signature) {
+      if (data.Length < signature.Length)
+        return false;
+      for (int i = 0; i < signature.Length; i++) {
+        if (data[i] != signature[i])
+          return false;
+      }
+      return true;
     }
 
   }

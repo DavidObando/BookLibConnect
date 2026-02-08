@@ -1,7 +1,7 @@
 # Book Lib Connect
 A standalone Audible downloader and decrypter
 
-[![GitHub All Releases](https://img.shields.io/github/downloads/audiamus/BookLibConnect/total)](https://github.com/audiamus/BookLibConnect/releases) [![GitHub](https://img.shields.io/github/license/audiamus/BookLibConnect)](https://github.com/audiamus/BookLibConnect/blob/main/LICENSE) [![](https://img.shields.io/badge/platform-Windows-blue)](http://microsoft.com/windows) [![](https://img.shields.io/badge/language-C%23-blue)](http://csharp.net/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/audiamus/BookLibConnect)](https://github.com/audiamus/BookLibConnect/releases/latest)
+[![GitHub All Releases](https://img.shields.io/github/downloads/audiamus/BookLibConnect/total)](https://github.com/audiamus/BookLibConnect/releases) [![GitHub](https://img.shields.io/github/license/audiamus/BookLibConnect)](https://github.com/audiamus/BookLibConnect/blob/main/LICENSE) [![](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-blue)](http://microsoft.com/windows) [![](https://img.shields.io/badge/language-C%23-blue)](http://csharp.net/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/audiamus/BookLibConnect)](https://github.com/audiamus/BookLibConnect/releases/latest)
 
 ![](res/mainwnd.png?raw=true)
 
@@ -32,10 +32,59 @@ Use the [Discussions](https://github.com/audiamus/BookLibConnect/discussions) an
 Be cautious with uploading log files to these sections as they may contain sensitive data.   
 
 ## Dependencies
-Book Lib Connect will run on Windows 64bit. Minimum Windows version is 7.
-The application requires .Net 6 64 bit to be installed. On Windows 10/11 systems this should normally be the case, if the system is kept up to date.
-If not, the app will prompt you for downloading .Net 6 and open the link in your default web browser. From the many options, pick 
-**.Net 6 Runtime x64 for _Windows desktop_**.
+Book Lib Connect will run on Windows 64bit or macOS. Minimum Windows version is 7. Minimum macOS version is 13 (Ventura).
+The application requires .NET 10 to be installed.
+
+### Building from source
+
+The solution contains both Windows (WinForms) and macOS (Avalonia) clients. Use the solution filter files for platform-specific builds:
+
+```bash
+# Build everything (requires EnableWindowsTargeting on non-Windows)
+dotnet build "AaxAudioConverter 2.x.sln"
+
+# Build only Windows projects
+dotnet build BookLibConnect.Windows.slnf
+
+# Build only macOS projects  
+dotnet build BookLibConnect.macOS.slnf
+
+# Run the macOS app
+dotnet run --project Connect.app.mac.core/Connect.app.mac.core.csproj
+
+# Publish macOS app for Apple Silicon
+dotnet publish Connect.app.mac.core/Connect.app.mac.core.csproj -r osx-arm64 -c Release
+
+# Publish macOS app for Intel
+dotnet publish Connect.app.mac.core/Connect.app.mac.core.csproj -r osx-x64 -c Release
+```
+
+### Project Architecture
+
+```
+Shared (platform-neutral):
+  CommonTypes.lib.core    — Interfaces and enums
+  AuxLib.core             — Utilities, logging, settings
+  Audible.json.core       — Audible API JSON models
+  BooksDatabase.core      — EF Core + SQLite database
+  TreeDecomposition.core  — Diagnostics
+  CommonUtil.lib.core     — File operations, online update
+  Connect.lib.core        — Core business logic (Audible API, library, auth)
+
+Windows-specific:
+  SystemMgmt.core         — WMI hardware ID (Windows)
+  AuxWin32Lib.core        — Win32 file I/O, registry
+  AuxWin.DialogBox.core   — Win32 dialog hooks
+  AuxWin.lib.core         — WinForms helpers
+  PropGridLib.core        — WinForms PropertyGrid
+  Connect.ui.lib.core     — WinForms UI controls
+  Connect.app.gui.core    — WinForms application
+
+macOS-specific:
+  SystemMgmt.mac.core     — macOS hardware ID (sysctl/IOKit)
+  Connect.ui.mac.core     — Avalonia MVVM ViewModels + Views
+  Connect.app.mac.core    — Avalonia application entry point
+```
 
 ## Acknowledgments
 - [mkb79](https://github.com/mkb79/Audible) for his Python library which served as the reference implementation of the Audible API to me, straightforward and easy to follow. 

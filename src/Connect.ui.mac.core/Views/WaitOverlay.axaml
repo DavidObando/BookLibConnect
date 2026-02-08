@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="core.audiamus.connect.ui.mac.Views.WaitOverlay">
+
+  <Border Background="#80000000" IsVisible="{Binding IsBusy}">
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                Spacing="16">
+      <ProgressBar IsIndeterminate="True" Width="200" />
+      <TextBlock Text="{Binding StatusMessage}"
+                 Foreground="White"
+                 HorizontalAlignment="Center"
+                 FontSize="14" />
+    </StackPanel>
+  </Border>
+
+</UserControl>

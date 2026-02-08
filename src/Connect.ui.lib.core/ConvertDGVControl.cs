@@ -40,6 +40,7 @@ namespace core.audiamus.connect.ui {
     public event EventHandler SelectionChanged;
     public event BoolEventHandler IdleChanged;
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool PartiallyDisabled {
       get => !panel1.Enabled;
       set {
@@ -52,6 +53,7 @@ namespace core.audiamus.connect.ui {
       }
     }
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public IAudibleApi AudibleApi {
       private get => _audibleApi;
       set {
@@ -60,6 +62,7 @@ namespace core.audiamus.connect.ui {
       }
     }
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public IDownloadSettings DownloadSettings {
       private get => _downloadSettings;
       set {
@@ -68,6 +71,7 @@ namespace core.audiamus.connect.ui {
       }
     }
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public IExportSettings ExportSettings { private get; set; }
 
     public bool IsIdle => BookLibForm is null && !(DataSourceDownload?.Any () ?? false);
@@ -85,6 +89,7 @@ namespace core.audiamus.connect.ui {
     //  }
     //}
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool DownloadOnlyMode {
       get => !btnAdd.Visible;
       set {
