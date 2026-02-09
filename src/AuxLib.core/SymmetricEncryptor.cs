@@ -110,11 +110,9 @@ namespace core.audiamus.aux {
     private static byte[] getKey (string password, byte[] passwordSalt) {
       var keyBytes = _stringEncoding.GetBytes (password);
 
-      using (var derivator = new Rfc2898DeriveBytes (
+      return Rfc2898DeriveBytes.Pbkdf2 (
           keyBytes, passwordSalt,
-          PASSWORD_ITERATION_COUNT, HashAlgorithmName.SHA256)) {
-        return derivator.GetBytes (PASSWORD_BYTE_SIZE);
-      }
+          PASSWORD_ITERATION_COUNT, HashAlgorithmName.SHA256, PASSWORD_BYTE_SIZE);
     }
 
     private static byte[] generateRandomBytes (int numberOfBytes) {

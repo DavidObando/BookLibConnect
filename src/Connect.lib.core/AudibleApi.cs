@@ -540,7 +540,7 @@ namespace core.audiamus.connect {
 
       using var csDecrypt = new CryptoStream (new MemoryStream (encryptedText), decryptor, CryptoStreamMode.Read);
 
-      csDecrypt.Read (encryptedText, 0, encryptedText.Length & 0x7ffffff0);
+      csDecrypt.ReadExactly (encryptedText, 0, encryptedText.Length & 0x7ffffff0);
 
       string plainText = Encoding.ASCII.GetString (encryptedText.TakeWhile (b => b != 0).ToArray ());
 
