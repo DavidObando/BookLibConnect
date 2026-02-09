@@ -11,6 +11,12 @@ EXECUTABLE_NAME="BookLibConnect.Mac"
 CONFIGURATION="Release"
 RUNTIME=""
 OUTPUT_DIR="./artifacts"
+CODESIGN_IDENTITY=""
+ENTITLEMENTS=""
+NOTARIZE="false"
+APPLE_ID=""
+APPLE_ID_PASSWORD=""
+APPLE_TEAM_ID=""
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SRC_DIR="$REPO_ROOT/src"
@@ -20,9 +26,15 @@ INFO_PLIST="$SRC_DIR/Connect.app.mac.core/Info.plist"
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --configuration) CONFIGURATION="$2"; shift 2 ;;
-    --runtime)       RUNTIME="$2"; shift 2 ;;
-    --output)        OUTPUT_DIR="$2"; shift 2 ;;
+    --configuration)    CONFIGURATION="$2"; shift 2 ;;
+    --runtime)          RUNTIME="$2"; shift 2 ;;
+    --output)           OUTPUT_DIR="$2"; shift 2 ;;
+    --codesign-identity) CODESIGN_IDENTITY="$2"; shift 2 ;;
+    --entitlements)     ENTITLEMENTS="$2"; shift 2 ;;
+    --notarize)         NOTARIZE="true"; shift ;;
+    --apple-id)         APPLE_ID="$2"; shift 2 ;;
+    --apple-id-password) APPLE_ID_PASSWORD="$2"; shift 2 ;;
+    --apple-team-id)    APPLE_TEAM_ID="$2"; shift 2 ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
@@ -42,8 +54,9 @@ echo "Configuration: $CONFIGURATION"
 echo "Runtime:       $RUNTIME"
 echo "Output:        $OUTPUT_DIR"
 # Resolve version from Nerdbank.GitVersioning
-if command -v nbgv &> /dev/null; then
-  APP_VERSION=$(nbgv get-version -v SimpleVersion --project "$SRC_DIR/Connect.app.mac.core" 2>/dev/null || echo "1.0.0")
+dotnet tool restore
+if dotnet nbgv get-version -v SimpleVersion --project "$SRC_DIR/Connect.app.mac.core" &> /dev/null; then
+  APP_VERSION=$(dotnet nbgv get-version -v SimpleVersion --project "$SRC_DIR/Connect.app.mac.core")
 else
   # Fallback: read base version from version.json
   APP_VERSION=$(grep '"version"' "$REPO_ROOT/version.json" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1.0/')
@@ -110,6 +123,43 @@ fi
 # Make the executable actually executable
 chmod +x "$MACOS_DIR/$EXECUTABLE_NAME"
 
+# Code sign the .app bundle
+if [[ -n "$CODESIGN_IDENTITY" ]]; then
+  echo "==> Code signing .app bundle..."
+
+  # Resolve entitlements path
+  if [[ -z "$ENTITLEMENTS" ]]; then
+    ENTITLEMENTS="$SCRIPT_DIR/entitlements.plist"
+  fi
+
+  if [[ ! -f "$ENTITLEMENTS" ]]; then
+    echo "  Error: Entitlements file not found at $ENTITLEMENTS"
+    exit 1
+  fi
+
+  # Sign all nested binaries and dylibs first (deep sign)
+  find "$APP_BUNDLE" -type f \( -name "*.dylib" -o -perm +111 \) -not -name "*.plist" -not -name "*.json" | while read -r bin; do
+    codesign --force --options runtime \
+      --entitlements "$ENTITLEMENTS" \
+      --sign "$CODESIGN_IDENTITY" \
+      --timestamp \
+      "$bin" 2>/dev/null || true
+  done
+
+  # Sign the .app bundle itself
+  codesign --force --deep --options runtime \
+    --entitlements "$ENTITLEMENTS" \
+    --sign "$CODESIGN_IDENTITY" \
+    --timestamp \
+    "$APP_BUNDLE"
+
+  echo "  Verifying signature..."
+  codesign --verify --deep --strict "$APP_BUNDLE"
+  echo "  Signature OK"
+else
+  echo "==> Skipping code signing (no --codesign-identity provided)"
+fi
+
 echo "==> .app bundle created at: $APP_BUNDLE"
 
 # Create DMG
@@ -131,6 +181,32 @@ hdiutil create -volname "$APP_NAME" \
   "$DMG_PATH"
 
 echo "==> DMG created at: $DMG_PATH"
+
+# Sign the DMG
+if [[ -n "$CODESIGN_IDENTITY" ]]; then
+  echo "==> Code signing DMG..."
+  codesign --force --sign "$CODESIGN_IDENTITY" --timestamp "$DMG_PATH"
+  echo "  DMG signed"
+fi
+
+# Notarize the DMG
+if [[ "$NOTARIZE" == "true" ]]; then
+  if [[ -z "$APPLE_ID" || -z "$APPLE_ID_PASSWORD" || -z "$APPLE_TEAM_ID" ]]; then
+    echo "  Error: --notarize requires --apple-id, --apple-id-password, and --apple-team-id"
+    exit 1
+  fi
+
+  echo "==> Submitting DMG for notarization..."
+  xcrun notarytool submit "$DMG_PATH" \
+    --apple-id "$APPLE_ID" \
+    --password "$APPLE_ID_PASSWORD" \
+    --team-id "$APPLE_TEAM_ID" \
+    --wait
+
+  echo "==> Stapling notarization ticket..."
+  xcrun stapler staple "$DMG_PATH"
+  echo "  Notarization complete"
+fi
 
 # Clean up staging
 rm -rf "$DMG_STAGING"

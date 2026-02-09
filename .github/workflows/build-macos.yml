@@ -39,6 +39,48 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Import code signing certificate
+        if: secrets.MACOS_CERTIFICATE_P12 != ''
+        env:
+          MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          # Decode the certificate
+          CERT_FILE=$(mktemp /tmp/cert.XXXXXX.p12)
+          echo "$MACOS_CERTIFICATE_P12" | base64 --decode > "$CERT_FILE"
+
+          # Create a temporary keychain
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 32)"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import the certificate
+          security import "$CERT_FILE" \
+            -P "$MACOS_CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          # Allow codesign to access the keychain
+          security set-key-partition-list -S apple-tool:,apple: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Add the keychain to the search list
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+
+          rm "$CERT_FILE"
+
+          # Extract the signing identity name
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "CODESIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          echo "Found signing identity: $IDENTITY"
+
       - name: Restore dependencies
         working-directory: src
         run: dotnet restore BookLibConnect.macOS.slnf
@@ -47,8 +89,35 @@ jobs:
         working-directory: src
         run: dotnet build BookLibConnect.macOS.slnf --configuration Release --no-restore
 
-      - name: Create .app bundle and DMG
-        run: ./build/build-macos.sh --configuration Release --runtime ${{ matrix.runtime }} --output ./artifacts
+      - name: Create .app bundle, sign, and create DMG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          SIGN_ARGS=""
+          if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
+            SIGN_ARGS="--codesign-identity \"$CODESIGN_IDENTITY\""
+          fi
+
+          NOTARIZE_ARGS=""
+          if [[ -n "${APPLE_ID:-}" && -n "${APPLE_ID_PASSWORD:-}" && -n "${APPLE_TEAM_ID:-}" && -n "${CODESIGN_IDENTITY:-}" ]]; then
+            NOTARIZE_ARGS="--notarize --apple-id \"$APPLE_ID\" --apple-id-password \"$APPLE_ID_PASSWORD\" --apple-team-id \"$APPLE_TEAM_ID\""
+          fi
+
+          eval ./build/build-macos.sh \
+            --configuration Release \
+            --runtime ${{ matrix.runtime }} \
+            --output ./artifacts \
+            $SIGN_ARGS \
+            $NOTARIZE_ARGS
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          if [[ -n "${KEYCHAIN_PATH:-}" && -f "${KEYCHAIN_PATH:-}" ]]; then
+            security delete-keychain "$KEYCHAIN_PATH" || true
+          fi
 
       - name: Upload .app bundle
         uses: actions/upload-artifact@v4
