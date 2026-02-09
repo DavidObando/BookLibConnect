@@ -43,8 +43,9 @@ jobs:
         run: dotnet tool restore
 
       - name: Import code signing certificate
-        if: secrets.MACOS_CERTIFICATE_P12 != ''
+        if: env.HAS_CERT == 'true'
         env:
+          HAS_CERT: ${{ secrets.MACOS_CERTIFICATE_P12 != '' }}
           MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
           MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
         run: |
