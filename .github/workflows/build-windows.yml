@@ -37,15 +37,27 @@ jobs:
 
       - name: Install Inno Setup
         run: |
-          winget install --id JRSoftware.InnoSetup -e -s winget --accept-source-agreements --accept-package-agreements
-          # Add Inno Setup to PATH for the rest of the workflow
-          $innoPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
-          if (-not (Test-Path $innoPath)) {
-            $innoPath = "${env:LOCALAPPDATA}\Programs\Inno Setup 6"
+          # Check common install locations
+          $searchPaths = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6",
+            "${env:LOCALAPPDATA}\Programs\Inno Setup 6",
+            "${env:ProgramFiles}\Inno Setup 6"
+          )
+          $innoPath = $searchPaths | Where-Object { Test-Path "$_\ISCC.exe" } | Select-Object -First 1
+
+          if (-not $innoPath) {
+            Write-Host "Inno Setup not found, installing via winget..."
+            winget install --id JRSoftware.InnoSetup -e -s winget --accept-source-agreements --accept-package-agreements
+            $innoPath = $searchPaths | Where-Object { Test-Path "$_\ISCC.exe" } | Select-Object -First 1
+          } else {
+            Write-Host "Inno Setup already installed."
           }
-          if (-not (Test-Path $innoPath)) {
-            $innoPath = "${env:ProgramFiles}\Inno Setup 6"
+
+          if (-not $innoPath) {
+            Write-Error "Inno Setup installation not found after install attempt."
+            exit 1
           }
+
           Write-Host "Inno Setup path: $innoPath"
           echo "$innoPath" >> $env:GITHUB_PATH
 
