@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.common;
-using core.audiamus.connect.ex;
-using static core.audiamus.aux.Logging;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.CommonTypes;
+using BookLibConnect.Core.ex;
+using static BookLibConnect.Aux.Logging;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   public class AudibleClient {
 
     private IAudibleApi _audibleApi;

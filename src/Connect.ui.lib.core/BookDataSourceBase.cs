@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Linq;
-using core.audiamus.booksdb;
-using core.audiamus.booksdb.ex;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.BooksDatabase.ex;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public abstract class BookDataSourceBase : DataSourceBase<Book> {
 
     [Browsable (false)]

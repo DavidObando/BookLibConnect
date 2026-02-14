@@ -7,12 +7,12 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using static core.audiamus.aux.Logging;
-using InteractMessage = core.audiamus.aux.InteractionMessage<core.audiamus.util.UpdateInteractionMessage>;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using static BookLibConnect.Aux.Logging;
+using InteractMessage = BookLibConnect.Aux.InteractionMessage<BookLibConnect.Common.Util.UpdateInteractionMessage>;
 
-namespace core.audiamus.util {
+namespace BookLibConnect.Common.Util {
   public class OnlineUpdate {
 
     const string SETUP_REF_URL = "https://raw.githubusercontent.com/audiamus/{0}/master/res/Setup.json";

@@ -12,15 +12,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using AAXClean;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.booksdb;
-using core.audiamus.common;
-using core.audiamus.connect.ex;
-using static core.audiamus.aux.Logging;
-using R = core.audiamus.connect.Properties.Resources;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.CommonTypes;
+using BookLibConnect.Core.ex;
+using static BookLibConnect.Aux.Logging;
+using R = BookLibConnect.Core.Properties.Resources;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   class AudibleApi : IAudibleApi {
     const string USER_AGENT = "Audible/671 CFNetwork/1240.0.4 Darwin/20.6.0";
 
@@ -101,15 +101,15 @@ namespace core.audiamus.connect {
       //HttpClientAudible?.Dispose ();
     }
 
-    public async Task<adb.json.LibraryResponse> GetLibraryAsync (bool resync) => await GetLibraryAsync (null, resync);
+    public async Task<BookLibConnect.Audible.Json.LibraryResponse> GetLibraryAsync (bool resync) => await GetLibraryAsync (null, resync);
 
 
-    internal async Task<adb.json.LibraryResponse> GetLibraryAsync (string json, bool resync) {
+    internal async Task<BookLibConnect.Audible.Json.LibraryResponse> GetLibraryAsync (string json, bool resync) {
       using var _ = new LogGuard (3, this, () => $"resync={resync}");
 
       const int PAGE_SIZE = 100;
       int page = 0;
-      var libProducts = new List<adb.json.Product> ();
+      var libProducts = new List<BookLibConnect.Audible.Json.Product> ();
 
       if (json is null) {
 
@@ -138,7 +138,7 @@ namespace core.audiamus.connect {
             Log (3, this, () => $"page={page}, file=\"{Path.GetFileName (file)}\"");
           }
 
-          adb.json.LibraryResponse libraryResponse = adb.json.LibraryResponse.Deserialize (pageResult);
+          BookLibConnect.Audible.Json.LibraryResponse libraryResponse = BookLibConnect.Audible.Json.LibraryResponse.Deserialize (pageResult);
           if (libraryResponse is null)
             return null;
 
@@ -155,7 +155,7 @@ namespace core.audiamus.connect {
 
         }
       } else {
-        adb.json.LibraryResponse libraryResponse = adb.json.LibraryResponse.Deserialize (json);
+        BookLibConnect.Audible.Json.LibraryResponse libraryResponse = BookLibConnect.Audible.Json.LibraryResponse.Deserialize (json);
         libProducts.AddRange (libraryResponse.items);
       }
 
@@ -174,7 +174,7 @@ namespace core.audiamus.connect {
 
       await BookLibrary.AddRemBooksAsync (libProducts, new ProfileId (AccountId, Region), resync);
 
-      var allPagesResponse = new adb.json.LibraryResponse ();
+      var allPagesResponse = new BookLibConnect.Audible.Json.LibraryResponse ();
       allPagesResponse.items = libProducts.ToArray ();
       return allPagesResponse;
     }
@@ -223,7 +223,7 @@ namespace core.audiamus.connect {
       return false;
     }
 
-    public async Task<adb.json.LicenseResponse> GetDownloadLicenseAsync (string asin, EDownloadQuality quality) {
+    public async Task<BookLibConnect.Audible.Json.LicenseResponse> GetDownloadLicenseAsync (string asin, EDownloadQuality quality) {
       using var _ = new LogGuard (3, this, () => $"asin={asin}");
       string response = await getDownloadLicenseAsync (asin, quality);
 
@@ -232,7 +232,7 @@ namespace core.audiamus.connect {
         Log (3, this, () => $"asin={asin}, file=\"{Path.GetFileName (file)}\"");
       }
 
-      adb.json.LicenseResponse license = adb.json.LicenseResponse.Deserialize (response);
+      BookLibConnect.Audible.Json.LicenseResponse license = BookLibConnect.Audible.Json.LicenseResponse.Deserialize (response);
 
       decryptLicense (license?.content_license);
 
@@ -242,7 +242,7 @@ namespace core.audiamus.connect {
     public async Task<bool> GetDownloadLicenseAndSaveAsync (Conversion conversion, EDownloadQuality quality) {
       using var _ = new LogGuard (3, this, () => $"{conversion}");
       Log (3, this, () => $"{conversion}; desired quality: {quality}");
-      adb.json.LicenseResponse licresp;
+      BookLibConnect.Audible.Json.LicenseResponse licresp;
       // get license
       try {
         licresp = await GetDownloadLicenseAsync (conversion.Asin, quality);
@@ -423,7 +423,7 @@ namespace core.audiamus.connect {
       onDone (result);
     }
 
-    public async Task<adb.json.Product> GetProductInfoAsync (string asin) {
+    public async Task<BookLibConnect.Audible.Json.Product> GetProductInfoAsync (string asin) {
 
       const string GROUPS
         = "response_groups=contributors,media,product_attrs,product_desc,product_extended_attrs," +
@@ -441,9 +441,9 @@ namespace core.audiamus.connect {
         Log (3, this, () => $"asin={asin}, file=\"{Path.GetFileName (file)}\"");
       }
 
-      adb.json.ProductResponse productResponse = adb.json.ProductResponse.Deserialize (result);
+      BookLibConnect.Audible.Json.ProductResponse productResponse = BookLibConnect.Audible.Json.ProductResponse.Deserialize (result);
 
-      adb.json.Product product = productResponse?.product;
+      BookLibConnect.Audible.Json.Product product = productResponse?.product;
 #if TEST_INVAL_CHAR
       if (product is not null) {
         product.title = product.title.Replace (ORIG, SUBS);
@@ -511,7 +511,7 @@ namespace core.audiamus.connect {
       return json;
     }
 
-    private void decryptLicense (adb.json.ContentLicense license) {
+    private void decryptLicense (BookLibConnect.Audible.Json.ContentLicense license) {
       // See also
       //https://patchwork.ffmpeg.org/project/ffmpeg/patch/17559601585196510@sas2-2fa759678732.qloud-c.yandex.net/
 
@@ -544,7 +544,7 @@ namespace core.audiamus.connect {
 
       string plainText = Encoding.ASCII.GetString (encryptedText.TakeWhile (b => b != 0).ToArray ());
 
-      adb.json.Voucher voucher = adb.json.Voucher.Deserialize (plainText);
+      BookLibConnect.Audible.Json.Voucher voucher = BookLibConnect.Audible.Json.Voucher.Deserialize (plainText);
 
       license.voucher = voucher;
     }

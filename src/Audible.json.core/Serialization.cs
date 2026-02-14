@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text.Json;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.adb.json {
+namespace BookLibConnect.Audible.Json {
   public abstract class Serialization<T> {
     private static JsonSerializerOptions Options { get; } = JsonExtensions.Options;
 

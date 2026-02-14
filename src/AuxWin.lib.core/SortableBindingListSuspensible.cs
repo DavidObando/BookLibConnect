@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.aux.win {
+namespace BookLibConnect.Aux.Win {
   /// <summary>
   /// A ResortableBindingList that can be paused.
   /// </summary>

@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace core.audiamus.aux.propgrid {
+namespace BookLibConnect.Aux.PropGird {
   public static class PropertyGridExtensions {
 
 

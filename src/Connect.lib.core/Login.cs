@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using core.audiamus.aux.ex;
-using core.audiamus.common;
-using core.audiamus.connect.ex;
-using static core.audiamus.aux.Logging;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.CommonTypes;
+using BookLibConnect.Core.ex;
+using static BookLibConnect.Aux.Logging;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   class AudibleLogin {
 
     public const string DEVICE_TYPE = "A2CZJZGLK2JJVM";

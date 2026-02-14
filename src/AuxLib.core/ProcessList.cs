@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public class ProcessList : IDisposable, IProcessList {
 
     private readonly object _lockable = new object ();

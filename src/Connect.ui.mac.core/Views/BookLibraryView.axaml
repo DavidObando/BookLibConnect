@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:core.audiamus.connect.ui.mac.ViewModels"
-             xmlns:conv="using:core.audiamus.connect.ui.mac.Converters"
-             x:Class="core.audiamus.connect.ui.mac.Views.BookLibraryView"
+             xmlns:vm="using:BookLibConnect.Core.UI.Mac.ViewModels"
+             xmlns:conv="using:BookLibConnect.Core.UI.Mac.Converters"
+             x:Class="BookLibConnect.Core.UI.Mac.Views.BookLibraryView"
              x:DataType="vm:BookLibraryViewModel">
 
   <DockPanel>

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace core.audiamus.util {
+namespace BookLibConnect.Common.Util {
 
   public record ProgressMessage (
     int? ItemCount,

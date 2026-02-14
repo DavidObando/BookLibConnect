@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using core.audiamus.aux;
-using core.audiamus.booksdb;
-using core.audiamus.common;
+using BookLibConnect.Aux;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.CommonTypes;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   interface IProfile {
     uint Id { get; }
     bool PreAmazon { get; }
@@ -76,11 +76,11 @@ namespace core.audiamus.connect {
   public interface IAudibleApi : IProfileAliasKey, IDisposable {
     Func<Task> RefreshTokenAsyncFunc { get; }
     Func<AccountAliasContext, bool> GetAccountAliasFunc { set; }
-    Task<adb.json.LibraryResponse> GetLibraryAsync (bool resync);
+    Task<BookLibConnect.Audible.Json.LibraryResponse> GetLibraryAsync (bool resync);
     Task<string> GetAccountInfoAsync ();
     Task<string> GetUserProfileAsync ();
     Task<bool> GetActivationBytesAsync ();
-    Task<adb.json.LicenseResponse> GetDownloadLicenseAsync (
+    Task<BookLibConnect.Audible.Json.LicenseResponse> GetDownloadLicenseAsync (
       string asin, EDownloadQuality quality
     );
     Task<bool> DownloadAsync (

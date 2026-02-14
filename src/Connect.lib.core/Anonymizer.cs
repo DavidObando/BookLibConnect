@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.connect.ex {
+namespace BookLibConnect.Core.ex {
   static class Anonymizer {
 
     private static Dictionary<uint, string> Usernames { get; } = new Dictionary<uint, string> ();

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace core.audiamus.util {
+namespace BookLibConnect.Common.Util {
   public abstract class ThreadProgressBase<T> : IDisposable {
 
     private readonly Action<T> _report;

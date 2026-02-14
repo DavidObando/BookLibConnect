@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Http;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   class HttpClientEx : HttpClient {
     public CookieContainer CookieContainer { get; } = new CookieContainer ();
 

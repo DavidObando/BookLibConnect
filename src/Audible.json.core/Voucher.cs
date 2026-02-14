@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace core.audiamus.adb.json {
+namespace BookLibConnect.Audible.Json {
 
   public class Voucher : Serialization<Voucher> {
     public string key { get; set; }

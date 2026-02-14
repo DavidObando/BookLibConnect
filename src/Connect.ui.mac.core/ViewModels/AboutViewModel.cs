@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using core.audiamus.aux;
+using BookLibConnect.Aux;
 
-namespace core.audiamus.connect.ui.mac.ViewModels {
+namespace BookLibConnect.Core.UI.Mac.ViewModels {
   public partial class AboutViewModel : ObservableObject {
 
     public string AppName => "Book Lib Connect";

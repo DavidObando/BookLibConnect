@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public static class JsonSerialization {
     private static readonly JsonSerializerOptions __jsonSerializerOptions = new JsonSerializerOptions {
       WriteIndented = true,

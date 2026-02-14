@@ -1,6 +1,6 @@
-using core.audiamus.common;
+using BookLibConnect.CommonTypes;
 
-namespace core.audiamus.sysmgmt {
+namespace BookLibConnect.SystemManagement {
   public class WinHardwareIdProvider : IHardwareIdProvider {
     public string GetCpuId () => HardwareId.GetCpuId ();
     public string GetMotherboardId () => HardwareId.GetMotherboardId ();

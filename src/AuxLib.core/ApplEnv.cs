@@ -5,7 +5,7 @@ using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public static class ApplEnv {
 
     static readonly char[] INVALID_CHARS = Path.GetInvalidFileNameChars ();

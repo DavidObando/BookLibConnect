@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using core.audiamus.common;
+using BookLibConnect.CommonTypes;
 
-namespace core.audiamus.booksdb {
+namespace BookLibConnect.BooksDatabase {
   public interface IPerson {
     string Asin { get; set; }
     string Name { get; set; }

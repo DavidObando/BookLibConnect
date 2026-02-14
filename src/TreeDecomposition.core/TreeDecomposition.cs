@@ -5,9 +5,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.aux.diagn {
+namespace BookLibConnect.Aux.Diagnostics {
 
   public static class TreeDecomposition {
     /// <summary>

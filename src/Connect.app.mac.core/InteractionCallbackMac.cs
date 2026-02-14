@@ -2,9 +2,9 @@ using System;
 using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using core.audiamus.aux;
+using BookLibConnect.Aux;
 
-namespace core.audiamus.connect.app.mac {
+namespace BookLibConnect.App.Mac {
   /// <summary>
   /// macOS implementation of IInteractionCallback using Avalonia message boxes.
   /// Bridges the business logic interaction pattern to Avalonia dialog windows.

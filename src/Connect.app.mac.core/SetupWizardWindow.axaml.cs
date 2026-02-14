@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using core.audiamus.connect.ui.mac.ViewModels;
+using BookLibConnect.Core.UI.Mac.ViewModels;
 
-namespace core.audiamus.connect.app.mac {
+namespace BookLibConnect.App.Mac {
   public partial class SetupWizardWindow : Window {
     private readonly ProfileWizardViewModel _viewModel;
 

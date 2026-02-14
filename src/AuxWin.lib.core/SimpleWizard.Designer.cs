@@ -1,5 +1,5 @@
 ﻿
-namespace core.audiamus.aux.win {
+namespace BookLibConnect.Aux.Win {
   partial class SimpleWizard {
     /// <summary>
     /// Required designer variable.

@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.aux.win {
+namespace BookLibConnect.Aux.Win {
 
   /// <summary>
   /// http://www.timvw.be/2008/08/02/presenting-the-sortablebindinglistt-take-two/

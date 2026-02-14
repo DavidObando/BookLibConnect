@@ -2,10 +2,10 @@ using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using core.audiamus.aux.ex;
-using core.audiamus.connect;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.Core;
 
-namespace core.audiamus.connect.ui.mac.ViewModels {
+namespace BookLibConnect.Core.UI.Mac.ViewModels {
   public partial class SettingsViewModel : ObservableObject {
 
     private readonly DownloadSettings _downloadSettings;

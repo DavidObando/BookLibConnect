@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace core.audiamus.aux.w32 {
+namespace BookLibConnect.Aux.Win32 {
   unsafe public class WinFileIO : IDisposable {
     // This class provides the capability to utilize the ReadFile and Writefile windows IO functions.  These functions
     // are the most efficient way to perform file I/O from C# or even C++.  The constructor with the buffer and buffer

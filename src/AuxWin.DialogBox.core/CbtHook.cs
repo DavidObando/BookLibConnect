@@ -18,7 +18,7 @@ using System;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace core.audiamus.aux.win.Win32API.Hook
+namespace BookLibConnect.Aux.Win.Win32API.Hook
 {
 	///////////////////////////////////////////////////////////////////////
 	#region Enum CbtHookAction

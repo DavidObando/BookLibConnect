@@ -1,5 +1,5 @@
 ﻿
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   partial class AccountAliasForm {
     /// <summary>
     /// Required designer variable.

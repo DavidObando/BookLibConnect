@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Reflection;
 
-namespace core.audiamus.aux.propgrid {
+namespace BookLibConnect.Aux.PropGird {
   public enum EReadonly { none, minimum, search, modify, modifyExt, all };
   public enum EVisibility { none, minmum, search, all };
 

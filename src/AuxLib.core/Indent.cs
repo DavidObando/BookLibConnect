@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   /// <summary>
   /// Automatic indentation, managed as a resource
   /// </summary>

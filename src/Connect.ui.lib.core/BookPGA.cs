@@ -1,12 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.aux.propgrid;
-using core.audiamus.booksdb;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.Aux.PropGird;
+using BookLibConnect.BooksDatabase;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public class BookPGA : BookDataSourceBase {
     public BookPGA (Book book, IDownloadSettings settings) : base (book, settings) {
       SetReadonly (EReadonly.all);

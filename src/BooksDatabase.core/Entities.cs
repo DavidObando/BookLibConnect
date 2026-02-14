@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
-using core.audiamus.aux.ex;
-using core.audiamus.common;
-using core.audiamus.booksdb.ex;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.CommonTypes;
+using BookLibConnect.BooksDatabase.ex;
 
-namespace core.audiamus.booksdb {
+namespace BookLibConnect.BooksDatabase {
   public class Book : IBookMeta, IBookCommon {
     public int Id { get; internal set; }
     public string Asin { get; set; }

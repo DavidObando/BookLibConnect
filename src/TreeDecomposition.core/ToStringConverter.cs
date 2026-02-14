@@ -1,4 +1,4 @@
-﻿namespace core.audiamus.aux.diagn {
+﻿namespace BookLibConnect.Aux.Diagnostics {
   public abstract class ToStringConverter {
     public abstract string ToString (object o, string format = null);
   }

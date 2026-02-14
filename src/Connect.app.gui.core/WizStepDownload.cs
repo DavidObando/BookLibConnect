@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using core.audiamus.aux.win;
+using BookLibConnect.Aux.Win;
 
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
   public partial class WizStepDownload : UserControl, ICompleted {
     public event EventHandler Completed;
 

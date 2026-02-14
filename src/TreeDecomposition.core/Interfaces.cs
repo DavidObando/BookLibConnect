@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace core.audiamus.aux.diagn {
+namespace BookLibConnect.Aux.Diagnostics {
   /// <summary>
   /// Interface for custom primitive types, to be used with <see cref="TreeDecomposition{T}"/>
   /// </summary>

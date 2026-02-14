@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.aux.win;
-using core.audiamus.common;
-using R = core.audiamus.connect.ui.Properties.Resources;
-using static core.audiamus.aux.Logging;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.Aux.Win;
+using BookLibConnect.CommonTypes;
+using R = BookLibConnect.Core.UI.Properties.Resources;
+using static BookLibConnect.Aux.Logging;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public partial class NewProfileForm : Form {
 
     private static IReadOnlyDictionary<ERegion, string> __regions = new Dictionary<ERegion, string> {

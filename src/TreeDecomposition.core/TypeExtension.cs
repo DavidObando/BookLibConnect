@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace core.audiamus.aux.diagn {
+namespace BookLibConnect.Aux.Diagnostics {
   static class TypeExtension {
 
     public static IEnumerable<IEnumerable<Type>> GetInterfaceHierarchy (this Type root) {

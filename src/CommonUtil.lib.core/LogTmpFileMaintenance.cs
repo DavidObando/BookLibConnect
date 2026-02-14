@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.util {
+namespace BookLibConnect.Common.Util {
   public class LogTmpFileMaintenance {
     record DirectoryStatistics (int NumFiles, long TotalSize, DateTime Timestamp);
     //record DirectoryFilesAndStatistics (List<FileInfo> Files, DirectoryStatistics Statistics);

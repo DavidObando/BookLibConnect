@@ -6,20 +6,21 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using core.audiamus.aux;
-using core.audiamus.aux.diagn;
-using core.audiamus.aux.ex;
-using core.audiamus.aux.win;
-using core.audiamus.aux.win.ex;
-using core.audiamus.booksdb;
-using core.audiamus.connect.ui;
-using core.audiamus.sysmgmt;
-using core.audiamus.util;
-using static core.audiamus.aux.ApplEnv;
-using static core.audiamus.aux.Logging;
-using R = core.audiamus.connect.app.gui.Properties.Resources;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Diagnostics;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.Aux.Win;
+using BookLibConnect.Aux.Win.Extensions;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.Core.UI;
+using BookLibConnect.SystemManagement;
+using BookLibConnect.Common.Util;
+using static BookLibConnect.Aux.ApplEnv;
+using static BookLibConnect.Aux.Logging;
+using R = BookLibConnect.App.Gui.Properties.Resources;
+using BookLibConnect.Core;
 
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
   public partial class MainForm : Form {
     private bool _ignoreFlag;
     private CancellationTokenSource _cts;

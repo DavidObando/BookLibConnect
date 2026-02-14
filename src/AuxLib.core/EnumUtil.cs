@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Resources;
 using System.Text;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public static class EnumUtil {
     // Note: constraint System.Enum available in C# 7.3 
     public static IEnumerable<T> GetValues<T> () where T : struct, Enum {

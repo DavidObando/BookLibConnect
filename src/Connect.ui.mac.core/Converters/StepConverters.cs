@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace core.audiamus.connect.ui.mac.Converters {
+namespace BookLibConnect.Core.UI.Mac.Converters {
   /// <summary>
   /// Converts an integer step index to a visibility boolean based on whether
   /// it matches the converter parameter.

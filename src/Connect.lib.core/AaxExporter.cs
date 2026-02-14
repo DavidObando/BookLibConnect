@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.booksdb;
-using core.audiamus.booksdb.ex;
-using core.audiamus.connect.ex;
-using core.audiamus.util;
-using R = core.audiamus.connect.Properties.Resources;
-using static core.audiamus.aux.Logging;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.BooksDatabase.ex;
+using BookLibConnect.Core.ex;
+using BookLibConnect.Common.Util;
+using R = BookLibConnect.Core.Properties.Resources;
+using static BookLibConnect.Aux.Logging;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   public class AaxExporter {
     const string JSON = ".json";
     const string CONTENT_METADATA = "content_metadata_";
@@ -119,18 +119,18 @@ namespace core.audiamus.connect {
       var chapterInfo = book.ChapterInfo;
 
 
-      var cr = new adb.json.ContentReference {
+      var cr = new BookLibConnect.Audible.Json.ContentReference {
         asin = book.Asin,
         content_size_in_bytes = book.FileSizeBytes ?? 0,
         sku = book.Sku
       };
 
-      var ci = new adb.json.ChapterInfo ();
-      var metadata = new adb.json.ContentMetadata {
+      var ci = new BookLibConnect.Audible.Json.ChapterInfo ();
+      var metadata = new BookLibConnect.Audible.Json.ContentMetadata {
         chapter_info = ci,
         content_reference = cr
       };
-      var container = new adb.json.MetadataContainer {
+      var container = new BookLibConnect.Audible.Json.MetadataContainer {
         content_metadata = metadata
       };
 
@@ -145,12 +145,12 @@ namespace core.audiamus.connect {
 
      
       if (!flattenedChapters.IsNullOrEmpty()) {
-        var chapters = new List<adb.json.Chapter> ();
+        var chapters = new List<BookLibConnect.Audible.Json.Chapter> ();
         foreach (var chapter in flattenedChapters) {
           if (chapters.Count == 0 && skipChapter (chapter))
             continue;
 
-          var ch = new adb.json.Chapter {
+          var ch = new BookLibConnect.Audible.Json.Chapter {
             length_ms = chapter.LengthMs,
             start_offset_ms = chapter.StartOffsetMs,
             start_offset_sec = chapter.StartOffsetMs / 1000,
@@ -201,7 +201,7 @@ namespace core.audiamus.connect {
       Log (3, this, () => book.ToString ());
       var product = makeProduct (book);
 
-      var container = new adb.json.ProductResponse {
+      var container = new BookLibConnect.Audible.Json.ProductResponse {
         product = product
       };
 
@@ -225,7 +225,7 @@ namespace core.audiamus.connect {
         var series = serbook.Series;       
         string asin = series.Asin;
 
-        var products = new List<adb.json.Product> ();
+        var products = new List<BookLibConnect.Audible.Json.Product> ();
 
         // sort by sort/num+sub/sequence
         IOrderedEnumerable<SeriesBook> sbks;
@@ -241,7 +241,7 @@ namespace core.audiamus.connect {
           products.Add (p);
         }
 
-        var container = new adb.json.SimsBySeriesResponse {
+        var container = new BookLibConnect.Audible.Json.SimsBySeriesResponse {
           similar_products = products.ToArray ()
         };
 
@@ -255,7 +255,7 @@ namespace core.audiamus.connect {
       }
     }
 
-    private adb.json.Product makeProduct (IBookCommon prod) {
+    private BookLibConnect.Audible.Json.Product makeProduct (IBookCommon prod) {
 
       Book book = prod.GetBook ();
       Log (3, this, () => book.ToString ());
@@ -267,7 +267,7 @@ namespace core.audiamus.connect {
       // series:title,sequence
       // sku; sku_lite
 
-      var product = new adb.json.Product {
+      var product = new BookLibConnect.Audible.Json.Product {
         asin = prod.Asin,
         title = prod.Title,
         sku = prod.Sku,
@@ -279,9 +279,9 @@ namespace core.audiamus.connect {
       };
 
       if (!book.Authors.IsNullOrEmpty ()) {
-        var authors = new List<adb.json.Author> ();
+        var authors = new List<BookLibConnect.Audible.Json.Author> ();
         foreach (var author in book.Authors) {
-          var a = new adb.json.Author {
+          var a = new BookLibConnect.Audible.Json.Author {
             asin = author.Asin,
             name = author.Name
           };
@@ -291,9 +291,9 @@ namespace core.audiamus.connect {
       }
 
       if (!book.Series.IsNullOrEmpty()) {
-        var series = new List<adb.json.Series> ();
+        var series = new List<BookLibConnect.Audible.Json.Series> ();
         foreach (var serbook in book.Series) {
-          var s = new adb.json.Series {
+          var s = new BookLibConnect.Audible.Json.Series {
             asin = serbook.Series.Asin,
             title = serbook.Series.Title,
             sequence = serbook.SeqString

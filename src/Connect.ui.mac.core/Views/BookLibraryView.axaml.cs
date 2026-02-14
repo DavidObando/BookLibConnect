@@ -2,9 +2,9 @@ using System.ComponentModel;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using core.audiamus.connect.ui.mac.ViewModels;
+using BookLibConnect.Core.UI.Mac.ViewModels;
 
-namespace core.audiamus.connect.ui.mac.Views {
+namespace BookLibConnect.Core.UI.Mac.Views {
   public partial class BookLibraryView : UserControl {
     public BookLibraryView () {
       InitializeComponent ();

@@ -7,7 +7,7 @@
     <Authors>audiamus</Authors>
     <AssemblyName>BookLibConnect</AssemblyName>
     <AssemblyTitle>Book Lib Connect</AssemblyTitle>
-    <RootNamespace>core.audiamus.connect.app.gui</RootNamespace>
+    <RootNamespace>BookLibConnect.App.Gui</RootNamespace>
     <Copyright>Copyright © 2021 - $([System.DateTime]::UtcNow.Year) audiamus ($([System.DateTime]::UtcNow.ToString("s")))</Copyright>
     <ApplicationIcon>Resources\audio.ico</ApplicationIcon>
   </PropertyGroup>

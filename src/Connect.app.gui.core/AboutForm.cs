@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows.Forms;
-using core.audiamus.aux;
-using static core.audiamus.aux.ApplEnv;
+using BookLibConnect.Aux;
+using static BookLibConnect.Aux.ApplEnv;
 
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
   partial class AboutForm : Form {
     public AboutForm () {
       InitializeComponent ();

@@ -1,7 +1,7 @@
 using System.Threading;
-using core.audiamus.connect;
+using BookLibConnect.Core;
 
-namespace core.audiamus.connect.app.mac {
+namespace BookLibConnect.App.Mac {
   /// <summary>
   /// Minimal implementation of <see cref="ICancellation"/> for use with
   /// <see cref="DownloadDecryptJob{T}"/>.

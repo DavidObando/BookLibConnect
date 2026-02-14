@@ -5,15 +5,15 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.booksdb;
-using core.audiamus.booksdb.ex;
-using core.audiamus.util;
-using static core.audiamus.aux.Logging;
-using R = core.audiamus.connect.Properties.Resources;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.BooksDatabase.ex;
+using BookLibConnect.Common.Util;
+using static BookLibConnect.Aux.Logging;
+using R = BookLibConnect.Core.Properties.Resources;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   public class DownloadDecryptJob<T> : IDisposable where T : ICancellation {
     private static int MaxDecrypts => 1; // Environment.ProcessorCount / 2;
 

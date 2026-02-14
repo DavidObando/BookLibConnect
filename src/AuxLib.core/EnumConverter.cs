@@ -5,10 +5,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
-using core.audiamus.aux.ex;
-using static core.audiamus.aux.EnumUtil;
+using BookLibConnect.Aux.Extensions;
+using static BookLibConnect.Aux.EnumUtil;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
 
   public class EnumConverter<TEnum> : TypeConverter 
     where TEnum : struct, Enum 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace core.audiamus.aux.win {
+namespace BookLibConnect.Aux.Win {
   public interface ISortingEvents {
     event EventHandler BeginSorting;
     event EventHandler EndSorting;

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
 
   public class ArgParser {
     readonly string[] _args;

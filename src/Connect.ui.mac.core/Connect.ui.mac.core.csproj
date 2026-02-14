@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>core.audiamus.connect.ui.mac</RootNamespace>
-    <AssemblyName>audiamus.connect.ui.mac.core</AssemblyName>
+    <RootNamespace>BookLibConnect.Core.UI.Mac</RootNamespace>
+    <AssemblyName>BookLibConnect.UI.Mac.Core</AssemblyName>
     <Authors>audiamus</Authors>
     <Copyright>Copyright © 2025 - $([System.DateTime]::UtcNow.Year) audiamus ($([System.DateTime]::UtcNow.ToString("s")))</Copyright>
   </PropertyGroup>

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using core.audiamus.aux;
+using BookLibConnect.Aux;
 using Microsoft.EntityFrameworkCore;
-using core.audiamus.aux.ex;
-using static core.audiamus.aux.Logging;
+using BookLibConnect.Aux.Extensions;
+using static BookLibConnect.Aux.Logging;
 using System.Reflection;
 
-namespace core.audiamus.booksdb {
+namespace BookLibConnect.BooksDatabase {
 
   // PM> Add-Migration InitialCreate -Project BooksDatabase.core -Context BookDbContext
   // PM> Add-Migration -Name <mig name> -Project BooksDatabase.core -Context BookDbContext

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Media;
 using System.Windows.Forms;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.aux.win {
+namespace BookLibConnect.Aux.Win {
   public class InteractionCallbackHandler : IInteractionCallback<InteractionMessage, bool?> {
     private readonly Control _parent;
     private Control Parent => _parent;

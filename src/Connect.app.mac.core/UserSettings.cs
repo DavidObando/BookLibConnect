@@ -1,8 +1,8 @@
 using System;
-using core.audiamus.aux;
-using core.audiamus.connect;
+using BookLibConnect.Aux;
+using BookLibConnect.Core;
 
-namespace core.audiamus.connect.app.mac {
+namespace BookLibConnect.App.Mac {
 
   public class UserSettings : IUserSettings, IInitSettings {
     public DownloadSettings DownloadSettings { get; set; } = new DownloadSettings ();

@@ -1,7 +1,7 @@
 using System;
 using Avalonia;
 
-namespace core.audiamus.connect.app.mac {
+namespace BookLibConnect.App.Mac {
   class Program {
     [STAThread]
     public static void Main (string[] args) => BuildAvaloniaApp ()

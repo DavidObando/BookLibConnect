@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   /// <summary>
   /// Implementing <see cref="IResource"/> and using it with <see cref="ResourceGuard"/> allows 
   /// RAII behavior within the lifecycle of an instance, beyond ctor/dtor, e.g. for indentation of text. 

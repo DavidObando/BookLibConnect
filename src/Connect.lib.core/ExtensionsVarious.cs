@@ -13,15 +13,15 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.booksdb;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.BooksDatabase;
 using HtmlAgilityPack;
-using static core.audiamus.aux.ApplEnv;
+using static BookLibConnect.Aux.ApplEnv;
 
-using R = core.audiamus.connect.Properties.Resources;
+using R = BookLibConnect.Core.Properties.Resources;
 
-namespace core.audiamus.connect.ex {
+namespace BookLibConnect.Core.ex {
   public static class AnonExtensions {
     public static string ToAnonString (this Credentials creds) {
       return $"usr={creds.Username.AnonymizeUsername ()}, pwd={creds.Password.AnonymizePassword ()}";

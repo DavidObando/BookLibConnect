@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Resources;
 
-namespace core.audiamus.aux.ex {
+namespace BookLibConnect.Aux.Extensions {
   public static class ResourceManagerEx {
 
     public static ResourceManager GetDefaultResourceManager (this object o) {

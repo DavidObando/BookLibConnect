@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace core.audiamus.aux.diagn {
+namespace BookLibConnect.Aux.Diagnostics {
   /// <summary>
   /// Base class to implement <see cref="IPrimitiveTypes"/> with a dictionary. 
   /// Derived classes simply need to call the provided add method with custom function delegates.
   /// </summary>
-  /// <seealso cref="core.audiamus.aux.diagn.IPrimitiveTypes" />
+  /// <seealso cref="BookLibConnect.Aux.Diagnostics.IPrimitiveTypes" />
   public abstract class AbstractPrimitiveTypes : IPrimitiveTypes {
 
     Dictionary<Type, Delegate> _dict = new Dictionary<Type, Delegate> ();
@@ -110,7 +110,7 @@ namespace core.audiamus.aux.diagn {
   /// <summary>
   /// Convenience class as default implementation of <see cref="IPrimitiveTypes"/> with no additional custom types.  
   /// </summary>
-  /// <seealso cref="core.audiamus.aux.diagn.AbstractPrimitiveTypes" />
+  /// <seealso cref="BookLibConnect.Aux.Diagnostics.AbstractPrimitiveTypes" />
   internal class NoPrimitiveTypes : AbstractPrimitiveTypes {  }
 
 }

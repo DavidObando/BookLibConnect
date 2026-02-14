@@ -4,7 +4,7 @@ using System.IO;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
 
-namespace core.audiamus.connect.ui.mac.Converters {
+namespace BookLibConnect.Core.UI.Mac.Converters {
   public class FilePathToImageConverter : IValueConverter {
     public static readonly FilePathToImageConverter Instance = new ();
 

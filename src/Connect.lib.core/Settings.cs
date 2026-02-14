@@ -1,9 +1,9 @@
 ﻿using System;
-using core.audiamus.aux.diagn;
-using core.audiamus.booksdb;
-using core.audiamus.util;
+using BookLibConnect.Aux.Diagnostics;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.Common.Util;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   public interface IConfigSettings {
     bool EncryptConfiguration { get; }
   }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public static class TimeUtil {
     private readonly static DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 

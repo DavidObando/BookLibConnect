@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace core.audiamus.aux.ex {
+namespace BookLibConnect.Aux.Extensions {
 
   /// <summary>
   ///   <para>Type-safe extensions for invoking methods via a synchronization context. 

@@ -1,5 +1,5 @@
 ﻿
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   partial class ManageProfilesForm {
     /// <summary>
     /// Required designer variable.

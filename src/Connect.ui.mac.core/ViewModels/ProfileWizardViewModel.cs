@@ -6,13 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.common;
-using core.audiamus.connect.ui.mac.Converters;
-using static core.audiamus.aux.Logging;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.CommonTypes;
+using BookLibConnect.Core.UI.Mac.Converters;
+using static BookLibConnect.Aux.Logging;
 
-namespace core.audiamus.connect.ui.mac.ViewModels {
+namespace BookLibConnect.Core.UI.Mac.ViewModels {
   public partial class ProfileWizardViewModel : ObservableObject {
 
     public static StepVisibilityConverter StepConverter { get; } = new ();

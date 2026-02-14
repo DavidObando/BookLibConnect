@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using core.audiamus.aux.ex;
-using core.audiamus.aux.propgrid;
-using core.audiamus.booksdb;
-using core.audiamus.common;
-using R = core.audiamus.connect.ui.Properties.Resources;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.Aux.PropGird;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.CommonTypes;
+using R = BookLibConnect.Core.UI.Properties.Resources;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public abstract class DataSourceBase<T> : BasePropertyGridAdapter<T> 
     where T: IBookMeta
   {
