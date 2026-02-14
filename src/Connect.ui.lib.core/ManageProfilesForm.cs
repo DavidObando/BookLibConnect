@@ -160,6 +160,7 @@ namespace core.audiamus.connect.ui {
       Close ();
     }
 
+    [Obsolete]
     protected override void OnClosing (CancelEventArgs e) {
       if (DialogResult != DialogResult.OK && _aliasChanged)
         btnOK_Click(this, e);
