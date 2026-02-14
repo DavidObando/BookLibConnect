@@ -124,6 +124,7 @@ namespace core.audiamus.connect.app.gui {
       }
     }
 
+    [Obsolete]
     protected override void OnClosing (CancelEventArgs e) {
       using var _ = new LogGuard (3, this);
       

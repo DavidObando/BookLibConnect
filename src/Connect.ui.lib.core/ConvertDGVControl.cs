@@ -16,7 +16,7 @@ using core.audiamus.booksdb;
 
 using static core.audiamus.aux.Logging;
 
-using abl = core.audiamus.booksdb;
+using BooksDb = core.audiamus.booksdb;
 
 namespace core.audiamus.connect.ui {
   public partial class ConvertDGVControl : UserControl {
@@ -29,7 +29,7 @@ namespace core.audiamus.connect.ui {
     private IAudibleApi _audibleApi;
     private IDownloadSettings _downloadSettings;
     private readonly AffineSynchronizationContext _sync;
-    private readonly HashSet<abl.Component> _componentsForUpdate = new();
+    private readonly HashSet<BooksDb.Component> _componentsForUpdate = new();
     private readonly List<Conversion> _selectedConversions = new();
 
     private SortableBindingListSuspensible<ConversionDataSource> DataSourceDownload { get; set; }
@@ -219,9 +219,9 @@ namespace core.audiamus.connect.ui {
 
 
 
-      void onDone (IEnumerable<abl.Component> comps) => _sync.Post (onDoneSync, comps);
+      void onDone (IEnumerable<BooksDb.Component> comps) => _sync.Post (onDoneSync, comps);
 
-      void onDoneSync (IEnumerable<abl.Component> comps) {
+      void onDoneSync (IEnumerable<BooksDb.Component> comps) {
         Log (3, this, () => $"#comps={comps.Count ()}");
         foreach (var comp in comps)
           _componentsForUpdate.Remove (comp);
@@ -235,7 +235,7 @@ namespace core.audiamus.connect.ui {
         } else
           update (comps, conversions);
 
-        void update (IEnumerable<abl.Component> comps, List<ConversionDataSource> conversions) {
+        void update (IEnumerable<BooksDb.Component> comps, List<ConversionDataSource> conversions) {
           foreach (var comp in comps) {
             var convDS = conversions.FirstOrDefault (c => comp.Equals (c.Conversion.Component));
             if (convDS is null)

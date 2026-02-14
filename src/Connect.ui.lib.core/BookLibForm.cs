@@ -19,9 +19,6 @@ namespace core.audiamus.connect.ui {
     const double REL_SPLITTER_DIST_BOTTOM = 0.75;
     const double REL_SPLITTER_DIST_INNER = 0.40;
 
-    private static double? __relSplitterDistBottom;
-    private static double? __relSplitterDistInner;
-
     private readonly AffineSynchronizationContext _sync;
     private readonly InteractionCallbackHandler<BookLibInteract> _interactionHandler;
     private IDownloadSettings _downloadSettings;
@@ -156,8 +153,8 @@ namespace core.audiamus.connect.ui {
       var scb = splitContainerBottom;
       var sci = splitContainerInner;
 
-      double relSplitterDistBottom = __relSplitterDistBottom ?? REL_SPLITTER_DIST_BOTTOM; 
-      double relSplitterDistInner = __relSplitterDistInner ?? REL_SPLITTER_DIST_INNER; 
+      double relSplitterDistBottom = REL_SPLITTER_DIST_BOTTOM; 
+      double relSplitterDistInner = REL_SPLITTER_DIST_INNER; 
 
       scb.SplitterDistance = (int)(relSplitterDistBottom * scb.Width);
       sci.SplitterDistance = (int)(relSplitterDistInner * scb.Width);
