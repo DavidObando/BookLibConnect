@@ -102,7 +102,7 @@ jobs:
           fi
 
           NOTARIZE_ARGS=""
-          if [[ -n "${APPLE_ID:-}" && -n "${APPLE_ID_PASSWORD:-}" && -n "${APPLE_TEAM_ID:-}" && -n "${CODESIGN_IDENTITY:-}" ]]; then
+          if [[ "$GITHUB_EVENT_NAME" != "pull_request" && -n "${APPLE_ID:-}" && -n "${APPLE_ID_PASSWORD:-}" && -n "${APPLE_TEAM_ID:-}" && -n "${CODESIGN_IDENTITY:-}" ]]; then
             NOTARIZE_ARGS="--notarize --apple-id \"$APPLE_ID\" --apple-id-password \"$APPLE_ID_PASSWORD\" --apple-team-id \"$APPLE_TEAM_ID\""
           fi
 
@@ -121,6 +121,7 @@ jobs:
           fi
 
       - name: Upload .app bundle
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: BookLibConnect-${{ matrix.runtime }}-app
@@ -128,6 +129,7 @@ jobs:
           retention-days: 30
 
       - name: Upload DMG
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: BookLibConnect-${{ matrix.runtime }}-dmg
