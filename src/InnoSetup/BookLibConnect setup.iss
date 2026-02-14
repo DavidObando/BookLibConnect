@@ -59,7 +59,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 [Files]
 Source: "*.exe"; DestDir: "{app}"
 Source: "*.dll"; DestDir: "{app}"
-Source: "*.pdf"; DestDir: "{app}"
+;Source: "*.pdf"; DestDir: "{app}"
 Source: "*.json"; DestDir: "{app}"
 
 [Icons]

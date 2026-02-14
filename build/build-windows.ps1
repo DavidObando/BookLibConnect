@@ -206,6 +206,7 @@ if ($CreateInstaller) {
             Select-Object -ExpandProperty Source
     if (-not $iscc) {
         $defaultPaths = @(
+            "${env:LOCALAPPDATA}\Programs\Inno Setup 6\ISCC.exe",
             "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
             "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
         )
