@@ -1,7 +1,7 @@
 ﻿using System.IO;
 
 
-namespace core.audiamus.aux.diagn {
+namespace BookLibConnect.Aux.Diagnostics {
   /// <summary>
   /// <see cref="TreeDecomposition{T}"/>
   /// </summary>

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public static class ShellExecute {
     public static void Url (Uri uri) => File (uri.OriginalString);
 

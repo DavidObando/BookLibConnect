@@ -2,7 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace core.audiamus.util {
+namespace BookLibConnect.Common.Util {
   public interface IFileCopyCallout {
     void ProcessBuffer (byte[] buffer, int size, long globalOffset);
   }
@@ -38,8 +38,8 @@ namespace core.audiamus.util {
       long count = 0;
 
       using (var threadProgress = new ThreadProgressPerMille (report)) { 
-        using (var wfioRd = new core.audiamus.aux.w32.WinFileIO (buf)) 
-        using (var wfioWr = new core.audiamus.aux.w32.WinFileIO (buf)) {
+        using (var wfioRd = new BookLibConnect.Aux.Win32.WinFileIO (buf)) 
+        using (var wfioWr = new BookLibConnect.Aux.Win32.WinFileIO (buf)) {
           wfioRd.OpenForReading (sourceFileName);
           wfioWr.OpenForWriting (destFileName, overwrite);
 

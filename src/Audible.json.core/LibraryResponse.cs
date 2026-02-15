@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace core.audiamus.adb.json {
+namespace BookLibConnect.Audible.Json {
 
   public interface IPerson {
     string asin { get; set; }

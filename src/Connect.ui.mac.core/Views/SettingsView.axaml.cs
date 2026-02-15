@@ -2,9 +2,9 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using core.audiamus.connect.ui.mac.ViewModels;
+using BookLibConnect.Core.UI.Mac.ViewModels;
 
-namespace core.audiamus.connect.ui.mac.Views {
+namespace BookLibConnect.Core.UI.Mac.Views {
   public partial class SettingsView : UserControl {
     public SettingsView () {
       InitializeComponent ();

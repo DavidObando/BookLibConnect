@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Threading;
 
-using core.audiamus.aux.ex;
-using core.audiamus.booksdb;
-using core.audiamus.common;
-using core.audiamus.util;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.CommonTypes;
+using BookLibConnect.Common.Util;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   public record Callbacks {
     public Func<byte[], string> CaptchaCallback { get; init; }
     public Action ApprovalCallback { get; init; }
@@ -53,7 +53,7 @@ namespace core.audiamus.connect {
 
   public record ChapterExtract (string Title, int Length);
 
-  record ProductComponentPair (adb.json.Product Product, Component Component);
+  record ProductComponentPair (BookLibConnect.Audible.Json.Product Product, Component Component);
 
   record ProfileBundle (IProfile Profile, IProfileKey Key, IProfileAliasKey AliasKey);
 

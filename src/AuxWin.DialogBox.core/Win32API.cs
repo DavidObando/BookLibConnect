@@ -19,7 +19,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 
-namespace core.audiamus.aux.win.Win32API
+namespace BookLibConnect.Aux.Win.Win32API
 {
 	///////////////////////////////////////////////////////////////////////
 	#region Generic declarations

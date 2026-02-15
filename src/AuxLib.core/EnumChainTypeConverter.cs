@@ -6,10 +6,10 @@ using System.Globalization;
 using System.Linq;
 using System.Resources;
 using System.Text;
-using core.audiamus.aux.ex;
-using static core.audiamus.aux.EnumUtil;
+using BookLibConnect.Aux.Extensions;
+using static BookLibConnect.Aux.EnumUtil;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public class EnumChainConverter<TEnum, TPunct> : TypeConverter
     where TEnum : struct, Enum 
     where TPunct : class, IChainPunctuation, new() 

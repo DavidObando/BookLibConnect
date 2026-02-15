@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
-using core.audiamus.connect;
-using core.audiamus.util;
+using BookLibConnect.Core;
+using BookLibConnect.Common.Util;
 
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
   class ConversionContext : ICancellation {
     public IProgress<ProgressMessage> Progress { get; }
     public CancellationToken CancellationToken { get; }

@@ -6,20 +6,21 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using core.audiamus.aux;
-using core.audiamus.aux.diagn;
-using core.audiamus.aux.ex;
-using core.audiamus.aux.win;
-using core.audiamus.aux.win.ex;
-using core.audiamus.booksdb;
-using core.audiamus.connect.ui;
-using core.audiamus.sysmgmt;
-using core.audiamus.util;
-using static core.audiamus.aux.ApplEnv;
-using static core.audiamus.aux.Logging;
-using R = core.audiamus.connect.app.gui.Properties.Resources;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Diagnostics;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.Aux.Win;
+using BookLibConnect.Aux.Win.Extensions;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.Core.UI;
+using BookLibConnect.SystemManagement;
+using BookLibConnect.Common.Util;
+using static BookLibConnect.Aux.ApplEnv;
+using static BookLibConnect.Aux.Logging;
+using R = BookLibConnect.App.Gui.Properties.Resources;
+using BookLibConnect.Core;
 
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
   public partial class MainForm : Form {
     private bool _ignoreFlag;
     private CancellationTokenSource _cts;
@@ -130,13 +131,6 @@ namespace core.audiamus.connect.app.gui {
       
       base.OnClosing (e);
       UserSettings?.Save ();
-
-      if (_updateAvailableFlag) {
-        _updateAvailableFlag = false;
-        e.Cancel = true;
-        handleDeferredUpdateAsync ();
-      }
-
     }
 
     protected override async void OnLoad (EventArgs e) {
@@ -168,11 +162,7 @@ namespace core.audiamus.connect.app.gui {
         return;
 
       using var _ = new LogGuard (3, this);
-
       logTmpFileMaintenance ();
-
-      checkOnlineUpdate ();
-
       await init ();
 
       _initDone = true;
@@ -341,27 +331,6 @@ namespace core.audiamus.connect.app.gui {
     private void logTmpFileMaintenance () {
       Task task = LogTmpFileMaintenance.Instance.CleanupAsync ();
     } 
-
-    private OnlineUpdate newOnlineUpdate () => 
-      new OnlineUpdate (UserSettings.UpdateSettings, ApplEnv.ApplName, null, AppSettings.DbgOnlineUpdate);
-
-    private async void checkOnlineUpdate () {
-      var update = newOnlineUpdate ();
-      
-      var interact =
-        new InteractionCallback<InteractionMessage<UpdateInteractionMessage>, bool?> (_interactionHandler.Interact);
-      
-      await update.UpdateAsync (interact, () => Application.Exit (), isBusyForUpdate);
-    }
-
-    private async void handleDeferredUpdateAsync () {
-      var update = newOnlineUpdate ();
-
-      var interact =
-        new InteractionCallback<InteractionMessage<UpdateInteractionMessage>, bool?> (_interactionHandler.Interact);
-
-      await update.InstallAsync (interact, () => Application.Exit ());
-    }
 
     private bool isBusyForUpdate () {
       bool busy = !convertdgvControl1.IsIdle;
@@ -603,7 +572,7 @@ namespace core.audiamus.connect.app.gui {
           // fallback 1: user profile = user root folder 
           defdir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
           if (defdir.IsNullOrWhiteSpace () || !Directory.Exists (defdir)) {
-            // fallback 2: ...\AppData\Local\audiamus\BookLibConnect
+            // fallback 2: ...\AppData\Local\BookLibConnect
             defdir = LocalApplDirectory;
           }
           defdir = Path.Combine (defdir, "Audio");

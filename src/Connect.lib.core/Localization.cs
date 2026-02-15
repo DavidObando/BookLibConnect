@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using core.audiamus.common;
+using BookLibConnect.CommonTypes;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
 
   interface ILocale {
     ERegion CountryCode { get; }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using core.audiamus.common;
+using BookLibConnect.CommonTypes;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
 
   public class AccountAliasContext {
     public int LocalId { get; }

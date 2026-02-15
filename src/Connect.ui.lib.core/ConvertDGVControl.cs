@@ -8,17 +8,17 @@ using System.Resources;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.aux.win;
-using core.audiamus.aux.win.ex;
-using core.audiamus.booksdb;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.Aux.Win;
+using BookLibConnect.Aux.Win.Extensions;
+using BookLibConnect.BooksDatabase;
 
-using static core.audiamus.aux.Logging;
+using static BookLibConnect.Aux.Logging;
 
-using BooksDb = core.audiamus.booksdb;
+using BooksDb = BookLibConnect.BooksDatabase;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public partial class ConvertDGVControl : UserControl {
     private ResourceManager RM { get; }
 

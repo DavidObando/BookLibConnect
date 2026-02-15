@@ -3,9 +3,9 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using core.audiamus.booksdb;
+using BookLibConnect.BooksDatabase;
 
-namespace core.audiamus.booksdb.Migrations
+namespace BookLibConnect.BooksDatabase.Migrations
 {
     [DbContext(typeof(BookDbContext))]
     partial class BookDbContextModelSnapshot : ModelSnapshot
@@ -109,7 +109,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("LadderRung");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Account", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Account", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -126,7 +126,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Accounts");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Author", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Author", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -148,7 +148,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Authors");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Book", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Book", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -242,7 +242,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Books");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Chapter", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Chapter", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -272,7 +272,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Chapters");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.ChapterInfo", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.ChapterInfo", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -307,7 +307,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("ChapterInfos");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Codec", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Codec", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -321,7 +321,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Codecs");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Component", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Component", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -379,7 +379,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Components");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Conversion", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Conversion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -453,7 +453,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Conversions");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Genre", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Genre", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -473,7 +473,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Genres");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Ladder", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Ladder", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -484,7 +484,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Ladders");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Narrator", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Narrator", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -506,7 +506,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Narrators");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.PseudoAsin", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.PseudoAsin", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("INTEGER");
@@ -519,7 +519,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("PseudoAsins");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Rung", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Rung", b =>
                 {
                     b.Property<int>("OrderIdx")
                         .HasColumnType("INTEGER");
@@ -534,7 +534,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Rungs");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Series", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Series", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -560,7 +560,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.ToTable("Series");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.SeriesBook", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.SeriesBook", b =>
                 {
                     b.Property<int>("SeriesId")
                         .HasColumnType("INTEGER");
@@ -589,13 +589,13 @@ namespace core.audiamus.booksdb.Migrations
 
             modelBuilder.Entity("AuthorBook", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Author", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Author", null)
                         .WithMany()
                         .HasForeignKey("AuthorsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("core.audiamus.booksdb.Book", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Book", null)
                         .WithMany()
                         .HasForeignKey("BooksId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -604,13 +604,13 @@ namespace core.audiamus.booksdb.Migrations
 
             modelBuilder.Entity("BookCodec", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Book", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Book", null)
                         .WithMany()
                         .HasForeignKey("BooksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("core.audiamus.booksdb.Codec", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Codec", null)
                         .WithMany()
                         .HasForeignKey("CodecsId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -619,13 +619,13 @@ namespace core.audiamus.booksdb.Migrations
 
             modelBuilder.Entity("BookGenre", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Book", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Book", null)
                         .WithMany()
                         .HasForeignKey("BooksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("core.audiamus.booksdb.Genre", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Genre", null)
                         .WithMany()
                         .HasForeignKey("GenresId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -634,13 +634,13 @@ namespace core.audiamus.booksdb.Migrations
 
             modelBuilder.Entity("BookLadder", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Book", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Book", null)
                         .WithMany()
                         .HasForeignKey("BooksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("core.audiamus.booksdb.Ladder", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Ladder", null)
                         .WithMany()
                         .HasForeignKey("LaddersId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -649,13 +649,13 @@ namespace core.audiamus.booksdb.Migrations
 
             modelBuilder.Entity("BookNarrator", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Book", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Book", null)
                         .WithMany()
                         .HasForeignKey("BooksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("core.audiamus.booksdb.Narrator", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Narrator", null)
                         .WithMany()
                         .HasForeignKey("NarratorsId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -664,27 +664,27 @@ namespace core.audiamus.booksdb.Migrations
 
             modelBuilder.Entity("LadderRung", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Ladder", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Ladder", null)
                         .WithMany()
                         .HasForeignKey("LaddersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("core.audiamus.booksdb.Rung", null)
+                    b.HasOne("BookLibConnect.BooksDatabase.Rung", null)
                         .WithMany()
                         .HasForeignKey("RungsOrderIdx", "RungsGenreId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Chapter", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Chapter", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.ChapterInfo", "ChapterInfo")
+                    b.HasOne("BookLibConnect.BooksDatabase.ChapterInfo", "ChapterInfo")
                         .WithMany("Chapters")
                         .HasForeignKey("ChapterInfoId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("core.audiamus.booksdb.Chapter", "ParentChapter")
+                    b.HasOne("BookLibConnect.BooksDatabase.Chapter", "ParentChapter")
                         .WithMany("Chapters")
                         .HasForeignKey("ParentChapterId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -694,16 +694,16 @@ namespace core.audiamus.booksdb.Migrations
                     b.Navigation("ParentChapter");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.ChapterInfo", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.ChapterInfo", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Book", "Book")
+                    b.HasOne("BookLibConnect.BooksDatabase.Book", "Book")
                         .WithOne("ChapterInfo")
-                        .HasForeignKey("core.audiamus.booksdb.ChapterInfo", "BookId")
+                        .HasForeignKey("BookLibConnect.BooksDatabase.ChapterInfo", "BookId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("core.audiamus.booksdb.Component", "Component")
+                    b.HasOne("BookLibConnect.BooksDatabase.Component", "Component")
                         .WithOne("ChapterInfo")
-                        .HasForeignKey("core.audiamus.booksdb.ChapterInfo", "ComponentId")
+                        .HasForeignKey("BookLibConnect.BooksDatabase.ChapterInfo", "ComponentId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Book");
@@ -711,9 +711,9 @@ namespace core.audiamus.booksdb.Migrations
                     b.Navigation("Component");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Component", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Component", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Book", "Book")
+                    b.HasOne("BookLibConnect.BooksDatabase.Book", "Book")
                         .WithMany("Components")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -722,16 +722,16 @@ namespace core.audiamus.booksdb.Migrations
                     b.Navigation("Book");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Conversion", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Conversion", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Book", "Book")
+                    b.HasOne("BookLibConnect.BooksDatabase.Book", "Book")
                         .WithOne("Conversion")
-                        .HasForeignKey("core.audiamus.booksdb.Conversion", "BookId")
+                        .HasForeignKey("BookLibConnect.BooksDatabase.Conversion", "BookId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("core.audiamus.booksdb.Component", "Component")
+                    b.HasOne("BookLibConnect.BooksDatabase.Component", "Component")
                         .WithOne("Conversion")
-                        .HasForeignKey("core.audiamus.booksdb.Conversion", "ComponentId")
+                        .HasForeignKey("BookLibConnect.BooksDatabase.Conversion", "ComponentId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Book");
@@ -739,9 +739,9 @@ namespace core.audiamus.booksdb.Migrations
                     b.Navigation("Component");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Rung", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Rung", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Genre", "Genre")
+                    b.HasOne("BookLibConnect.BooksDatabase.Genre", "Genre")
                         .WithMany()
                         .HasForeignKey("GenreId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -750,15 +750,15 @@ namespace core.audiamus.booksdb.Migrations
                     b.Navigation("Genre");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.SeriesBook", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.SeriesBook", b =>
                 {
-                    b.HasOne("core.audiamus.booksdb.Book", "Book")
+                    b.HasOne("BookLibConnect.BooksDatabase.Book", "Book")
                         .WithMany("Series")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("core.audiamus.booksdb.Series", "Series")
+                    b.HasOne("BookLibConnect.BooksDatabase.Series", "Series")
                         .WithMany("Books")
                         .HasForeignKey("SeriesId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -769,7 +769,7 @@ namespace core.audiamus.booksdb.Migrations
                     b.Navigation("Series");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Book", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Book", b =>
                 {
                     b.Navigation("ChapterInfo");
 
@@ -780,24 +780,24 @@ namespace core.audiamus.booksdb.Migrations
                     b.Navigation("Series");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Chapter", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Chapter", b =>
                 {
                     b.Navigation("Chapters");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.ChapterInfo", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.ChapterInfo", b =>
                 {
                     b.Navigation("Chapters");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Component", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Component", b =>
                 {
                     b.Navigation("ChapterInfo");
 
                     b.Navigation("Conversion");
                 });
 
-            modelBuilder.Entity("core.audiamus.booksdb.Series", b =>
+            modelBuilder.Entity("BookLibConnect.BooksDatabase.Series", b =>
                 {
                     b.Navigation("Books");
                 });

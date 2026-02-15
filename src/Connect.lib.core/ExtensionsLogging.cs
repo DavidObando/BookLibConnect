@@ -5,10 +5,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using core.audiamus.aux;
-using static core.audiamus.aux.Logging;
+using BookLibConnect.Aux;
+using static BookLibConnect.Aux.Logging;
 
-namespace core.audiamus.connect.ex {
+namespace BookLibConnect.Core.ex {
   public static class LoggingExtensions {
     const string BEFORE = "Before request, "; 
     const string AFTER =  "After request,  "; 

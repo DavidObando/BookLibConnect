@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using core.audiamus.aux.ex;
-using static core.audiamus.aux.ApplEnv;
+using BookLibConnect.Aux.Extensions;
+using static BookLibConnect.Aux.ApplEnv;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
 
   public class Logging {
 

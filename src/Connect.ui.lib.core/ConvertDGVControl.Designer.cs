@@ -1,5 +1,5 @@
 ﻿
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   partial class ConvertDGVControl {
     /// <summary> 
     /// Required designer variable.
@@ -27,7 +27,7 @@ namespace core.audiamus.connect.ui {
       this.components = new System.ComponentModel.Container();
       System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
       System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-      this.dataGridView1 = new core.audiamus.connect.ui.DataGridViewEx();
+      this.dataGridView1 = new BookLibConnect.Core.UI.DataGridViewEx();
       this.panel1 = new System.Windows.Forms.Panel();
       this.btnDnload = new System.Windows.Forms.Button();
       this.btnRem = new System.Windows.Forms.Button();
@@ -142,7 +142,7 @@ namespace core.audiamus.connect.ui {
 
     #endregion
 
-    private core.audiamus.connect.ui.DataGridViewEx dataGridView1;
+    private BookLibConnect.Core.UI.DataGridViewEx dataGridView1;
     private System.Windows.Forms.Panel panel1;
     private System.Windows.Forms.Button btnDnload;
     private System.Windows.Forms.Button btnRem;

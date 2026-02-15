@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
   public partial class WizStepHelp : UserControl {
 
     private Action BtnAction { get; }

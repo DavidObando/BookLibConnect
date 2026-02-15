@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Linq;
-using R = core.audiamus.aux.win.Properties.Resources;
+using R = BookLibConnect.Aux.Win.Properties.Resources;
 
-namespace core.audiamus.aux.win {
+namespace BookLibConnect.Aux.Win {
   public interface ICompleted {
     event EventHandler Completed;
   }

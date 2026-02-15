@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace core.audiamus.aux.win.ex {
+namespace BookLibConnect.Aux.Win.Extensions {
   public static class ControlExtensions {
     public static Form GetParentForm (this Control control) {
       Control parent = control;

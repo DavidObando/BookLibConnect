@@ -24,10 +24,10 @@ using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
-using core.audiamus.aux.win.Win32API;
-using core.audiamus.aux.win.Win32API.Hook;
+using BookLibConnect.Aux.Win.Win32API;
+using BookLibConnect.Aux.Win.Win32API.Hook;
 
-namespace core.audiamus.aux.win 
+namespace BookLibConnect.Aux.Win 
 {
 	///////////////////////////////////////////////////////////////////////
 	#region DlgBox

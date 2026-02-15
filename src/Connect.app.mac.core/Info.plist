@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>CFBundleIdentifier</key>
-  <string>com.audiamus.booklibconnect</string>
+  <string>com.davidobando.booklibconnect</string>
   <key>CFBundleName</key>
   <string>Book Lib Connect</string>
   <key>CFBundleDisplayName</key>
@@ -21,7 +21,7 @@
   <key>NSHighResolutionCapable</key>
   <true/>
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © 2025 audiamus</string>
+  <string>Copyright © 2026 DavidObando</string>
   <key>CFBundleIconFile</key>
   <string>audio.icns</string>
 </dict>

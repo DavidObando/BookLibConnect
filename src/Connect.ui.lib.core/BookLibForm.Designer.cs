@@ -1,5 +1,5 @@
 ﻿
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   partial class BookLibForm {
     /// <summary>
     /// Required designer variable.
@@ -25,7 +25,7 @@ namespace core.audiamus.connect.ui {
     /// </summary>
     private void InitializeComponent () {
       this.splitContainerOuter = new System.Windows.Forms.SplitContainer();
-      this.bookLibdgvControl1 = new core.audiamus.connect.ui.BookLibDGVControl();
+      this.bookLibdgvControl1 = new BookLibConnect.Core.UI.BookLibDGVControl();
       this.splitContainerBottom = new System.Windows.Forms.SplitContainer();
       this.splitContainerInner = new System.Windows.Forms.SplitContainer();
       this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();

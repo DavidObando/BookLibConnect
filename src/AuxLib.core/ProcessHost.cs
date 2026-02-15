@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public class ProcessHost {
 
     protected Process Process { get; private set; }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using core.audiamus.booksdb;
+using BookLibConnect.BooksDatabase;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public class BookEventArgs : EventArgs {
     public IEnumerable<Book> Books { get; }
 

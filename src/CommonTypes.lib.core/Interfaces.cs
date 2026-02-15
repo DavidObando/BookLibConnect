@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace core.audiamus.common {
+namespace BookLibConnect.CommonTypes {
   public interface IBookMeta : IAudioQuality {
     string Asin { get; }
     string Title { get; }

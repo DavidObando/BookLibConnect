@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
   public partial class WaitForm : Form {
     public WaitForm () {
       InitializeComponent ();

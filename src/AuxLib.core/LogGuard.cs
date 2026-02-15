@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
 
   public class LogGuard : IDisposable {
 

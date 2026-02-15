@@ -1,5 +1,5 @@
 ﻿
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
   partial class WizStepExport {
     /// <summary> 
     /// Required designer variable.

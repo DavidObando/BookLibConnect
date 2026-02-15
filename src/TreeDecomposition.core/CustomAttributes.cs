@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace core.audiamus.aux.diagn {
+namespace BookLibConnect.Aux.Diagnostics {
 
   /// <summary>
   /// An attribute intended to be used as a custom format string in text serialization.   

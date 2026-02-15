@@ -6,17 +6,17 @@ using System.Linq;
 using System.Resources;
 using System.Windows.Forms;
 
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.aux.win;
-using core.audiamus.booksdb;
-using core.audiamus.booksdb.ex;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.Aux.Win;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.BooksDatabase.ex;
 
-using static core.audiamus.aux.Logging;
+using static BookLibConnect.Aux.Logging;
 
-using R = core.audiamus.connect.ui.Properties.Resources;
+using R = BookLibConnect.Core.UI.Properties.Resources;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
 
   public partial class BookLibDGVControl : UserControl {
     private ResourceManager RM { get; } 

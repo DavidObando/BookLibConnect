@@ -1,4 +1,4 @@
-﻿namespace core.audiamus.booksdb {
+﻿namespace BookLibConnect.BooksDatabase {
   public enum ECodec {
     format4,
     mp4_22_32,

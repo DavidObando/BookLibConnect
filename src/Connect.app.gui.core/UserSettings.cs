@@ -1,8 +1,9 @@
 ﻿using System;
-using core.audiamus.aux;
-using core.audiamus.util;
+using BookLibConnect.Aux;
+using BookLibConnect.Core;
+using BookLibConnect.Common.Util;
 
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
 
   public class UserSettings : IUserSettings, IInitSettings {
     public UpdateSettings UpdateSettings { get; set; } = new UpdateSettings ();

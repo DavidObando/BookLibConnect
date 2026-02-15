@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using core.audiamus.aux.ex;
-using core.audiamus.common;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.CommonTypes;
 
-namespace core.audiamus.booksdb {
+namespace BookLibConnect.BooksDatabase {
   public record AudioQuality (int? SampleRate, int? BitRate) : IAudioQuality;
 
   namespace ex {

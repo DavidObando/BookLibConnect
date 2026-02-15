@@ -10,7 +10,7 @@ using System.Web;
 using System.Xml;
 using static System.Math;
 
-namespace core.audiamus.aux.ex {
+namespace BookLibConnect.Aux.Extensions {
   public static class ExtDirInfo {
     public static void Clear (this DirectoryInfo di) {
       foreach (DirectoryInfo dir in di.GetDirectories ()) {

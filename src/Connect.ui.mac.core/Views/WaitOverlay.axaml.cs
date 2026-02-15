@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace core.audiamus.connect.ui.mac.Views {
+namespace BookLibConnect.Core.UI.Mac.Views {
   public partial class WaitOverlay : UserControl {
     public WaitOverlay () {
       InitializeComponent ();

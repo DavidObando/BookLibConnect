@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public interface IProcessList {
     bool Add (Process process);
     bool Remove (Process process);

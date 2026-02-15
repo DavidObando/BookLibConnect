@@ -2,7 +2,7 @@
 using System.Diagnostics.Contracts;
 using System.Threading;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
 
 
   /// <summary>

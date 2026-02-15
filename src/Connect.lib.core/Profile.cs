@@ -6,12 +6,12 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.common;
-using core.audiamus.connect.ex;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.CommonTypes;
+using BookLibConnect.Core.ex;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
 
   class Authorization : IAuthorization {
     public string AuthorizationCode { get; set; }

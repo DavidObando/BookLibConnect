@@ -3,7 +3,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   // https://tomrucki.com/posts/aes-encryption-in-csharp/
   // possibly way over the top for some applications. 
 

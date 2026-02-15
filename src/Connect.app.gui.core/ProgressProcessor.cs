@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using core.audiamus.util;
+using BookLibConnect.Common.Util;
 
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
   abstract class ProgressProcessorBase {
     public Progress<ProgressMessage> Progress { get; }
 

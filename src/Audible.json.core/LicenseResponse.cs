@@ -1,4 +1,4 @@
-﻿namespace core.audiamus.adb.json {
+﻿namespace BookLibConnect.Audible.Json {
 
   public class LicenseResponse : Serialization<LicenseResponse> {
     public ContentLicense content_license { get; set; }

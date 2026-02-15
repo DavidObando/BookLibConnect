@@ -1,7 +1,7 @@
 ﻿
-using core.audiamus.booksdb;
+using BookLibConnect.BooksDatabase;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   public enum EDownloadQualityReducedChoices {
     Normal,
     High,

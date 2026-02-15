@@ -4,9 +4,9 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using core.audiamus.connect.ui.mac.ViewModels;
+using BookLibConnect.Core.UI.Mac.ViewModels;
 
-namespace core.audiamus.connect.ui.mac.Views {
+namespace BookLibConnect.Core.UI.Mac.Views {
   public partial class ProfileWizardView : UserControl {
     public ProfileWizardView () {
       InitializeComponent ();

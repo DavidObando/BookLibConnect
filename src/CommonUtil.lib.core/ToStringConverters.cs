@@ -1,8 +1,8 @@
 ﻿using System;
-using core.audiamus.aux.diagn;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux.Diagnostics;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.util {
+namespace BookLibConnect.Common.Util {
   public class ToStringConverterActivationCode : ToStringConverter {
     public override string ToString (object o, string format = null) {
       try {

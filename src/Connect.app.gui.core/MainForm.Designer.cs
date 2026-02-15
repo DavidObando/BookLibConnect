@@ -1,5 +1,7 @@
 ﻿
-namespace core.audiamus.connect.app.gui {
+using BookLibConnect.Core.UI;
+
+namespace BookLibConnect.App.Gui {
   partial class MainForm {
     /// <summary>
     ///  Required designer variable.
@@ -28,7 +30,7 @@ namespace core.audiamus.connect.app.gui {
       System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
       this.ckBoxAdult = new System.Windows.Forms.CheckBox();
       this.ckBoxMultiPart = new System.Windows.Forms.CheckBox();
-      this.convertdgvControl1 = new core.audiamus.connect.ui.ConvertDGVControl();
+      this.convertdgvControl1 = new BookLibConnect.Core.UI.ConvertDGVControl();
       this.panelTop = new System.Windows.Forms.Panel();
       this.grpBoxDownload = new System.Windows.Forms.GroupBox();
       this.comBoxDnldQual = new System.Windows.Forms.ComboBox();
@@ -470,7 +472,7 @@ namespace core.audiamus.connect.app.gui {
     #endregion
     private System.Windows.Forms.CheckBox ckBoxAdult;
     private System.Windows.Forms.CheckBox ckBoxMultiPart;
-    private connect.ui.ConvertDGVControl convertdgvControl1;
+    private ConvertDGVControl convertdgvControl1;
     private System.Windows.Forms.Panel panelTop;
     private System.Windows.Forms.CheckBox ckBoxOpenDlg;
     private System.Windows.Forms.Panel panelBottom;

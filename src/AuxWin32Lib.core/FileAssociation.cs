@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Win32;
 
-namespace core.audiamus.aux.w32 {
+namespace BookLibConnect.Aux.Win32 {
   class FileAssociation {
     public string Extension { get; set; }
     public string ProgId { get; set; }

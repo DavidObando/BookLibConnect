@@ -2,9 +2,9 @@ using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using core.audiamus.connect;
+using BookLibConnect.Core;
 
-namespace core.audiamus.connect.ui.mac.ViewModels {
+namespace BookLibConnect.Core.UI.Mac.ViewModels {
   public partial class MainWindowViewModel : ObservableObject {
 
     [ObservableProperty]

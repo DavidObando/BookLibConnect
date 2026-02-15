@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
 
   public enum EInitialSorting {
     state_date,

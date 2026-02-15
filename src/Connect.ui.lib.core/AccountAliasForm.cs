@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
-using core.audiamus.aux.ex;
-using core.audiamus.aux.win.ex;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.Aux.Win.Extensions;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public partial class AccountAliasForm : Form {
     private AccountAliasContext Context { get; }
 

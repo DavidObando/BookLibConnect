@@ -2,10 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>core.audiamus.sysmgmt.mac</RootNamespace>
-    <AssemblyName>audiamus.sysmgmt.mac.core</AssemblyName>
-    <Authors>audiamus</Authors>
-    <Copyright>Copyright © 2025 - $([System.DateTime]::UtcNow.Year) audiamus ($([System.DateTime]::UtcNow.ToString("s")))</Copyright>
+    <RootNamespace>BookLibConnect.SystemManagement.Mac</RootNamespace>
+    <AssemblyName>BookLibConnect.SystemManagement.Mac.Core</AssemblyName>
+
   </PropertyGroup>
 
   <ItemGroup>

@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using core.audiamus.common;
+using BookLibConnect.CommonTypes;
 
-namespace core.audiamus.sysmgmt.mac {
+namespace BookLibConnect.SystemManagement.Mac {
   public class MacHardwareIdProvider : IHardwareIdProvider {
 
     private string _cachedCpuId;

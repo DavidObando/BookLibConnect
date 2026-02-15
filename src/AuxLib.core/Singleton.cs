@@ -1,6 +1,6 @@
 using System;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   /// <summary>
   /// Implementation of the "Singleton" pattern.
   /// </summary>

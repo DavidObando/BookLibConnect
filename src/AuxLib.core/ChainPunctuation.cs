@@ -1,4 +1,4 @@
-﻿namespace core.audiamus.aux {
+﻿namespace BookLibConnect.Aux {
   public interface IChainPunctuation {
     string Prefix { get; }
     string Suffix { get; }

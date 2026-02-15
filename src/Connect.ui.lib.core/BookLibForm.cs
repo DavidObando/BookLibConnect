@@ -6,15 +6,15 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using core.audiamus.aux;
-using core.audiamus.aux.propgrid;
-using core.audiamus.booksdb;
-using core.audiamus.connect.ex;
-using R = core.audiamus.connect.ui.Properties.Resources;
-using static core.audiamus.aux.Logging;
-using core.audiamus.aux.win;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.PropGird;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.Core.ex;
+using R = BookLibConnect.Core.UI.Properties.Resources;
+using static BookLibConnect.Aux.Logging;
+using BookLibConnect.Aux.Win;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public partial class BookLibForm : Form {
     const double REL_SPLITTER_DIST_BOTTOM = 0.75;
     const double REL_SPLITTER_DIST_INNER = 0.40;

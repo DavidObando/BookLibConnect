@@ -7,15 +7,15 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
-using core.audiamus.booksdb;
-using core.audiamus.connect;
-using core.audiamus.connect.ui.mac.ViewModels;
-using core.audiamus.util;
-using static core.audiamus.aux.Logging;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.Core;
+using BookLibConnect.Core.UI.Mac.ViewModels;
+using BookLibConnect.Common.Util;
+using static BookLibConnect.Aux.Logging;
 
-namespace core.audiamus.connect.app.mac {
+namespace BookLibConnect.App.Mac {
   public partial class MainWindow : Window {
 
     private readonly MainWindowViewModel _viewModel;

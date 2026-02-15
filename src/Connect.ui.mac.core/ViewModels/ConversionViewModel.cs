@@ -6,9 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using core.audiamus.booksdb;
+using BookLibConnect.BooksDatabase;
 
-namespace core.audiamus.connect.ui.mac.ViewModels {
+namespace BookLibConnect.Core.UI.Mac.ViewModels {
   public partial class ConversionViewModel : ObservableObject {
 
     [ObservableProperty]

@@ -2,12 +2,12 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using core.audiamus.aux;
-using core.audiamus.aux.propgrid;
-using core.audiamus.booksdb;
-using R = core.audiamus.connect.ui.Properties.Resources;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.PropGird;
+using BookLibConnect.BooksDatabase;
+using R = BookLibConnect.Core.UI.Properties.Resources;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public class BookDataSource : BookDataSourceBase {
     public BookDataSource (Book book, IDownloadSettings settings) : base (book, settings) { }
 

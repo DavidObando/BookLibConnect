@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Linq;
-using core.audiamus.booksdb;
+using BookLibConnect.BooksDatabase;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public static class Extensions {
 
     public static int IndexOf (this BindingList<BookDataSource> bindingList, Book dataItem) {

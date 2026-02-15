@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
 using System.Windows.Forms;
-using core.audiamus.aux;
+using BookLibConnect.Aux;
 
-namespace core.audiamus.connect.app.gui {
+namespace BookLibConnect.App.Gui {
   static class Program {
     /// <summary>
     ///  The main entry point for the application.

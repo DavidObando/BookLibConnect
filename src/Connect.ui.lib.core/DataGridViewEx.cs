@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using core.audiamus.aux;
-using core.audiamus.aux.win;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Win;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   class DataGridViewEx : DataGridView, ISortingEvents {
 
     private readonly Timer _timer1 = new Timer ();

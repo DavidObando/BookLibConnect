@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public class AffineSynchronizationContext {
 
 #region Private Fields

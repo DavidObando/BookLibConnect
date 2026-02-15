@@ -4,15 +4,15 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using core.audiamus.aux;
-using core.audiamus.aux.win;
-using core.audiamus.connect.ex;
-using R = core.audiamus.connect.ui.Properties.Resources;
-using static core.audiamus.aux.Logging;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Win;
+using BookLibConnect.Core.ex;
+using R = BookLibConnect.Core.UI.Properties.Resources;
+using static BookLibConnect.Aux.Logging;
+using BookLibConnect.Aux.Extensions;
 using System.ComponentModel;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   public partial class ManageProfilesForm : Form {
     record ProfileDesc (string Tag, IProfileKeyEx Key, string Alias);
 

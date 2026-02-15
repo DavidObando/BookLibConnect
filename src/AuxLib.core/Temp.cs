@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public static class Temp {
     public static string GetPseudoUniqueString () {
       long ticks = DateTime.UtcNow.Ticks;

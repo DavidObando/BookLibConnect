@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using core.audiamus.aux;
+using BookLibConnect.Aux;
 
-namespace core.audiamus.connect {
+namespace BookLibConnect.Core {
   public static class ConsoleExternalLogin {
     public static Uri Callback (Uri uri) {
 

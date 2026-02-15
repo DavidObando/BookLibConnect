@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   /// <summary>
   /// Implements a 32-bit CRC hash algorithm compatible with Zip etc.
   /// https://github.com/damieng/DamienGKit/tree/master/CSharp/DamienG.Library/Security/Cryptography
@@ -216,7 +216,7 @@ namespace core.audiamus.aux {
     }
   }
 
-  namespace ex {
+  namespace Extensions {
     public static class Crc32Extensions {
       public static uint Checksum32 (this byte[] bytes) {
         return Crc32.Compute (bytes);

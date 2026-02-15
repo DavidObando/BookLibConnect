@@ -4,9 +4,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Resources;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.aux {
+namespace BookLibConnect.Aux {
   public class BooleanYesNoConverter : BooleanConverter {
 
     const string TRUE = "Yes";

@@ -1,14 +1,14 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing;
-using core.audiamus.aux.ex;
-using core.audiamus.aux.propgrid;
-using core.audiamus.booksdb;
-using core.audiamus.booksdb.ex;
-using core.audiamus.common;
-using R = core.audiamus.connect.ui.Properties.Resources;
+using BookLibConnect.Aux.Extensions;
+using BookLibConnect.Aux.PropGird;
+using BookLibConnect.BooksDatabase;
+using BookLibConnect.BooksDatabase.ex;
+using BookLibConnect.CommonTypes;
+using R = BookLibConnect.Core.UI.Properties.Resources;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   class ConversionDataSource : DataSourceBase<Conversion>, IEquatable<ConversionDataSource> {
 
     [Browsable (false)]

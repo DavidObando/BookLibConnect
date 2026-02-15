@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace core.audiamus.util {
+namespace BookLibConnect.Common.Util {
   public interface IUpdateSettings {
     EOnlineUpdate OnlineUpdate { get; }
   }

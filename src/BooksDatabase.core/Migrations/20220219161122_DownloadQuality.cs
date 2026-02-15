@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace core.audiamus.booksdb.Migrations
+namespace BookLibConnect.BooksDatabase.Migrations
 {
     public partial class DownloadQuality : Migration
     {

@@ -1,8 +1,8 @@
 ﻿using System;
-using core.audiamus.aux;
-using core.audiamus.aux.ex;
+using BookLibConnect.Aux;
+using BookLibConnect.Aux.Extensions;
 
-namespace core.audiamus.connect.ui {
+namespace BookLibConnect.Core.UI {
   class EnumConverterRM<TEnum> : EnumConverter<TEnum>
      where TEnum : struct, Enum {
     

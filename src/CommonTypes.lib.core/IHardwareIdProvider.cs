@@ -1,4 +1,4 @@
-namespace core.audiamus.common {
+namespace BookLibConnect.CommonTypes {
   public interface IHardwareIdProvider {
     string GetCpuId ();
     string GetMotherboardId ();

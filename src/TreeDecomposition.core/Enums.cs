@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace core.audiamus.aux.diagn {
+namespace BookLibConnect.Aux.Diagnostics {
   
   /// <summary>
   /// Flags to control dump output

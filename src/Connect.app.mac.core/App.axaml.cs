@@ -2,13 +2,13 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using core.audiamus.aux;
-using core.audiamus.connect;
-using core.audiamus.connect.ui.mac.ViewModels;
-using core.audiamus.sysmgmt.mac;
-using static core.audiamus.aux.Logging;
+using BookLibConnect.Aux;
+using BookLibConnect.Core;
+using BookLibConnect.Core.UI.Mac.ViewModels;
+using BookLibConnect.SystemManagement.Mac;
+using static BookLibConnect.Aux.Logging;
 
-namespace core.audiamus.connect.app.mac {
+namespace BookLibConnect.App.Mac {
   public partial class App : Application {
     public override void Initialize () {
       AvaloniaXamlLoader.Load (this);
