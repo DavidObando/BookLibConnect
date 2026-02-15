@@ -131,13 +131,6 @@ namespace BookLibConnect.App.Gui {
       
       base.OnClosing (e);
       UserSettings?.Save ();
-
-      if (_updateAvailableFlag) {
-        _updateAvailableFlag = false;
-        e.Cancel = true;
-        handleDeferredUpdateAsync ();
-      }
-
     }
 
     protected override async void OnLoad (EventArgs e) {
@@ -169,11 +162,7 @@ namespace BookLibConnect.App.Gui {
         return;
 
       using var _ = new LogGuard (3, this);
-
       logTmpFileMaintenance ();
-
-      checkOnlineUpdate ();
-
       await init ();
 
       _initDone = true;
@@ -342,27 +331,6 @@ namespace BookLibConnect.App.Gui {
     private void logTmpFileMaintenance () {
       Task task = LogTmpFileMaintenance.Instance.CleanupAsync ();
     } 
-
-    private OnlineUpdate newOnlineUpdate () => 
-      new OnlineUpdate (UserSettings.UpdateSettings, ApplEnv.ApplName, null, AppSettings.DbgOnlineUpdate);
-
-    private async void checkOnlineUpdate () {
-      var update = newOnlineUpdate ();
-      
-      var interact =
-        new InteractionCallback<InteractionMessage<UpdateInteractionMessage>, bool?> (_interactionHandler.Interact);
-      
-      await update.UpdateAsync (interact, () => Application.Exit (), isBusyForUpdate);
-    }
-
-    private async void handleDeferredUpdateAsync () {
-      var update = newOnlineUpdate ();
-
-      var interact =
-        new InteractionCallback<InteractionMessage<UpdateInteractionMessage>, bool?> (_interactionHandler.Interact);
-
-      await update.InstallAsync (interact, () => Application.Exit ());
-    }
 
     private bool isBusyForUpdate () {
       bool busy = !convertdgvControl1.IsIdle;
@@ -604,7 +572,7 @@ namespace BookLibConnect.App.Gui {
           // fallback 1: user profile = user root folder 
           defdir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
           if (defdir.IsNullOrWhiteSpace () || !Directory.Exists (defdir)) {
-            // fallback 2: ...\AppData\Local\audiamus\BookLibConnect
+            // fallback 2: ...\AppData\Local\BookLibConnect
             defdir = LocalApplDirectory;
           }
           defdir = Path.Combine (defdir, "Audio");

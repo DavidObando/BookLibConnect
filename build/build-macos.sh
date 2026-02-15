@@ -5,7 +5,7 @@ set -euo pipefail
 # Usage: ./build-macos.sh [--configuration Release|Debug] [--runtime osx-arm64|osx-x64] [--output ./artifacts]
 
 APP_NAME="Book Lib Connect"
-BUNDLE_ID="com.audiamus.booklibconnect"
+BUNDLE_ID="com.davidobando.booklibconnect"
 EXECUTABLE_NAME="BookLibConnect.Mac"
 
 CONFIGURATION="Release"

@@ -4,8 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>BookLibConnect.Aux.Win32</RootNamespace>
     <AssemblyName>BookLibConnect.Aux.Win32.Core</AssemblyName>
-    <Authors>audiamus</Authors>
-    <Copyright>Copyright © 2019 - $([System.DateTime]::UtcNow.Year) audiamus ($([System.DateTime]::UtcNow.ToString("s")))</Copyright>
+
     <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
 

@@ -5,8 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>BookLibConnect.App.Mac</RootNamespace>
     <AssemblyName>BookLibConnect.Mac</AssemblyName>
-    <Authors>audiamus</Authors>
-    <Copyright>Copyright © 2025 - $([System.DateTime]::UtcNow.Year) audiamus ($([System.DateTime]::UtcNow.ToString("s")))</Copyright>
+
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
   </PropertyGroup>
 

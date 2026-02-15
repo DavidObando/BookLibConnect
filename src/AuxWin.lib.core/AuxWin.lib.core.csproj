@@ -5,8 +5,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>BookLibConnect.Aux.Win</RootNamespace>
     <AssemblyName>BookLibConnect.Aux.Win.Core</AssemblyName>
-    <Authors>audiamus</Authors>
-    <Copyright>Copyright © 2019 - $([System.DateTime]::UtcNow.Year) audiamus ($([System.DateTime]::UtcNow.ToString("s")))</Copyright>
+
   </PropertyGroup>
 
   <ItemGroup>
