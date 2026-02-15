@@ -105,6 +105,9 @@ namespace BookLibConnect.Core {
 
         conversion.DownloadFileName = Settings.DownloadDirectory;
 
+        // Ensure the download directory exists before writing files
+        Directory.CreateDirectory (Settings.DownloadDirectory);
+
         var licTask = AudibleApi.GetDownloadLicenseAndSaveAsync (conversion, quality);
         OnNewStateCallback (conversion);
         succ = await licTask;

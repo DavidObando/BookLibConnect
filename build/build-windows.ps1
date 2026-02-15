@@ -7,6 +7,9 @@
     as a self-contained deployment for Windows and optionally creates an
     Inno Setup installer.
 
+    With the -AvaloniaApp switch, publishes the cross-platform Avalonia
+    application instead (Connect.app.avalonia.core), with IL trimming enabled.
+
 .PARAMETER Configuration
     Build configuration (Release or Debug). Default: Release.
 
@@ -24,10 +27,14 @@
 .PARAMETER SingleFile
     Publish as a single-file executable. Default: $false.
 
+.PARAMETER AvaloniaApp
+    Publish the cross-platform Avalonia application instead of the
+    WinForms application. IL trimming is enabled automatically.
+
 .PARAMETER CreateInstaller
     Run Inno Setup to create an installer after publishing. Requires
     Inno Setup 6 to be installed (iscc.exe on PATH or in the default
-    install location).
+    install location). Only applies to WinForms builds.
 
 .PARAMETER SigningCertThumbprint
     Thumbprint of a code-signing certificate in the Windows certificate
@@ -40,7 +47,11 @@
 
 .EXAMPLE
     .\build-windows.ps1
-    # Publishes a Release build for win-x64 to ./artifacts.
+    # Publishes the WinForms app as a Release build for win-x64 to ./artifacts.
+
+.EXAMPLE
+    .\build-windows.ps1 -AvaloniaApp
+    # Publishes the Avalonia app with IL trimming for win-x64.
 
 .EXAMPLE
     .\build-windows.ps1 -Configuration Debug -Runtime win-arm64
@@ -68,6 +79,8 @@ param(
 
     [switch]$SingleFile,
 
+    [switch]$AvaloniaApp,
+
     [switch]$CreateInstaller,
 
     [string]$SigningCertThumbprint,
@@ -84,7 +97,17 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $RepoRoot  = (Resolve-Path "$ScriptDir/..").Path
 $SrcDir    = Join-Path $RepoRoot "src"
-$Project   = Join-Path $SrcDir "Connect.app.gui.core/Connect.app.gui.core.csproj"
+
+if ($AvaloniaApp) {
+    $Project    = Join-Path $SrcDir "Connect.app.avalonia.core/Connect.app.avalonia.core.csproj"
+    $ProjectDir = "Connect.app.avalonia.core"
+    $AppLabel   = "Avalonia"
+} else {
+    $Project    = Join-Path $SrcDir "Connect.app.gui.core/Connect.app.gui.core.csproj"
+    $ProjectDir = "Connect.app.gui.core"
+    $AppLabel   = "WinForms"
+}
+
 $PublishDir = Join-Path $OutputDir "publish"
 
 if (-not (Test-Path $Project)) {
@@ -95,7 +118,7 @@ if (-not (Test-Path $Project)) {
 # ---------------------------------------------------------------------------
 # Version
 # ---------------------------------------------------------------------------
-Write-Host "=== BookLibConnect Windows Build ===" -ForegroundColor Cyan
+Write-Host "=== BookLibConnect Windows Build ($AppLabel) ===" -ForegroundColor Cyan
 Write-Host "Configuration: $Configuration"
 Write-Host "Runtime:       $Runtime"
 Write-Host "Output:        $OutputDir"
@@ -105,7 +128,7 @@ dotnet tool restore | Out-Null
 
 $AppVersion = $null
 try {
-    $AppVersion = dotnet nbgv get-version -v SimpleVersion --project (Join-Path $SrcDir "Connect.app.gui.core") 2>$null
+    $AppVersion = dotnet nbgv get-version -v SimpleVersion --project (Join-Path $SrcDir $ProjectDir) 2>$null
     if ($LASTEXITCODE -ne 0) { $AppVersion = $null }
 } catch {
     $AppVersion = $null
@@ -141,7 +164,7 @@ $dotnetArgs = @(
     "--runtime", $Runtime,
     "--self-contained", ($SelfContained.IsPresent -or $SelfContained ? "true" : "false"),
     "-p:PublishSingleFile=$($SingleFile.IsPresent)",
-    "-p:PublishTrimmed=false",
+    "-p:PublishTrimmed=$($AvaloniaApp.IsPresent)",
     "--output", $PublishDir
 )
 

@@ -1,4 +1,4 @@
-name: Build macOS
+name: Build Clients
 
 on:
   push:
@@ -84,11 +84,11 @@ jobs:
 
       - name: Restore dependencies
         working-directory: src
-        run: dotnet restore BookLibConnect.macOS.slnf
+        run: dotnet restore BookLibConnect.Avalonia.slnf
 
       - name: Build
         working-directory: src
-        run: dotnet build BookLibConnect.macOS.slnf --configuration Release --no-restore
+        run: dotnet build BookLibConnect.Avalonia.slnf --configuration Release --no-restore
 
       - name: Create .app bundle, sign, and create DMG
         env:
@@ -142,6 +142,8 @@ jobs:
         include:
           - runtime: win-x64
             label: Windows-x64
+          - runtime: win-arm64
+            label: Windows-ARM64
 
     name: Build ${{ matrix.label }}
     runs-on: windows-latest
@@ -157,62 +159,86 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Install Inno Setup
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Restore dependencies
+        working-directory: src
+        run: dotnet restore BookLibConnect.Avalonia.slnf
+
+      - name: Build
+        working-directory: src
+        run: dotnet build BookLibConnect.Avalonia.slnf --configuration Release --no-restore
+
+      - name: Publish app
         run: |
-          # Check common install locations
-          $searchPaths = @(
-            "${env:ProgramFiles(x86)}\Inno Setup 6",
-            "${env:LOCALAPPDATA}\Programs\Inno Setup 6",
-            "${env:ProgramFiles}\Inno Setup 6"
-          )
-          $innoPath = $searchPaths | Where-Object { Test-Path "$_\ISCC.exe" } | Select-Object -First 1
+          ./build/build-windows.ps1 `
+            -Configuration Release `
+            -Runtime ${{ matrix.runtime }} `
+            -OutputDir ./artifacts `
+            -AvaloniaApp
 
-          if (-not $innoPath) {
-            Write-Host "Inno Setup not found, installing via winget..."
-            winget install --id JRSoftware.InnoSetup -e -s winget --accept-source-agreements --accept-package-agreements
-            $innoPath = $searchPaths | Where-Object { Test-Path "$_\ISCC.exe" } | Select-Object -First 1
-          } else {
-            Write-Host "Inno Setup already installed."
-          }
+      - name: Upload app
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: BookLibConnect-${{ matrix.runtime }}
+          path: ./artifacts/publish/
+          retention-days: 30
 
-          if (-not $innoPath) {
-            Write-Error "Inno Setup installation not found after install attempt."
-            exit 1
-          }
+  build-linux:
+    strategy:
+      matrix:
+        include:
+          - runtime: linux-x64
+            label: Linux-x64
+          - runtime: linux-arm64
+            label: Linux-ARM64
 
-          Write-Host "Inno Setup path: $innoPath"
-          echo "$innoPath" >> $env:GITHUB_PATH
+    name: Build ${{ matrix.label }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore .NET tools
         run: dotnet tool restore
 
       - name: Restore dependencies
         working-directory: src
-        run: dotnet restore BookLibConnect.Windows.slnf
+        run: dotnet restore BookLibConnect.Avalonia.slnf
 
-      - name: Build solution
+      - name: Build
         working-directory: src
-        run: dotnet build BookLibConnect.Windows.slnf --configuration Release --no-restore
+        run: dotnet build BookLibConnect.Avalonia.slnf --configuration Release --no-restore
 
-      - name: Publish and create installer
+      - name: Publish and package
         run: |
-          ./build/build-windows.ps1 `
-            -Configuration Release `
-            -Runtime ${{ matrix.runtime }} `
-            -OutputDir ./artifacts `
-            -CreateInstaller
+          chmod +x ./build/build-linux.sh
+          ./build/build-linux.sh \
+            --configuration Release \
+            --runtime ${{ matrix.runtime }} \
+            --output ./artifacts
 
-      - name: Upload installer
+      - name: Upload tarball
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: BookLibConnect-${{ matrix.runtime }}-installer
-          path: ./artifacts/installer/*.exe
+          name: BookLibConnect-${{ matrix.runtime }}-tarball
+          path: ./artifacts/*.tar.gz
           retention-days: 30
 
   release:
     name: Create Release
-    needs: [build-macos, build-windows]
+    needs: [build-macos, build-windows, build-linux]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -234,3 +260,4 @@ jobs:
           files: |
             ./release-assets/**/*.dmg
             ./release-assets/**/*.exe
+            ./release-assets/**/*.tar.gz

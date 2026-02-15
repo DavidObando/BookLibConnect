@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Web;
 using System.Xml;
 using static System.Math;
@@ -215,6 +216,7 @@ namespace BookLibConnect.Aux.Extensions {
 
   public static class JsonExtensions {
     public static JsonSerializerOptions Options { get; } = new JsonSerializerOptions {
+      TypeInfoResolver = new DefaultJsonTypeInfoResolver (),
       WriteIndented = true,
       ReadCommentHandling = JsonCommentHandling.Skip,
       AllowTrailingCommas = true,

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>BookLibConnect.SystemManagement.Linux</RootNamespace>
+    <AssemblyName>BookLibConnect.SystemManagement.Linux.Core</AssemblyName>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommonTypes.lib.core\CommonTypes.lib.core.csproj" />
+  </ItemGroup>
+
+</Project>
