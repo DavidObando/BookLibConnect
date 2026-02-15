@@ -38,7 +38,6 @@ namespace BookLibConnect.App.Gui {
     private readonly SystemMenu _systemMenu;
     private bool _initDone;
     private bool _libUpdated;
-    private bool _updateAvailableFlag;
     private WaitForm _waitForm;
 
 
@@ -330,13 +329,6 @@ namespace BookLibConnect.App.Gui {
 
     private void logTmpFileMaintenance () {
       Task task = LogTmpFileMaintenance.Instance.CleanupAsync ();
-    } 
-
-    private bool isBusyForUpdate () {
-      bool busy = !convertdgvControl1.IsIdle;
-      if (busy)
-        _updateAvailableFlag = true;
-      return busy;
     }
 
     private string updateInteractMessage (UpdateInteractionMessage uim) {
