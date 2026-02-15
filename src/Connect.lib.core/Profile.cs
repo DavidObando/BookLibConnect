@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using System.Web;
 using BookLibConnect.Aux;
@@ -277,7 +278,7 @@ namespace BookLibConnect.Core {
       if (configuration.Profiles is null)
         return;
 
-      string json = JsonSerializer.Serialize (configuration.Profiles);
+      string json = JsonSerializer.Serialize (configuration.Profiles, new JsonSerializerOptions { TypeInfoResolver = new DefaultJsonTypeInfoResolver () });
       byte[] encrypted = SymmetricEncryptor.EncryptString (json, token);
       string base64 = Convert.ToBase64String (encrypted);
       configuration.Secure = base64;
@@ -290,7 +291,7 @@ namespace BookLibConnect.Core {
       try {
         byte[] encrypted = Convert.FromBase64String (configuration.Secure);
         string json = SymmetricEncryptor.DecryptToString (encrypted, token);
-        var profiles = JsonSerializer.Deserialize<List<Profile>> (json);
+        var profiles = JsonSerializer.Deserialize<List<Profile>> (json, new JsonSerializerOptions { TypeInfoResolver = new DefaultJsonTypeInfoResolver () });
         configuration.Profiles = profiles;
         configuration.Secure = null;
       } catch (Exception) { }

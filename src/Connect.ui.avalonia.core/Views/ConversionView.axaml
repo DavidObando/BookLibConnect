@@ -1,0 +1,76 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BookLibConnect.Core.UI.Avalonia.ViewModels"
+             x:Class="BookLibConnect.Core.UI.Avalonia.Views.ConversionView"
+             x:DataType="vm:ConversionViewModel">
+
+  <DockPanel>
+    <!-- Toolbar -->
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="8">
+      <Button Content="▶ Run"
+              Command="{Binding RunCommand}"
+              IsEnabled="{Binding IsIdle}"
+              Classes="accent" />
+      <Button Content="Cancel"
+              Command="{Binding CancelCommand}"
+              IsVisible="{Binding IsRunning}" />
+      <Border Width="1" Background="LightGray" Margin="4,2" />
+      <Button Content="Remove Selected"
+              Command="{Binding RemoveSelectedCommand}"
+              IsEnabled="{Binding IsIdle}" />
+      <TextBlock Text="{Binding QueuedCount, StringFormat='{}{0} item(s) queued'}"
+                 VerticalAlignment="Center" Foreground="Gray" FontSize="12" />
+    </StackPanel>
+
+    <!-- Overall progress -->
+    <StackPanel DockPanel.Dock="Top" Margin="8,0,8,4" Spacing="2"
+                IsVisible="{Binding IsRunning}">
+      <TextBlock Text="{Binding OverallStatusText}" FontSize="12" Foreground="Gray" />
+      <ProgressBar Value="{Binding OverallProgress}"
+                   Minimum="0" Maximum="1"
+                   Height="8" />
+    </StackPanel>
+
+    <!-- Queue label -->
+    <TextBlock DockPanel.Dock="Top" Margin="8,4"
+               Text="Items queued for download, decryption, and optional export:"
+               FontSize="12" Foreground="Gray"
+               IsVisible="{Binding IsIdle}" />
+
+    <!-- Conversion list -->
+    <DataGrid ItemsSource="{Binding Conversions}"
+              AutoGenerateColumns="False"
+              CanUserResizeColumns="True"
+              GridLinesVisibility="Horizontal"
+              Margin="8">
+      <DataGrid.Columns>
+        <DataGridCheckBoxColumn Header="&#x2713;"
+                                Binding="{Binding IsSelected}"
+                                Width="40" />
+        <DataGridTextColumn Header="Title"
+                            Binding="{Binding Title}"
+                            IsReadOnly="True"
+                            Width="*" />
+        <DataGridTextColumn Header="Author"
+                            Binding="{Binding Author}"
+                            IsReadOnly="True"
+                            Width="200" />
+        <DataGridTextColumn Header="State"
+                            Binding="{Binding StatusText}"
+                            IsReadOnly="True"
+                            Width="120" />
+        <DataGridTemplateColumn Header="Progress" Width="150">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <ProgressBar Value="{Binding Progress}"
+                           Minimum="0" Maximum="1"
+                           Height="16"
+                           Margin="4" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+  </DockPanel>
+
+</UserControl>

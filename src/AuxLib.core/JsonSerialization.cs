@@ -2,11 +2,13 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 
 namespace BookLibConnect.Aux {
   public static class JsonSerialization {
     private static readonly JsonSerializerOptions __jsonSerializerOptions = new JsonSerializerOptions {
+      TypeInfoResolver = new DefaultJsonTypeInfoResolver (),
       WriteIndented = true,
       ReadCommentHandling = JsonCommentHandling.Skip,
       AllowTrailingCommas = true,

@@ -6,7 +6,7 @@ set -euo pipefail
 
 APP_NAME="Book Lib Connect"
 BUNDLE_ID="com.davidobando.booklibconnect"
-EXECUTABLE_NAME="BookLibConnect.Mac"
+EXECUTABLE_NAME="BookLibConnect"
 
 CONFIGURATION="Release"
 RUNTIME=""
@@ -20,8 +20,8 @@ APPLE_TEAM_ID=""
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SRC_DIR="$REPO_ROOT/src"
-PROJECT="$SRC_DIR/Connect.app.mac.core/Connect.app.mac.core.csproj"
-INFO_PLIST="$SRC_DIR/Connect.app.mac.core/Info.plist"
+PROJECT="$SRC_DIR/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj"
+INFO_PLIST="$SRC_DIR/Connect.app.avalonia.core/Info.plist"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -55,8 +55,8 @@ echo "Runtime:       $RUNTIME"
 echo "Output:        $OUTPUT_DIR"
 # Resolve version from Nerdbank.GitVersioning
 dotnet tool restore
-if dotnet nbgv get-version -v SimpleVersion --project "$SRC_DIR/Connect.app.mac.core" &> /dev/null; then
-  APP_VERSION=$(dotnet nbgv get-version -v SimpleVersion --project "$SRC_DIR/Connect.app.mac.core")
+if dotnet nbgv get-version -v SimpleVersion --project "$SRC_DIR/Connect.app.avalonia.core" &> /dev/null; then
+  APP_VERSION=$(dotnet nbgv get-version -v SimpleVersion --project "$SRC_DIR/Connect.app.avalonia.core")
 else
   # Fallback: read base version from version.json
   APP_VERSION=$(grep '"version"' "$REPO_ROOT/version.json" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1.0/')
@@ -75,7 +75,7 @@ dotnet publish "$PROJECT" \
   --runtime "$RUNTIME" \
   --self-contained true \
   -p:PublishSingleFile=false \
-  -p:PublishTrimmed=false \
+  -p:PublishTrimmed=true \
   --output "$OUTPUT_DIR/publish"
 
 # Build the .app bundle
@@ -95,7 +95,7 @@ cp -R "$OUTPUT_DIR/publish/"* "$MACOS_DIR/"
 sed "s/__VERSION__/$APP_VERSION/g" "$INFO_PLIST" > "$CONTENTS/Info.plist"
 
 # Copy icon if it exists; generate from PNG if needed
-ICON_FILE="$SRC_DIR/Connect.app.mac.core/audio.icns"
+ICON_FILE="$SRC_DIR/Connect.app.avalonia.core/audio.icns"
 ICON_PNG="$SRC_DIR/Connect.app.gui.core/Resources/audio.png"
 if [[ ! -f "$ICON_FILE" && -f "$ICON_PNG" ]]; then
   echo "  Generating audio.icns from audio.png..."
