@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>BookLibConnect.Audible.Json</RootNamespace>
-    <AssemblyName>BookLibConnect.Audible.Json.Core</AssemblyName>
+    <RootNamespace>Oahu.Audible.Json</RootNamespace>
+    <AssemblyName>Oahu.Audible.Json.Core</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

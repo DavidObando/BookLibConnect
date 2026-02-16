@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace BookLibConnect.Aux.Diagnostics {
+namespace Oahu.Aux.Diagnostics {
   
   /// <summary>
   /// Flags to control dump output

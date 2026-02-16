@@ -4,9 +4,9 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using BookLibConnect.Core.UI.Avalonia.ViewModels;
+using Oahu.Core.UI.Avalonia.ViewModels;
 
-namespace BookLibConnect.Core.UI.Avalonia.Views {
+namespace Oahu.Core.UI.Avalonia.Views {
   public partial class ProfileWizardView : UserControl {
     public ProfileWizardView () {
       InitializeComponent ();

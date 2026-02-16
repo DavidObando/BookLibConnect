@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using BookLibConnect.CommonTypes;
+using Oahu.CommonTypes;
 
-namespace BookLibConnect.BooksDatabase {
+namespace Oahu.BooksDatabase {
   public interface IPerson {
     string Asin { get; set; }
     string Name { get; set; }

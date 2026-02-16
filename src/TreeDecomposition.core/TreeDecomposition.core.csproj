@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>BookLibConnect.Aux.Diagnostics</RootNamespace>
-    <AssemblyName>BookLibConnect.TreeDecomposition.Core</AssemblyName>
+    <RootNamespace>Oahu.Aux.Diagnostics</RootNamespace>
+    <AssemblyName>Oahu.TreeDecomposition.Core</AssemblyName>
 
   </PropertyGroup>
 

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Windows.Forms;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Win;
-using BookLibConnect.Core;
+using Oahu.Aux;
+using Oahu.Aux.Win;
+using Oahu.Core;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   public partial class WizStepExport : UserControl, ICompleted {
     public event EventHandler Completed;
     

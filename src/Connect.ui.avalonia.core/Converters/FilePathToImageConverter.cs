@@ -4,7 +4,7 @@ using System.IO;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
 
-namespace BookLibConnect.Core.UI.Avalonia.Converters {
+namespace Oahu.Core.UI.Avalonia.Converters {
   public class FilePathToImageConverter : IValueConverter {
     public static readonly FilePathToImageConverter Instance = new ();
 

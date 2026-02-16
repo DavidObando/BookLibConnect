@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
 
   public enum EInitialSorting {
     state_date,

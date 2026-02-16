@@ -5,15 +5,15 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.BooksDatabase.ex;
-using BookLibConnect.Common.Util;
-using static BookLibConnect.Aux.Logging;
-using R = BookLibConnect.Core.Properties.Resources;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.BooksDatabase;
+using Oahu.BooksDatabase.ex;
+using Oahu.Common.Util;
+using static Oahu.Aux.Logging;
+using R = Oahu.Core.Properties.Resources;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
   public class DownloadDecryptJob<T> : IDisposable where T : ICancellation {
     private static int MaxDecrypts => 1; // Environment.ProcessorCount / 2;
 

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.Aux.PropGird;
-using BookLibConnect.BooksDatabase;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.Aux.PropGird;
+using Oahu.BooksDatabase;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public class BookPGA : BookDataSourceBase {
     public BookPGA (Book book, IDownloadSettings settings) : base (book, settings) {
       SetReadonly (EReadonly.all);

@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace BookLibConnect.Core.UI.Avalonia.Converters {
+namespace Oahu.Core.UI.Avalonia.Converters {
   /// <summary>
   /// Converts an integer step index to a visibility boolean based on whether
   /// it matches the converter parameter.

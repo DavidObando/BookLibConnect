@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:BookLibConnect.Core.UI.Avalonia.ViewModels"
-             x:Class="BookLibConnect.Core.UI.Avalonia.Views.ProfileWizardView"
+             xmlns:vm="using:Oahu.Core.UI.Avalonia.ViewModels"
+             x:Class="Oahu.Core.UI.Avalonia.Views.ProfileWizardView"
              x:DataType="vm:ProfileWizardViewModel"
              x:CompileBindings="True">
 

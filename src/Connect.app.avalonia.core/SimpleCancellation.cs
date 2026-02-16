@@ -1,7 +1,7 @@
 using System.Threading;
-using BookLibConnect.Core;
+using Oahu.Core;
 
-namespace BookLibConnect.App.Avalonia {
+namespace Oahu.App.Avalonia {
   /// <summary>
   /// Minimal implementation of <see cref="ICancellation"/> for use with
   /// <see cref="DownloadDecryptJob{T}"/>.

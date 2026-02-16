@@ -2,13 +2,13 @@ using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using BookLibConnect.Core;
+using Oahu.Core;
 
-namespace BookLibConnect.Core.UI.Avalonia.ViewModels {
+namespace Oahu.Core.UI.Avalonia.ViewModels {
   public partial class MainWindowViewModel : ObservableObject {
 
     [ObservableProperty]
-    private string _title = "Book Lib Connect";
+    private string _title = "Oahu";
 
     [ObservableProperty]
     private bool _isBusy;

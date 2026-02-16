@@ -1,12 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-# Build a macOS .app bundle for BookLibConnect
+# Build a macOS .app bundle for Oahu
 # Usage: ./build-macos.sh [--configuration Release|Debug] [--runtime osx-arm64|osx-x64] [--output ./artifacts]
 
-APP_NAME="Book Lib Connect"
+APP_NAME="Oahu"
 BUNDLE_ID="com.davidobando.booklibconnect"
-EXECUTABLE_NAME="BookLibConnect"
+EXECUTABLE_NAME="Oahu"
 
 CONFIGURATION="Release"
 RUNTIME=""
@@ -49,7 +49,7 @@ if [[ -z "$RUNTIME" ]]; then
   fi
 fi
 
-echo "=== BookLibConnect macOS Build ==="
+echo "=== Oahu macOS Build ==="
 echo "Configuration: $CONFIGURATION"
 echo "Runtime:       $RUNTIME"
 echo "Output:        $OUTPUT_DIR"
@@ -163,7 +163,7 @@ fi
 echo "==> .app bundle created at: $APP_BUNDLE"
 
 # Create DMG
-DMG_NAME="BookLibConnect-${APP_VERSION}-${RUNTIME}"
+DMG_NAME="Oahu-${APP_VERSION}-${RUNTIME}"
 DMG_PATH="$OUTPUT_DIR/${DMG_NAME}.dmg"
 DMG_STAGING="$OUTPUT_DIR/dmg-staging"
 

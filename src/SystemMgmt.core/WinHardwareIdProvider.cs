@@ -1,6 +1,6 @@
-using BookLibConnect.CommonTypes;
+using Oahu.CommonTypes;
 
-namespace BookLibConnect.SystemManagement {
+namespace Oahu.SystemManagement {
   public class WinHardwareIdProvider : IHardwareIdProvider {
     public string GetCpuId () => HardwareId.GetCpuId ();
     public string GetMotherboardId () => HardwareId.GetMotherboardId ();

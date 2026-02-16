@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Win;
+using Oahu.Aux;
+using Oahu.Aux.Win;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   class DataGridViewEx : DataGridView, ISortingEvents {
 
     private readonly Timer _timer1 = new Timer ();

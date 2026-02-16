@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   /// <summary>
   /// Implements a 32-bit CRC hash algorithm compatible with Zip etc.
   /// https://github.com/damieng/DamienGKit/tree/master/CSharp/DamienG.Library/Security/Cryptography

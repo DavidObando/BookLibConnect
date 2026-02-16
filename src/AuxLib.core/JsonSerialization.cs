@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   public static class JsonSerialization {
     private static readonly JsonSerializerOptions __jsonSerializerOptions = new JsonSerializerOptions {
       TypeInfoResolver = new DefaultJsonTypeInfoResolver (),

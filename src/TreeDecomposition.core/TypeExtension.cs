@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
-namespace BookLibConnect.Aux.Diagnostics {
+namespace Oahu.Aux.Diagnostics {
   static class TypeExtension {
 
     public static IEnumerable<IEnumerable<Type>> GetInterfaceHierarchy ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] this Type root) {

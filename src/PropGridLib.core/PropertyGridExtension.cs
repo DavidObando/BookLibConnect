@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace BookLibConnect.Aux.PropGird {
+namespace Oahu.Aux.PropGird {
   public static class PropertyGridExtensions {
 
 

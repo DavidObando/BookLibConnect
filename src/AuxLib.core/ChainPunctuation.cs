@@ -1,4 +1,4 @@
-﻿namespace BookLibConnect.Aux {
+﻿namespace Oahu.Aux {
   public interface IChainPunctuation {
     string Prefix { get; }
     string Suffix { get; }

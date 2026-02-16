@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>BookLibConnect.SystemManagement.Mac</RootNamespace>
-    <AssemblyName>BookLibConnect.SystemManagement.Mac.Core</AssemblyName>
+    <RootNamespace>Oahu.SystemManagement.Mac</RootNamespace>
+    <AssemblyName>Oahu.SystemManagement.Mac.Core</AssemblyName>
 
   </PropertyGroup>
 

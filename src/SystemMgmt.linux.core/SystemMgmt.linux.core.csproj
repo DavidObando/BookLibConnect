@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>BookLibConnect.SystemManagement.Linux</RootNamespace>
-    <AssemblyName>BookLibConnect.SystemManagement.Linux.Core</AssemblyName>
+    <RootNamespace>Oahu.SystemManagement.Linux</RootNamespace>
+    <AssemblyName>Oahu.SystemManagement.Linux.Core</AssemblyName>
 
   </PropertyGroup>
 

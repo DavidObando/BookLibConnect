@@ -1,4 +1,4 @@
-﻿namespace BookLibConnect.BooksDatabase {
+﻿namespace Oahu.BooksDatabase {
   public enum ECodec {
     format4,
     mp4_22_32,

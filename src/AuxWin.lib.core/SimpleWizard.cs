@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Linq;
-using R = BookLibConnect.Aux.Win.Properties.Resources;
+using R = Oahu.Aux.Win.Properties.Resources;
 
-namespace BookLibConnect.Aux.Win {
+namespace Oahu.Aux.Win {
   public interface ICompleted {
     event EventHandler Completed;
   }

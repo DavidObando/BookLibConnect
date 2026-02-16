@@ -4,7 +4,7 @@ set -euo pipefail
 # Build the cross-platform Avalonia application for Linux.
 # Usage: ./build-linux.sh [--configuration Release|Debug] [--runtime linux-x64|linux-arm64] [--output ./artifacts]
 
-APP_NAME="BookLibConnect"
+APP_NAME="Oahu"
 
 CONFIGURATION="Release"
 RUNTIME=""
@@ -34,7 +34,7 @@ if [[ -z "$RUNTIME" ]]; then
   fi
 fi
 
-echo "=== BookLibConnect Linux Build ==="
+echo "=== Oahu Linux Build ==="
 echo "Configuration: $CONFIGURATION"
 echo "Runtime:       $RUNTIME"
 echo "Output:        $OUTPUT_DIR"

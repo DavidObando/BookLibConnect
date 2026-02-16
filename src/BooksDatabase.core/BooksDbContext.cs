@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BookLibConnect.Aux;
+using Oahu.Aux;
 using Microsoft.EntityFrameworkCore;
-using BookLibConnect.Aux.Extensions;
-using static BookLibConnect.Aux.Logging;
+using Oahu.Aux.Extensions;
+using static Oahu.Aux.Logging;
 using System.Reflection;
 
-namespace BookLibConnect.BooksDatabase {
+namespace Oahu.BooksDatabase {
 
   // PM> Add-Migration InitialCreate -Project BooksDatabase.core -Context BookDbContext
   // PM> Add-Migration -Name <mig name> -Project BooksDatabase.core -Context BookDbContext

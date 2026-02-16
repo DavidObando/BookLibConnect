@@ -1,14 +1,11 @@
 <#
 .SYNOPSIS
-    Build script for BookLibConnect on Windows.
+    Build script for Oahu on Windows.
 
 .DESCRIPTION
-    Publishes the Connect.app.gui.core (BookLibConnect) WinForms application
-    as a self-contained deployment for Windows and optionally creates an
-    Inno Setup installer.
-
-    With the -AvaloniaApp switch, publishes the cross-platform Avalonia
-    application instead (Connect.app.avalonia.core).
+    Publishes the cross-platform Avalonia application
+    (Connect.app.avalonia.core) as a self-contained deployment for Windows
+    and optionally creates an Inno Setup installer.
 
 .PARAMETER Configuration
     Build configuration (Release or Debug). Default: Release.
@@ -27,14 +24,10 @@
 .PARAMETER SingleFile
     Publish as a single-file executable. Default: $false.
 
-.PARAMETER AvaloniaApp
-    Publish the cross-platform Avalonia application instead of the
-    WinForms application. IL trimming is enabled automatically.
-
 .PARAMETER CreateInstaller
     Run Inno Setup to create an installer after publishing. Requires
     Inno Setup 6 to be installed (iscc.exe on PATH or in the default
-    install location). Only applies to WinForms builds.
+    install location).
 
 .PARAMETER SigningCertThumbprint
     Thumbprint of a code-signing certificate in the Windows certificate
@@ -47,11 +40,7 @@
 
 .EXAMPLE
     .\build-windows.ps1
-    # Publishes the WinForms app as a Release build for win-x64 to ./artifacts.
-
-.EXAMPLE
-    .\build-windows.ps1 -AvaloniaApp
-    # Publishes the Avalonia app for win-x64.
+    # Publishes the Avalonia app as a Release build for win-x64 to ./artifacts.
 
 .EXAMPLE
     .\build-windows.ps1 -Configuration Debug -Runtime win-arm64
@@ -75,11 +64,9 @@ param(
 
     [string]$OutputDir = "./artifacts",
 
-    [switch]$SelfContained = $true,
+    [bool]$SelfContained = $true,
 
     [switch]$SingleFile,
-
-    [switch]$AvaloniaApp,
 
     [switch]$CreateInstaller,
 
@@ -98,15 +85,9 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $RepoRoot  = (Resolve-Path "$ScriptDir/..").Path
 $SrcDir    = Join-Path $RepoRoot "src"
 
-if ($AvaloniaApp) {
-    $Project    = Join-Path $SrcDir "Connect.app.avalonia.core/Connect.app.avalonia.core.csproj"
-    $ProjectDir = "Connect.app.avalonia.core"
-    $AppLabel   = "Avalonia"
-} else {
-    $Project    = Join-Path $SrcDir "Connect.app.gui.core/Connect.app.gui.core.csproj"
-    $ProjectDir = "Connect.app.gui.core"
-    $AppLabel   = "WinForms"
-}
+$Project    = Join-Path $SrcDir "Connect.app.avalonia.core/Connect.app.avalonia.core.csproj"
+$ProjectDir = "Connect.app.avalonia.core"
+$AppLabel   = "Avalonia"
 
 $PublishDir = Join-Path $OutputDir "publish"
 
@@ -118,7 +99,7 @@ if (-not (Test-Path $Project)) {
 # ---------------------------------------------------------------------------
 # Version
 # ---------------------------------------------------------------------------
-Write-Host "=== BookLibConnect Windows Build ($AppLabel) ===" -ForegroundColor Cyan
+Write-Host "=== Oahu Windows Build ($AppLabel) ===" -ForegroundColor Cyan
 Write-Host "Configuration: $Configuration"
 Write-Host "Runtime:       $Runtime"
 Write-Host "Output:        $OutputDir"
@@ -162,7 +143,7 @@ $dotnetArgs = @(
     "publish", $Project,
     "--configuration", $Configuration,
     "--runtime", $Runtime,
-    "--self-contained", ($SelfContained.IsPresent -or $SelfContained ? "true" : "false"),
+    "--self-contained", ($SelfContained ? "true" : "false"),
     "-p:PublishSingleFile=$($SingleFile.IsPresent)",
     "-p:PublishTrimmed=false",
     "--output", $PublishDir
@@ -182,7 +163,7 @@ Write-Host "  Published to: $PublishDir" -ForegroundColor Green
 if ($SigningCertThumbprint) {
     Write-Host "==> Signing published executable..." -ForegroundColor Yellow
 
-    $exePath = Join-Path $PublishDir "BookLibConnect.exe"
+    $exePath = Join-Path $PublishDir "Oahu.exe"
     if (-not (Test-Path $exePath)) {
         Write-Error "Executable not found at $exePath"
         exit 1
@@ -242,7 +223,7 @@ if ($CreateInstaller) {
         Write-Warning "Inno Setup (iscc.exe) not found. Skipping installer creation."
         Write-Warning "Install Inno Setup 6 from https://jrsoftware.org/isdl.php"
     } else {
-        $issFile = Join-Path $SrcDir "InnoSetup/BookLibConnect setup.iss"
+        $issFile = Join-Path $SrcDir "InnoSetup/Oahu setup.iss"
         if (-not (Test-Path $issFile)) {
             Write-Error "Inno Setup script not found: $issFile"
             exit 1

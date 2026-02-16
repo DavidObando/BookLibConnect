@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Aux.Win {
+namespace Oahu.Aux.Win {
   /// <summary>
   /// A ResortableBindingList that can be paused.
   /// </summary>

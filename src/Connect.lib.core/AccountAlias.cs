@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using BookLibConnect.CommonTypes;
+using Oahu.CommonTypes;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
 
   public class AccountAliasContext {
     public int LocalId { get; }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Resources;
 
-namespace BookLibConnect.Aux.Extensions {
+namespace Oahu.Aux.Extensions {
   public static class ResourceManagerEx {
 
     public static ResourceManager GetDefaultResourceManager (this object o) {

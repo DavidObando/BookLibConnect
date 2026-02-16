@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Resources;
 
-namespace BookLibConnect.Aux.PropGird {
+namespace Oahu.Aux.PropGird {
 
   public class DynamicTypeDescriptor : ICustomTypeDescriptor, ISupportInitialize {
     const string PROPERTY_CONTROL = "Property Control";

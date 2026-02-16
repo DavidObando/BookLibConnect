@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using BookLibConnect.BooksDatabase;
+using Oahu.BooksDatabase;
 
-namespace BookLibConnect.BooksDatabase.Migrations
+namespace Oahu.BooksDatabase.Migrations
 {
     [DbContext(typeof(BookDbContext))]
     [Migration("20220219161122_DownloadQuality")]
@@ -111,7 +111,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("LadderRung");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Account", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Account", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -128,7 +128,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Accounts");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Author", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Author", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -150,7 +150,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Authors");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Book", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Book", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -244,7 +244,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Books");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Chapter", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Chapter", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -274,7 +274,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Chapters");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.ChapterInfo", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.ChapterInfo", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -309,7 +309,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("ChapterInfos");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Codec", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Codec", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -323,7 +323,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Codecs");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Component", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Component", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -381,7 +381,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Components");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Conversion", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Conversion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -455,7 +455,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Conversions");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Genre", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Genre", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -475,7 +475,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Genres");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Ladder", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Ladder", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -486,7 +486,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Ladders");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Narrator", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Narrator", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -508,7 +508,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Narrators");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.PseudoAsin", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.PseudoAsin", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("INTEGER");
@@ -521,7 +521,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("PseudoAsins");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Rung", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Rung", b =>
                 {
                     b.Property<int>("OrderIdx")
                         .HasColumnType("INTEGER");
@@ -536,7 +536,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Rungs");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Series", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Series", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -562,7 +562,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.ToTable("Series");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.SeriesBook", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.SeriesBook", b =>
                 {
                     b.Property<int>("SeriesId")
                         .HasColumnType("INTEGER");
@@ -591,13 +591,13 @@ namespace BookLibConnect.BooksDatabase.Migrations
 
             modelBuilder.Entity("AuthorBook", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Author", null)
+                    b.HasOne("Oahu.BooksDatabase.Author", null)
                         .WithMany()
                         .HasForeignKey("AuthorsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BookLibConnect.BooksDatabase.Book", null)
+                    b.HasOne("Oahu.BooksDatabase.Book", null)
                         .WithMany()
                         .HasForeignKey("BooksId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -606,13 +606,13 @@ namespace BookLibConnect.BooksDatabase.Migrations
 
             modelBuilder.Entity("BookCodec", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Book", null)
+                    b.HasOne("Oahu.BooksDatabase.Book", null)
                         .WithMany()
                         .HasForeignKey("BooksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BookLibConnect.BooksDatabase.Codec", null)
+                    b.HasOne("Oahu.BooksDatabase.Codec", null)
                         .WithMany()
                         .HasForeignKey("CodecsId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -621,13 +621,13 @@ namespace BookLibConnect.BooksDatabase.Migrations
 
             modelBuilder.Entity("BookGenre", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Book", null)
+                    b.HasOne("Oahu.BooksDatabase.Book", null)
                         .WithMany()
                         .HasForeignKey("BooksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BookLibConnect.BooksDatabase.Genre", null)
+                    b.HasOne("Oahu.BooksDatabase.Genre", null)
                         .WithMany()
                         .HasForeignKey("GenresId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -636,13 +636,13 @@ namespace BookLibConnect.BooksDatabase.Migrations
 
             modelBuilder.Entity("BookLadder", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Book", null)
+                    b.HasOne("Oahu.BooksDatabase.Book", null)
                         .WithMany()
                         .HasForeignKey("BooksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BookLibConnect.BooksDatabase.Ladder", null)
+                    b.HasOne("Oahu.BooksDatabase.Ladder", null)
                         .WithMany()
                         .HasForeignKey("LaddersId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -651,13 +651,13 @@ namespace BookLibConnect.BooksDatabase.Migrations
 
             modelBuilder.Entity("BookNarrator", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Book", null)
+                    b.HasOne("Oahu.BooksDatabase.Book", null)
                         .WithMany()
                         .HasForeignKey("BooksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BookLibConnect.BooksDatabase.Narrator", null)
+                    b.HasOne("Oahu.BooksDatabase.Narrator", null)
                         .WithMany()
                         .HasForeignKey("NarratorsId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -666,27 +666,27 @@ namespace BookLibConnect.BooksDatabase.Migrations
 
             modelBuilder.Entity("LadderRung", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Ladder", null)
+                    b.HasOne("Oahu.BooksDatabase.Ladder", null)
                         .WithMany()
                         .HasForeignKey("LaddersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BookLibConnect.BooksDatabase.Rung", null)
+                    b.HasOne("Oahu.BooksDatabase.Rung", null)
                         .WithMany()
                         .HasForeignKey("RungsOrderIdx", "RungsGenreId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Chapter", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Chapter", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.ChapterInfo", "ChapterInfo")
+                    b.HasOne("Oahu.BooksDatabase.ChapterInfo", "ChapterInfo")
                         .WithMany("Chapters")
                         .HasForeignKey("ChapterInfoId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("BookLibConnect.BooksDatabase.Chapter", "ParentChapter")
+                    b.HasOne("Oahu.BooksDatabase.Chapter", "ParentChapter")
                         .WithMany("Chapters")
                         .HasForeignKey("ParentChapterId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -696,16 +696,16 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.Navigation("ParentChapter");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.ChapterInfo", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.ChapterInfo", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Book", "Book")
+                    b.HasOne("Oahu.BooksDatabase.Book", "Book")
                         .WithOne("ChapterInfo")
-                        .HasForeignKey("BookLibConnect.BooksDatabase.ChapterInfo", "BookId")
+                        .HasForeignKey("Oahu.BooksDatabase.ChapterInfo", "BookId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("BookLibConnect.BooksDatabase.Component", "Component")
+                    b.HasOne("Oahu.BooksDatabase.Component", "Component")
                         .WithOne("ChapterInfo")
-                        .HasForeignKey("BookLibConnect.BooksDatabase.ChapterInfo", "ComponentId")
+                        .HasForeignKey("Oahu.BooksDatabase.ChapterInfo", "ComponentId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Book");
@@ -713,9 +713,9 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.Navigation("Component");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Component", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Component", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Book", "Book")
+                    b.HasOne("Oahu.BooksDatabase.Book", "Book")
                         .WithMany("Components")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -724,16 +724,16 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.Navigation("Book");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Conversion", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Conversion", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Book", "Book")
+                    b.HasOne("Oahu.BooksDatabase.Book", "Book")
                         .WithOne("Conversion")
-                        .HasForeignKey("BookLibConnect.BooksDatabase.Conversion", "BookId")
+                        .HasForeignKey("Oahu.BooksDatabase.Conversion", "BookId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("BookLibConnect.BooksDatabase.Component", "Component")
+                    b.HasOne("Oahu.BooksDatabase.Component", "Component")
                         .WithOne("Conversion")
-                        .HasForeignKey("BookLibConnect.BooksDatabase.Conversion", "ComponentId")
+                        .HasForeignKey("Oahu.BooksDatabase.Conversion", "ComponentId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Book");
@@ -741,9 +741,9 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.Navigation("Component");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Rung", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Rung", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Genre", "Genre")
+                    b.HasOne("Oahu.BooksDatabase.Genre", "Genre")
                         .WithMany()
                         .HasForeignKey("GenreId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -752,15 +752,15 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.Navigation("Genre");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.SeriesBook", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.SeriesBook", b =>
                 {
-                    b.HasOne("BookLibConnect.BooksDatabase.Book", "Book")
+                    b.HasOne("Oahu.BooksDatabase.Book", "Book")
                         .WithMany("Series")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BookLibConnect.BooksDatabase.Series", "Series")
+                    b.HasOne("Oahu.BooksDatabase.Series", "Series")
                         .WithMany("Books")
                         .HasForeignKey("SeriesId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -771,7 +771,7 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.Navigation("Series");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Book", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Book", b =>
                 {
                     b.Navigation("ChapterInfo");
 
@@ -782,24 +782,24 @@ namespace BookLibConnect.BooksDatabase.Migrations
                     b.Navigation("Series");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Chapter", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Chapter", b =>
                 {
                     b.Navigation("Chapters");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.ChapterInfo", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.ChapterInfo", b =>
                 {
                     b.Navigation("Chapters");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Component", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Component", b =>
                 {
                     b.Navigation("ChapterInfo");
 
                     b.Navigation("Conversion");
                 });
 
-            modelBuilder.Entity("BookLibConnect.BooksDatabase.Series", b =>
+            modelBuilder.Entity("Oahu.BooksDatabase.Series", b =>
                 {
                     b.Navigation("Books");
                 });

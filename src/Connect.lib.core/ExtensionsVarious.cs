@@ -13,15 +13,15 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.BooksDatabase;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.BooksDatabase;
 using HtmlAgilityPack;
-using static BookLibConnect.Aux.ApplEnv;
+using static Oahu.Aux.ApplEnv;
 
-using R = BookLibConnect.Core.Properties.Resources;
+using R = Oahu.Core.Properties.Resources;
 
-namespace BookLibConnect.Core.ex {
+namespace Oahu.Core.ex {
   public static class AnonExtensions {
     public static string ToAnonString (this Credentials creds) {
       return $"usr={creds.Username.AnonymizeUsername ()}, pwd={creds.Password.AnonymizePassword ()}";

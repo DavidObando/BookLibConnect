@@ -5,9 +5,9 @@
   <key>CFBundleIdentifier</key>
   <string>com.davidobando.booklibconnect</string>
   <key>CFBundleName</key>
-  <string>Book Lib Connect</string>
+  <string>Oahu</string>
   <key>CFBundleDisplayName</key>
-  <string>Book Lib Connect</string>
+  <string>Oahu</string>
   <key>CFBundleVersion</key>
   <string>__VERSION__</string>
   <key>CFBundleShortVersionString</key>
@@ -15,7 +15,7 @@
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleExecutable</key>
-  <string>BookLibConnect</string>
+  <string>Oahu</string>
   <key>LSMinimumSystemVersion</key>
   <string>13.0</string>
   <key>NSHighResolutionCapable</key>

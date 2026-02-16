@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "AaxAudioConverter 2.x.sln",
+    "path": "Oahu.sln",
     "projects": [
       "Audible.json.core\\Audible.json.core.csproj",
       "AuxLib.core\\AuxLib.core.csproj",

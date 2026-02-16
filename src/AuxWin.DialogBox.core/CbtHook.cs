@@ -18,7 +18,7 @@ using System;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace BookLibConnect.Aux.Win.Win32API.Hook
+namespace Oahu.Aux.Win.Win32API.Hook
 {
 	///////////////////////////////////////////////////////////////////////
 	#region Enum CbtHookAction

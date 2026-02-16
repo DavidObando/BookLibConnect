@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.ComponentModel;
 
-namespace BookLibConnect.Aux.PropGird {
+namespace Oahu.Aux.PropGird {
   public class PropertySorter : ExpandableObjectConverter {
     #region Methods
     public override bool GetPropertiesSupported(ITypeDescriptorContext context) {

@@ -2,9 +2,9 @@ using System.ComponentModel;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using BookLibConnect.Core.UI.Avalonia.ViewModels;
+using Oahu.Core.UI.Avalonia.ViewModels;
 
-namespace BookLibConnect.Core.UI.Avalonia.Views {
+namespace Oahu.Core.UI.Avalonia.Views {
   public partial class BookLibraryView : UserControl {
     public BookLibraryView () {
       InitializeComponent ();

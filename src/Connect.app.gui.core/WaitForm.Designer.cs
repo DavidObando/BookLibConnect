@@ -1,5 +1,5 @@
 ﻿
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   partial class WaitForm {
     /// <summary>
     /// Required designer variable.
@@ -91,7 +91,7 @@ namespace BookLibConnect.App.Gui {
       this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
       this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
       this.Name = "WaitForm";
-      this.Text = "Book Lib Connect";
+      this.Text = "Oahu";
       this.tableLayoutPanel1.ResumeLayout(false);
       this.ResumeLayout(false);
 

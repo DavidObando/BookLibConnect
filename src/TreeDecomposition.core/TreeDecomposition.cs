@@ -6,9 +6,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Aux.Diagnostics {
+namespace Oahu.Aux.Diagnostics {
 
   public static class TreeDecomposition {
     /// <summary>

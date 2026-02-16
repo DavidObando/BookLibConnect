@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookLibConnect.CommonTypes {
+namespace Oahu.CommonTypes {
   public interface IBookMeta : IAudioQuality {
     string Asin { get; }
     string Title { get; }

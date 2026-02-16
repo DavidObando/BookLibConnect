@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
 
   public class LogGuard : IDisposable {
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   public static class ShellExecute {
     public static void Url (Uri uri) => File (uri.OriginalString);
 

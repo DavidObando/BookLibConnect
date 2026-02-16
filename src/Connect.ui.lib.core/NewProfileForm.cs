@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.Aux.Win;
-using BookLibConnect.CommonTypes;
-using R = BookLibConnect.Core.UI.Properties.Resources;
-using static BookLibConnect.Aux.Logging;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.Aux.Win;
+using Oahu.CommonTypes;
+using R = Oahu.Core.UI.Properties.Resources;
+using static Oahu.Aux.Logging;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public partial class NewProfileForm : Form {
 
     private static IReadOnlyDictionary<ERegion, string> __regions = new Dictionary<ERegion, string> {

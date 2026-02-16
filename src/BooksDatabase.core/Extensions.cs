@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace BookLibConnect.BooksDatabase.ex {
+namespace Oahu.BooksDatabase.ex {
   public static class EntityExtensions {
     public static EConversionState ApplicableState (this Book book, bool multipart) {
       if (multipart && book.Components.Count > 0) {

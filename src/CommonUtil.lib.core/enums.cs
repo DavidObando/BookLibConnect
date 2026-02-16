@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookLibConnect.Common.Util {
+namespace Oahu.Common.Util {
   public enum EOnlineUpdate {
     no,
     promptForDownload,

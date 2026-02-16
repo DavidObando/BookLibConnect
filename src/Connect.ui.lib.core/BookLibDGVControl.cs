@@ -6,17 +6,17 @@ using System.Linq;
 using System.Resources;
 using System.Windows.Forms;
 
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.Aux.Win;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.BooksDatabase.ex;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.Aux.Win;
+using Oahu.BooksDatabase;
+using Oahu.BooksDatabase.ex;
 
-using static BookLibConnect.Aux.Logging;
+using static Oahu.Aux.Logging;
 
-using R = BookLibConnect.Core.UI.Properties.Resources;
+using R = Oahu.Core.UI.Properties.Resources;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
 
   public partial class BookLibDGVControl : UserControl {
     private ResourceManager RM { get; } 

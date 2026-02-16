@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace BookLibConnect.Aux.Extensions {
+namespace Oahu.Aux.Extensions {
   public static class BigEndianReader {
     // Note this MODIFIES THE GIVEN ARRAY then returns a reference to the modified array.
     public static byte[] Reverse (this byte[] b) {

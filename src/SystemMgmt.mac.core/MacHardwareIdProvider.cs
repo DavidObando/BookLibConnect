@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using BookLibConnect.CommonTypes;
+using Oahu.CommonTypes;
 
-namespace BookLibConnect.SystemManagement.Mac {
+namespace Oahu.SystemManagement.Mac {
   public class MacHardwareIdProvider : IHardwareIdProvider {
 
     private string _cachedCpuId;

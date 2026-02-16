@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text.Json;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Audible.Json {
+namespace Oahu.Audible.Json {
   public abstract class Serialization<T> {
     private static JsonSerializerOptions Options { get; } = JsonExtensions.Options;
 

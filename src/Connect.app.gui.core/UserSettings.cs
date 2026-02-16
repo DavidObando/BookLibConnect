@@ -1,9 +1,9 @@
 ﻿using System;
-using BookLibConnect.Aux;
-using BookLibConnect.Core;
-using BookLibConnect.Common.Util;
+using Oahu.Aux;
+using Oahu.Core;
+using Oahu.Common.Util;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
 
   public class UserSettings : IUserSettings, IInitSettings {
     public UpdateSettings UpdateSettings { get; set; } = new UpdateSettings ();

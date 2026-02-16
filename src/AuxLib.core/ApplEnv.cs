@@ -5,7 +5,7 @@ using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   public static class ApplEnv {
 
     static readonly char[] INVALID_CHARS = Path.GetInvalidFileNameChars ();

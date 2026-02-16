@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows.Forms;
-using BookLibConnect.Aux;
-using static BookLibConnect.Aux.ApplEnv;
+using Oahu.Aux;
+using static Oahu.Aux.ApplEnv;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   partial class AboutForm : Form {
     public AboutForm () {
       InitializeComponent ();

@@ -6,10 +6,10 @@ using System.Globalization;
 using System.Linq;
 using System.Resources;
 using System.Text;
-using BookLibConnect.Aux.Extensions;
-using static BookLibConnect.Aux.EnumUtil;
+using Oahu.Aux.Extensions;
+using static Oahu.Aux.EnumUtil;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   public class EnumChainConverter<TEnum, TPunct> : TypeConverter
     where TEnum : struct, Enum 
     where TPunct : class, IChainPunctuation, new() 

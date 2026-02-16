@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using BookLibConnect.Aux;
+using Oahu.Aux;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
   public static class ConsoleExternalLogin {
     public static Uri Callback (Uri uri) {
 

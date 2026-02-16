@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BookLibConnect.Audible.Json {
+namespace Oahu.Audible.Json {
 
   public class Voucher : Serialization<Voucher> {
     public string key { get; set; }

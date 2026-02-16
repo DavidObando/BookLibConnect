@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Reflection;
 
-namespace BookLibConnect.Aux.PropGird {
+namespace Oahu.Aux.PropGird {
   public enum EReadonly { none, minimum, search, modify, modifyExt, all };
   public enum EVisibility { none, minmum, search, all };
 

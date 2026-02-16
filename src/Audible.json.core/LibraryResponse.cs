@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace BookLibConnect.Audible.Json {
+namespace Oahu.Audible.Json {
 
   public interface IPerson {
     string asin { get; set; }

@@ -1,5 +1,5 @@
 ﻿
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   partial class BookLibDGVControl {
     /// <summary>
     /// Required designer variable.
@@ -26,7 +26,7 @@ namespace BookLibConnect.Core.UI {
     private void InitializeComponent () {
       System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
       System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-      this.dataGridView1 = new BookLibConnect.Core.UI.DataGridViewEx();
+      this.dataGridView1 = new Oahu.Core.UI.DataGridViewEx();
       this.panelDownloadSelect = new System.Windows.Forms.Panel();
       this.panelDnloadList = new System.Windows.Forms.Panel();
       this.lblDnloadList = new System.Windows.Forms.Label();
@@ -260,7 +260,7 @@ namespace BookLibConnect.Core.UI {
 
     #endregion
 
-    private BookLibConnect.Core.UI.DataGridViewEx dataGridView1;
+    private Oahu.Core.UI.DataGridViewEx dataGridView1;
     private System.Windows.Forms.Button btnOk;
     private System.Windows.Forms.Panel panel1;
     private System.Windows.Forms.Panel panelOk;

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.CommonTypes;
-using BookLibConnect.Core.ex;
-using static BookLibConnect.Aux.Logging;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.CommonTypes;
+using Oahu.Core.ex;
+using static Oahu.Aux.Logging;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
   public class AudibleClient {
 
     private IAudibleApi _audibleApi;

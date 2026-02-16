@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-    <RootNamespace>BookLibConnect.Aux.PropGrid</RootNamespace>
-    <AssemblyName>BookLibConnect.Aux.PropGrid.Core</AssemblyName>
+    <RootNamespace>Oahu.Aux.PropGrid</RootNamespace>
+    <AssemblyName>Oahu.Aux.PropGrid.Core</AssemblyName>
 
   </PropertyGroup>
 

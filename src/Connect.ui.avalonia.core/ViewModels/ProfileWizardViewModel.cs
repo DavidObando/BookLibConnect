@@ -6,13 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.CommonTypes;
-using BookLibConnect.Core.UI.Avalonia.Converters;
-using static BookLibConnect.Aux.Logging;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.CommonTypes;
+using Oahu.Core.UI.Avalonia.Converters;
+using static Oahu.Aux.Logging;
 
-namespace BookLibConnect.Core.UI.Avalonia.ViewModels {
+namespace Oahu.Core.UI.Avalonia.ViewModels {
   public partial class ProfileWizardViewModel : ObservableObject {
 
     public static StepVisibilityConverter StepConverter { get; } = new ();
@@ -134,7 +134,7 @@ namespace BookLibConnect.Core.UI.Avalonia.ViewModels {
       _exportSettings = exportSettings;
 
       string musicDir = Path.Combine (
-        Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Music", "BookLibConnect");
+        Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Music", "Oahu");
 
       DownloadDirectory = downloadSettings?.DownloadDirectory
         ?? Path.Combine (musicDir, "Downloads");

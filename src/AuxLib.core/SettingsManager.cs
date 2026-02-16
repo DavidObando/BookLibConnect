@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   /// <summary>
   /// Simple settings manager for app and user settings serialized as json.
   /// Does not use Microsoft.Extensions.Configuration

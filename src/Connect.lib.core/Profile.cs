@@ -8,12 +8,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using System.Web;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.CommonTypes;
-using BookLibConnect.Core.ex;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.CommonTypes;
+using Oahu.Core.ex;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
 
   class Authorization : IAuthorization {
     public string AuthorizationCode { get; set; }

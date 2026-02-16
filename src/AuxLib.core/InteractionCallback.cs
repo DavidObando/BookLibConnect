@@ -2,7 +2,7 @@
 using System.Diagnostics.Contracts;
 using System.Threading;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
 
 
   /// <summary>

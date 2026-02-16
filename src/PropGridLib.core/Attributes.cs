@@ -1,6 +1,6 @@
 using System;
 
-namespace BookLibConnect.Aux.PropGird {
+namespace Oahu.Aux.PropGird {
   [AttributeUsage (AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
   public class GlobalizedPropertyAttribute : Attribute {
     public string NameTag { get; set; }

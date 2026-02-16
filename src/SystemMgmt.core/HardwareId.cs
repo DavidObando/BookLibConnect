@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Management;
 
-namespace BookLibConnect.SystemManagement {
+namespace Oahu.SystemManagement {
   /// <summary>
   /// http://jai-on-asp.blogspot.com/2010/03/finding-hardware-id-of-computer.html
   /// </summary>

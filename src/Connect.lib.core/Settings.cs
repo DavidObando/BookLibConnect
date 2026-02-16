@@ -1,9 +1,9 @@
 ﻿using System;
-using BookLibConnect.Aux.Diagnostics;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.Common.Util;
+using Oahu.Aux.Diagnostics;
+using Oahu.BooksDatabase;
+using Oahu.Common.Util;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
   public interface IConfigSettings {
     bool EncryptConfiguration { get; }
   }

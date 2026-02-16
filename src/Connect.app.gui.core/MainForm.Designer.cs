@@ -1,7 +1,7 @@
 ﻿
-using BookLibConnect.Core.UI;
+using Oahu.Core.UI;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   partial class MainForm {
     /// <summary>
     ///  Required designer variable.
@@ -30,7 +30,7 @@ namespace BookLibConnect.App.Gui {
       System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
       this.ckBoxAdult = new System.Windows.Forms.CheckBox();
       this.ckBoxMultiPart = new System.Windows.Forms.CheckBox();
-      this.convertdgvControl1 = new BookLibConnect.Core.UI.ConvertDGVControl();
+      this.convertdgvControl1 = new Oahu.Core.UI.ConvertDGVControl();
       this.panelTop = new System.Windows.Forms.Panel();
       this.grpBoxDownload = new System.Windows.Forms.GroupBox();
       this.comBoxDnldQual = new System.Windows.Forms.ComboBox();

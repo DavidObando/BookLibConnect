@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   public static class Temp {
     public static string GetPseudoUniqueString () {
       long ticks = DateTime.UtcNow.Ticks;

@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using BookLibConnect.BooksDatabase;
+using Oahu.BooksDatabase;
 
-namespace BookLibConnect.Core.UI.Avalonia.ViewModels {
+namespace Oahu.Core.UI.Avalonia.ViewModels {
   public partial class BookLibraryViewModel : ObservableObject {
 
     [ObservableProperty]

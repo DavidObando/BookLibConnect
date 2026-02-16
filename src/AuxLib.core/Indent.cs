@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   /// <summary>
   /// Automatic indentation, managed as a resource
   /// </summary>

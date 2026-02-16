@@ -5,10 +5,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
-using BookLibConnect.Aux.Extensions;
-using static BookLibConnect.Aux.EnumUtil;
+using Oahu.Aux.Extensions;
+using static Oahu.Aux.EnumUtil;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
 
   public class EnumConverter<TEnum> : TypeConverter 
     where TEnum : struct, Enum 

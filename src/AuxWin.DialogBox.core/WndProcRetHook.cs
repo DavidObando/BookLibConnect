@@ -19,7 +19,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
-namespace BookLibConnect.Aux.Win.Win32API.Hook
+namespace Oahu.Aux.Win.Win32API.Hook
 {
 	///////////////////////////////////////////////////////////////////////
 	#region Enum WndMessage

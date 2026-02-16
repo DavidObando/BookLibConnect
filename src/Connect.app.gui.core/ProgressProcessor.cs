@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using BookLibConnect.Common.Util;
+using Oahu.Common.Util;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   abstract class ProgressProcessorBase {
     public Progress<ProgressMessage> Progress { get; }
 

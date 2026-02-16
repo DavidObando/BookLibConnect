@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using BookLibConnect.CommonTypes;
+using Oahu.CommonTypes;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
 
   interface ILocale {
     ERegion CountryCode { get; }

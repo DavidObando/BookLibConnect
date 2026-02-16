@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace BookLibConnect.BooksDatabase.Migrations
+namespace Oahu.BooksDatabase.Migrations
 {
     public partial class NullableDeleted : Migration
     {

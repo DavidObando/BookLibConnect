@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Linq;
-using BookLibConnect.BooksDatabase;
+using Oahu.BooksDatabase;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public static class Extensions {
 
     public static int IndexOf (this BindingList<BookDataSource> bindingList, Book dataItem) {
