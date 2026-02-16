@@ -18,11 +18,15 @@ namespace Oahu.Core.UI.Avalonia.ViewModels {
     [ObservableProperty]
     private BookItemViewModel _selectedBook;
 
+    public string SelectedBookAsin { get; set; }
+
     [ObservableProperty]
     private bool _hasSelectedBook;
 
     partial void OnSelectedBookChanged (BookItemViewModel value) {
       HasSelectedBook = value is not null;
+      if (value is not null)
+        SelectedBookAsin = value.Asin;
     }
 
     [ObservableProperty]
@@ -52,8 +56,16 @@ namespace Oahu.Core.UI.Avalonia.ViewModels {
       }
       UpdateSelectedCount ();
 
-      if (Books.Count > 0)
-        SelectedBook = Books[0];
+      if (Books.Count == 0) {
+        SelectedBook = null;
+        return;
+      }
+
+      var previousSelection = !string.IsNullOrWhiteSpace (SelectedBookAsin)
+        ? Books.FirstOrDefault (b => b.Asin == SelectedBookAsin)
+        : null;
+
+      SelectedBook = previousSelection ?? Books[0];
     }
 
     public IEnumerable<BookItemViewModel> GetSelectedBooks () =>

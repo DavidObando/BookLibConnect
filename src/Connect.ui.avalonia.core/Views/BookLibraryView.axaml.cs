@@ -2,10 +2,14 @@ using System.ComponentModel;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Oahu.Core.UI.Avalonia.ViewModels;
 
 namespace Oahu.Core.UI.Avalonia.Views {
   public partial class BookLibraryView : UserControl {
+    private bool _sortingSubscribed;
+    private bool _restoringSortState;
+
     public BookLibraryView () {
       InitializeComponent ();
     }
@@ -16,29 +20,47 @@ namespace Oahu.Core.UI.Avalonia.Views {
       if (booksGrid is null)
         return;
 
-      // Save sort state whenever the user clicks a column header.
-      // The Sorting event fires before the sort is applied, so we compute the
-      // next direction using the same toggle logic the DataGrid uses internally:
-      // null → Ascending → Descending → Ascending → …
-      booksGrid.Sorting += (s, args) => {
-        if (DataContext is BookLibraryViewModel vm && args.Column is not null) {
-          int colIdx = booksGrid.Columns.IndexOf (args.Column);
-          ListSortDirection next;
-          if (vm.SortColumnIndex == colIdx && vm.SortDirection == ListSortDirection.Ascending)
-            next = ListSortDirection.Descending;
-          else
-            next = ListSortDirection.Ascending;
-
-          vm.SortColumnIndex = colIdx;
-          vm.SortDirection = next;
-        }
-      };
+      if (!_sortingSubscribed) {
+        booksGrid.Sorting += OnBooksGridSorting;
+        _sortingSubscribed = true;
+      }
 
       // Restore previously saved sort state
       restoreSortState ();
 
       // Restore previously selected book
       restoreSelectedBook ();
+    }
+
+    protected override void OnUnloaded (RoutedEventArgs e) {
+      if (DataContext is BookLibraryViewModel vm && booksGrid?.SelectedItem is BookItemViewModel selected) {
+        vm.SelectedBookAsin = selected.Asin;
+        vm.SelectedBook = selected;
+      }
+
+      if (booksGrid is not null && _sortingSubscribed) {
+        booksGrid.Sorting -= OnBooksGridSorting;
+        _sortingSubscribed = false;
+      }
+
+      base.OnUnloaded (e);
+    }
+
+    private void OnBooksGridSorting (object sender, DataGridColumnEventArgs args) {
+      if (_restoringSortState)
+        return;
+      if (DataContext is not BookLibraryViewModel vm || args.Column is null)
+        return;
+
+      int colIdx = booksGrid.Columns.IndexOf (args.Column);
+      ListSortDirection next;
+      if (vm.SortColumnIndex == colIdx && vm.SortDirection == ListSortDirection.Ascending)
+        next = ListSortDirection.Descending;
+      else
+        next = ListSortDirection.Ascending;
+
+      vm.SortColumnIndex = colIdx;
+      vm.SortDirection = next;
     }
 
     private void restoreSortState () {
@@ -56,17 +78,40 @@ namespace Oahu.Core.UI.Avalonia.Views {
       foreach (var c in booksGrid.Columns)
         c.ClearSort ();
 
-      col.Sort (vm.SortDirection.Value);
+      _restoringSortState = true;
+      try {
+        col.Sort (vm.SortDirection.Value);
+      }
+      finally {
+        _restoringSortState = false;
+      }
     }
 
     private void restoreSelectedBook () {
       if (DataContext is not BookLibraryViewModel vm)
         return;
-      if (vm.SelectedBook is null)
+      var selected = !string.IsNullOrWhiteSpace (vm.SelectedBookAsin)
+        ? vm.Books.FirstOrDefault (b => b.Asin == vm.SelectedBookAsin)
+        : vm.SelectedBook;
+
+      if (selected is null)
         return;
 
-      booksGrid.SelectedItem = vm.SelectedBook;
-      booksGrid.ScrollIntoView (vm.SelectedBook, null);
+      vm.SelectedBook = selected;
+      booksGrid.SelectedItem = selected;
+      ensureSelectedBookInView (selected);
+    }
+
+    private void ensureSelectedBookInView (BookItemViewModel selected) {
+      booksGrid.Focus ();
+      booksGrid.ScrollIntoView (selected, null);
+
+      Dispatcher.UIThread.Post (() => {
+        booksGrid.UpdateLayout ();
+        booksGrid.ScrollIntoView (selected, null);
+
+        Dispatcher.UIThread.Post (() => booksGrid.ScrollIntoView (selected, null), DispatcherPriority.Background);
+      }, DispatcherPriority.Render);
     }
   }
 }
