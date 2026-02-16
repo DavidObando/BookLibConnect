@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Connect.app.gui.core": {
-      "commandName": "Project",
-      "commandLineArgs": "-Log=4"
-    }
-  }
-}

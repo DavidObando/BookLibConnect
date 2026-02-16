@@ -29,7 +29,7 @@ The solution contains a legacy Windows WinForms client and a cross-platform Aval
 
 ```bash
 # Build everything (requires EnableWindowsTargeting on non-Windows)
-dotnet build "AaxAudioConverter 2.x.sln"
+dotnet build "Oahu.sln"
 
 # Build only the cross-platform Avalonia projects
 dotnet build Oahu.Avalonia.slnf
