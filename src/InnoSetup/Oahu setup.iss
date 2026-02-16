@@ -22,7 +22,7 @@ VersionInfoCompany={#MyCompany}
 AppPublisher={#MyCompany}
 AppPublisherURL=https://github.com/{#MyCompany}/{#MyAppName}
 
-OutputBaseFilename={#MyAppName}-{#MyAppVersion}-{#MyArchitecture}-Setup
+OutputBaseFilename={#MyAppName}-{#MyAppVersion}-win-{#MyArchitecture}-Setup
 DefaultGroupName={#MyCompany}
 DefaultDirName={autopf}\{#MyAppSetupName}
 UninstallDisplayIcon={app}\{#MyProgramExe}
