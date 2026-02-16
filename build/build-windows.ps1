@@ -87,7 +87,6 @@ $SrcDir    = Join-Path $RepoRoot "src"
 
 $Project    = Join-Path $SrcDir "Connect.app.avalonia.core/Connect.app.avalonia.core.csproj"
 $ProjectDir = "Connect.app.avalonia.core"
-$AppLabel   = "Avalonia"
 
 $PublishDir = Join-Path $OutputDir "publish"
 
@@ -99,7 +98,7 @@ if (-not (Test-Path $Project)) {
 # ---------------------------------------------------------------------------
 # Version
 # ---------------------------------------------------------------------------
-Write-Host "=== Oahu Windows Build ($AppLabel) ===" -ForegroundColor Cyan
+Write-Host "=== Oahu Windows Build ===" -ForegroundColor Cyan
 Write-Host "Configuration: $Configuration"
 Write-Host "Runtime:       $Runtime"
 Write-Host "Output:        $OutputDir"
