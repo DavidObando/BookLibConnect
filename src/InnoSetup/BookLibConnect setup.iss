@@ -8,6 +8,9 @@
 #ifndef MySourceDir
   #define MySourceDir '..\Connect.app.gui.core\bin\Release\net10.0-windows\publish'
 #endif
+#ifndef MyArchitecture
+  #define MyArchitecture 'x64'
+#endif
 
 [Setup]
 AppName={#MyAppSetupName}
@@ -19,7 +22,7 @@ VersionInfoCompany={#MyCompany}
 AppPublisher={#MyCompany}
 AppPublisherURL=https://github.com/{#MyCompany}/{#MyAppName}
 
-OutputBaseFilename={#MyAppName}-{#MyAppVersion}-Setup
+OutputBaseFilename={#MyAppName}-{#MyAppVersion}-{#MyArchitecture}-Setup
 DefaultGroupName={#MyCompany}
 DefaultDirName={autopf}\{#MyAppSetupName}
 UninstallDisplayIcon={app}\{#MyProgramExe}
@@ -37,8 +40,7 @@ PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 UsePreviousPrivileges=yes
 
-ArchitecturesAllowed=x64
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesInstallIn64BitMode=x64compatible
 
 [Languages]
 Name: en; MessagesFile: "compiler:Default.isl"
@@ -71,6 +73,3 @@ Name: "{autodesktop}\{#MyAppSetupName}"; Filename: "{app}\{#MyProgramExe}"; Task
 
 [Run]
 Filename: "{app}\{#MyProgramExe}"; Description: "{cm:LaunchProgram,{#MyAppSetupName}}"; Flags: nowait postinstall skipifsilent
-
-
-

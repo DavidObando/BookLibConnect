@@ -2,7 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:BookLibConnect.Core.UI.Avalonia.ViewModels"
              x:Class="BookLibConnect.Core.UI.Avalonia.Views.ProfileWizardView"
-             x:DataType="vm:ProfileWizardViewModel">
+             x:DataType="vm:ProfileWizardViewModel"
+             x:CompileBindings="True">
 
   <DockPanel Margin="16">
     <!-- Title and step indicator -->
@@ -12,8 +13,8 @@
       <TextBlock FontSize="12" Foreground="Gray">
         <TextBlock.Text>
           <MultiBinding StringFormat="Step {0} of {1}">
-            <Binding Path="CurrentStep" Converter="{x:Static vm:ProfileWizardViewModel.OneBasedConverter}" />
-            <Binding Path="TotalSteps" />
+            <CompiledBinding Path="CurrentStep" Converter="{x:Static vm:ProfileWizardViewModel.OneBasedConverter}" />
+            <CompiledBinding Path="TotalSteps" />
           </MultiBinding>
         </TextBlock.Text>
       </TextBlock>

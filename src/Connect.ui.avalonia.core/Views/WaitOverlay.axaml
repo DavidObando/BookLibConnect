@@ -1,6 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="BookLibConnect.Core.UI.Avalonia.Views.WaitOverlay">
+             xmlns:vm="using:BookLibConnect.Core.UI.Avalonia.ViewModels"
+             x:Class="BookLibConnect.Core.UI.Avalonia.Views.WaitOverlay"
+             x:DataType="vm:MainWindowViewModel"
+             x:CompileBindings="True">
 
   <Border Background="#80000000" IsVisible="{Binding IsBusy}">
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"

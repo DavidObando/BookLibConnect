@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -87,6 +88,9 @@ namespace BookLibConnect.Aux.Diagnostics {
       dump (o, new Stack<Type> (), tw, ind, flags, caption, null, null, null, false);
 
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Type metadata is preserved via TrimMode=partial.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Type metadata is preserved via TrimMode=partial.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Type metadata is preserved via TrimMode=partial.")]
     private void dump (
       object o, Stack<Type> stack, TextWriter tw, Indent ind, EDumpFlags flags,
       string caption, string itemCaption, CustomFormat itemFormat, string oDesc, bool inEnum
@@ -136,6 +140,7 @@ namespace BookLibConnect.Aux.Diagnostics {
       stack.Pop ();
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Interface types are preserved via TrimMode=partial.")]
     private void dump (
       ref IEnumerable<PropertyInfo> propInfos, object o, IEnumerable<Type> path,
       Stack<Type> stack, TextWriter tw, Indent ind, EDumpFlags flags, bool inEnum
@@ -265,7 +270,7 @@ namespace BookLibConnect.Aux.Diagnostics {
       return attrs.FirstOfType<DescriptionAttribute> ()?.Description;
     }
 
-    private void dumpCollection (object o, Stack<Type> stack, Type objectType, TextWriter tw, Indent ind, 
+    private void dumpCollection (object o, Stack<Type> stack, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type objectType, TextWriter tw, Indent ind, 
       EDumpFlags flags, string itemCaption, CustomFormat itemFormat
     ) {
 
@@ -427,6 +432,8 @@ namespace BookLibConnect.Aux.Diagnostics {
       return enumerable.OfType<T>().FirstOrDefault ();
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "DeclaringType is expected to preserve interface metadata at runtime.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Interface types preserve property metadata at runtime.")]
     public static IEnumerable<object> GetCustomAttributesIncludingBaseInterfaces (this PropertyInfo pi) {
       return pi.GetCustomAttributes (true).
         Union (pi.DeclaringType.GetInterfaces ().

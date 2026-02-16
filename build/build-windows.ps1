@@ -253,9 +253,13 @@ if ($CreateInstaller) {
         $installerOutput = Join-Path (Resolve-Path $OutputDir).Path "installer"
         New-Item -ItemType Directory -Path $installerOutput -Force | Out-Null
 
+        # Extract architecture from runtime (e.g. win-x64 -> x64, win-arm64 -> arm64)
+        $Arch = $Runtime -replace '^win-', ''
+
         & $iscc $issFile `
             /DMyAppVersion="$AppVersion" `
             /DMySourceDir="$(Resolve-Path $PublishDir)" `
+            /DMyArchitecture="$Arch" `
             /O"$installerOutput"
 
         if ($LASTEXITCODE -ne 0) {
