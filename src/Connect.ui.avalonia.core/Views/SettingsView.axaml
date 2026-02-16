@@ -2,7 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:BookLibConnect.Core.UI.Avalonia.ViewModels"
              x:Class="BookLibConnect.Core.UI.Avalonia.Views.SettingsView"
-             x:DataType="vm:SettingsViewModel">
+             x:DataType="vm:SettingsViewModel"
+             x:CompileBindings="True">
 
   <ScrollViewer Padding="16">
     <StackPanel Spacing="16">

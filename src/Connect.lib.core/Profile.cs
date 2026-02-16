@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -274,6 +275,7 @@ namespace BookLibConnect.Core {
       await config.WriteJsonFileAsync (CONFIG_DIR, this.GetType().Name);
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "SerializableConfig and Profile types are preserved via TrimMode=partial.")]
     private static void encrypt (SerializableConfig configuration, string token) {
       if (configuration.Profiles is null)
         return;
@@ -285,6 +287,7 @@ namespace BookLibConnect.Core {
       configuration.Profiles = null;
     }
   
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "SerializableConfig and Profile types are preserved via TrimMode=partial.")]
     private static void decrypt (SerializableConfig configuration, string token) {
       if (configuration.Secure is null || configuration.Secure.IsNullOrWhiteSpace())
         return;

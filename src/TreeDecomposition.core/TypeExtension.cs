@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
 namespace BookLibConnect.Aux.Diagnostics {
   static class TypeExtension {
 
-    public static IEnumerable<IEnumerable<Type>> GetInterfaceHierarchy (this Type root) {
+    public static IEnumerable<IEnumerable<Type>> GetInterfaceHierarchy ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] this Type root) {
       var leavesDict = new Dictionary<Type, List<Type>> ();
       findLeaves (root, new List<Type> (), leavesDict);
       List<List<Type>> list = sort (leavesDict);
@@ -23,7 +24,8 @@ namespace BookLibConnect.Aux.Diagnostics {
       return sb.ToString ();
     } 
 
-    private static void findLeaves (Type type, IList<Type> path, IDictionary<Type, List<Type>> leaves) {
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Interface types returned by GetInterfaces preserve their own interface metadata.")]
+    private static void findLeaves ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type type, IList<Type> path, IDictionary<Type, List<Type>> leaves) {
       if (type.IsInterface) {
         path.Add (type);
         bool succ = leaves.TryGetValue (type, out var p);

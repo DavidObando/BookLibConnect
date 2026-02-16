@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BookLibConnect.Aux.Diagnostics {
 
@@ -27,7 +28,7 @@ namespace BookLibConnect.Aux.Diagnostics {
     public readonly ToStringConverter Converter;
     public readonly string Format;
 
-    public ToStringAttribute (Type type, string format = null) {
+    public ToStringAttribute ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type type, string format = null) {
       if (typeof (ToStringConverter).IsAssignableFrom (type)) {
         lock (__converters) {
           bool succ = __converters.TryGetValue (type, out var converter);

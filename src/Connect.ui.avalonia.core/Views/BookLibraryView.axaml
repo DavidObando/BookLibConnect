@@ -3,7 +3,8 @@
              xmlns:vm="using:BookLibConnect.Core.UI.Avalonia.ViewModels"
              xmlns:conv="using:BookLibConnect.Core.UI.Avalonia.Converters"
              x:Class="BookLibConnect.Core.UI.Avalonia.Views.BookLibraryView"
-             x:DataType="vm:BookLibraryViewModel">
+             x:DataType="vm:BookLibraryViewModel"
+             x:CompileBindings="True">
 
   <DockPanel>
     <!-- Toolbar -->
@@ -53,7 +54,7 @@
                                   SortMemberPath="RunTimeLengthSeconds"
                                   Width="80">
             <DataGridTemplateColumn.CellTemplate>
-              <DataTemplate>
+              <DataTemplate x:DataType="vm:BookItemViewModel">
                 <TextBlock Text="{Binding Duration}"
                            VerticalAlignment="Center"
                            Margin="4,0" />

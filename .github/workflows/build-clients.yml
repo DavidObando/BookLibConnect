@@ -120,14 +120,6 @@ jobs:
             security delete-keychain "$KEYCHAIN_PATH" || true
           fi
 
-      - name: Upload .app bundle
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: BookLibConnect-${{ matrix.runtime }}-app
-          path: ./artifacts/Book Lib Connect.app
-          retention-days: 30
-
       - name: Upload DMG
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
@@ -178,14 +170,6 @@ jobs:
             -OutputDir ./artifacts `
             -AvaloniaApp `
             -CreateInstaller
-
-      - name: Upload app
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: BookLibConnect-${{ matrix.runtime }}
-          path: ./artifacts/publish/
-          retention-days: 30
 
       - name: Upload installer
         if: github.event_name != 'pull_request'

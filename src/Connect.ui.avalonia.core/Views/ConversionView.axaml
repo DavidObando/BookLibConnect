@@ -2,7 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:BookLibConnect.Core.UI.Avalonia.ViewModels"
              x:Class="BookLibConnect.Core.UI.Avalonia.Views.ConversionView"
-             x:DataType="vm:ConversionViewModel">
+             x:DataType="vm:ConversionViewModel"
+             x:CompileBindings="True">
 
   <DockPanel>
     <!-- Toolbar -->
@@ -61,7 +62,7 @@
                             Width="120" />
         <DataGridTemplateColumn Header="Progress" Width="150">
           <DataGridTemplateColumn.CellTemplate>
-            <DataTemplate>
+            <DataTemplate x:DataType="vm:ConversionItemViewModel">
               <ProgressBar Value="{Binding Progress}"
                            Minimum="0" Maximum="1"
                            Height="16"
