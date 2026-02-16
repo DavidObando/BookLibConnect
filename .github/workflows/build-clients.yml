@@ -84,11 +84,11 @@ jobs:
 
       - name: Restore dependencies
         working-directory: src
-        run: dotnet restore Oahu.Avalonia.slnf
+        run: dotnet restore Oahu.sln
 
       - name: Build
         working-directory: src
-        run: dotnet build Oahu.Avalonia.slnf --configuration Release --no-restore
+        run: dotnet build Oahu.sln --configuration Release --no-restore
 
       - name: Create .app bundle, sign, and create DMG
         env:
@@ -156,11 +156,11 @@ jobs:
 
       - name: Restore dependencies
         working-directory: src
-        run: dotnet restore Oahu.Avalonia.slnf
+        run: dotnet restore Oahu.sln
 
       - name: Build
         working-directory: src
-        run: dotnet build Oahu.Avalonia.slnf --configuration Release --no-restore
+        run: dotnet build Oahu.sln --configuration Release --no-restore
 
       - name: Publish app
         run: |
@@ -206,11 +206,11 @@ jobs:
 
       - name: Restore dependencies
         working-directory: src
-        run: dotnet restore Oahu.Avalonia.slnf
+        run: dotnet restore Oahu.sln
 
       - name: Build
         working-directory: src
-        run: dotnet build Oahu.Avalonia.slnf --configuration Release --no-restore
+        run: dotnet build Oahu.sln --configuration Release --no-restore
 
       - name: Publish and package
         run: |
