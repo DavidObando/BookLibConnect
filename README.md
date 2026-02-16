@@ -3,6 +3,7 @@ A standalone Audible downloader and decrypter
 
 [![GitHub All Releases](https://img.shields.io/github/downloads/DavidObando/Oahu/total)](https://github.com/DavidObando/Oahu/releases) [![GitHub](https://img.shields.io/github/license/DavidObando/Oahu)](https://github.com/DavidObando/Oahu/blob/main/LICENSE) [![](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](http://microsoft.com/windows) [![](https://img.shields.io/badge/language-C%23-blue)](http://csharp.net/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/DavidObando/Oahu)](https://github.com/DavidObando/Oahu/releases/latest)
 
+![](src/Connect.app.avalonia.core/Resources/audio.png?raw=true)
 
 Oahu is an Audible downloader app for Windows, macOS, and Linux. Forked from [audiamus/BookLibConnect](https://github.com/audiamus/BookLibConnect).
 
