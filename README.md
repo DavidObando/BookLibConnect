@@ -4,7 +4,7 @@ A standalone Audible downloader and decrypter
 [![GitHub All Releases](https://img.shields.io/github/downloads/DavidObando/Oahu/total)](https://github.com/DavidObando/Oahu/releases) [![GitHub](https://img.shields.io/github/license/DavidObando/Oahu)](https://github.com/DavidObando/Oahu/blob/main/LICENSE) [![](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](http://microsoft.com/windows) [![](https://img.shields.io/badge/language-C%23-blue)](http://csharp.net/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/DavidObando/Oahu)](https://github.com/DavidObando/Oahu/releases/latest)
 
 
-Oahu is an Audible downloader app for Windows, macOS, and Linux. Forked from [audiamus/Oahu](https://github.com/audiamus/BookLibConnect).
+Oahu is an Audible downloader app for Windows, macOS, and Linux. Forked from [audiamus/BookLibConnect](https://github.com/audiamus/BookLibConnect).
 
 ## Features
 - **Free** and **Open Source** software. 
@@ -25,35 +25,29 @@ Oahu will run on Windows 64bit, macOS, or Linux. Minimum Windows version is 7. M
 
 ### Building from source
 
-The solution contains a legacy Windows WinForms client and a cross-platform Avalonia client (Windows, macOS, Linux). Use the solution filter files for targeted builds:
+The repository now ships a single cross-platform Avalonia client (Windows, macOS, Linux).
 
 ```bash
-# Build everything (requires EnableWindowsTargeting on non-Windows)
-dotnet build "AaxAudioConverter 2.x.sln"
-
-# Build only the cross-platform Avalonia projects
-dotnet build Oahu.Avalonia.slnf
-
-# Build only Windows WinForms projects
-dotnet build Oahu.Windows.slnf
+# Build the full solution
+dotnet build src/Oahu.sln
 
 # Run the Avalonia app
-dotnet run --project Connect.app.avalonia.core/Connect.app.avalonia.core.csproj
+dotnet run --project src/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj
 
 # Publish for macOS (Apple Silicon)
-dotnet publish Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
+dotnet publish src/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
   -r osx-arm64 -c Release --self-contained -p:PublishTrimmed=true
 
 # Publish for macOS (Intel)
-dotnet publish Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
+dotnet publish src/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
   -r osx-x64 -c Release --self-contained -p:PublishTrimmed=true
 
 # Publish for Windows
-dotnet publish Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
+dotnet publish src/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
   -r win-x64 -c Release --self-contained -p:PublishTrimmed=true
 
 # Publish for Linux
-dotnet publish Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
+dotnet publish src/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
   -r linux-x64 -c Release --self-contained -p:PublishTrimmed=true
 ```
 
@@ -65,11 +59,8 @@ Platform-specific build scripts are provided in the `build/` directory:
 # macOS — creates .app bundle + DMG (with optional code signing and notarization)
 ./build/build-macos.sh
 
-# Windows — publishes WinForms app (with optional Inno Setup installer)
+# Windows — publishes Avalonia app (with optional Inno Setup installer)
 ./build/build-windows.ps1
-
-# Windows — publishes Avalonia app (with IL trimming)
-./build/build-windows.ps1 -AvaloniaApp
 
 # Linux — publishes Avalonia app and creates tarball
 ./build/build-linux.sh
@@ -88,19 +79,12 @@ Shared (platform-neutral):
   Connect.lib.core        — Core business logic (Audible API, library, auth)
 
 Cross-platform Avalonia app (Windows, macOS, Linux):
+  AuxWin32Lib.core         — Win32 file I/O helper (used conditionally)
   SystemMgmt.core         — Windows hardware ID (WMI)
   SystemMgmt.mac.core     — macOS hardware ID (sysctl/IOKit)
   SystemMgmt.linux.core   — Linux hardware ID (DMI/machine-id)
   Connect.ui.avalonia.core — Avalonia MVVM ViewModels + Views
   Connect.app.avalonia.core — Avalonia application entry point
-
-Legacy Windows-only (WinForms):
-  AuxWin32Lib.core        — Win32 file I/O, registry
-  AuxWin.DialogBox.core   — Win32 dialog hooks
-  AuxWin.lib.core         — WinForms helpers
-  PropGridLib.core        — WinForms PropertyGrid
-  Connect.ui.lib.core     — WinForms UI controls
-  Connect.app.gui.core    — WinForms application
 ```
 
 ## Acknowledgments
