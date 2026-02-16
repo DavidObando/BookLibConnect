@@ -75,7 +75,7 @@ dotnet publish "$PROJECT" \
   --runtime "$RUNTIME" \
   --self-contained true \
   -p:PublishSingleFile=false \
-  -p:PublishTrimmed=true \
+  -p:PublishTrimmed=false \
   --output "$OUTPUT_DIR/publish"
 
 # Build the .app bundle
@@ -95,8 +95,8 @@ cp -R "$OUTPUT_DIR/publish/"* "$MACOS_DIR/"
 sed "s/__VERSION__/$APP_VERSION/g" "$INFO_PLIST" > "$CONTENTS/Info.plist"
 
 # Copy icon if it exists; generate from PNG if needed
-ICON_FILE="$SRC_DIR/Connect.app.avalonia.core/audio.icns"
-ICON_PNG="$SRC_DIR/Connect.app.gui.core/Resources/audio.png"
+ICON_FILE="$SRC_DIR/Connect.app.avalonia.core/Resources/audio.icns"
+ICON_PNG="$SRC_DIR/Connect.app.avalonia.core/Resources/audio.png"
 if [[ ! -f "$ICON_FILE" && -f "$ICON_PNG" ]]; then
   echo "  Generating audio.icns from audio.png..."
   ICONSET="$(mktemp -d)/audio.iconset"

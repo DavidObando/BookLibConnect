@@ -8,7 +8,7 @@
     Inno Setup installer.
 
     With the -AvaloniaApp switch, publishes the cross-platform Avalonia
-    application instead (Connect.app.avalonia.core), with IL trimming enabled.
+    application instead (Connect.app.avalonia.core).
 
 .PARAMETER Configuration
     Build configuration (Release or Debug). Default: Release.
@@ -51,7 +51,7 @@
 
 .EXAMPLE
     .\build-windows.ps1 -AvaloniaApp
-    # Publishes the Avalonia app with IL trimming for win-x64.
+    # Publishes the Avalonia app for win-x64.
 
 .EXAMPLE
     .\build-windows.ps1 -Configuration Debug -Runtime win-arm64
@@ -164,7 +164,7 @@ $dotnetArgs = @(
     "--runtime", $Runtime,
     "--self-contained", ($SelfContained.IsPresent -or $SelfContained ? "true" : "false"),
     "-p:PublishSingleFile=$($SingleFile.IsPresent)",
-    "-p:PublishTrimmed=$($AvaloniaApp.IsPresent)",
+    "-p:PublishTrimmed=false",
     "--output", $PublishDir
 )
 
