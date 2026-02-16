@@ -168,7 +168,6 @@ jobs:
             -Configuration Release `
             -Runtime ${{ matrix.runtime }} `
             -OutputDir ./artifacts `
-            -AvaloniaApp `
             -CreateInstaller
 
       - name: Upload installer
