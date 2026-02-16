@@ -57,13 +57,13 @@ mkdir -p "$OUTPUT_DIR"
 
 PUBLISH_DIR="$OUTPUT_DIR/publish"
 
-# Publish self-contained with IL trimming
+# Publish self-contained
 echo "==> Publishing..."
 dotnet publish "$PROJECT" \
   --configuration "$CONFIGURATION" \
   --runtime "$RUNTIME" \
   --self-contained true \
-  -p:PublishTrimmed=true \
+  -p:PublishTrimmed=false \
   --output "$PUBLISH_DIR"
 
 echo "  Published to: $PUBLISH_DIR"

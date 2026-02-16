@@ -6,11 +6,9 @@
     <RootNamespace>BookLibConnect.App.Avalonia</RootNamespace>
     <AssemblyName>BookLibConnect</AssemblyName>
 
-    <ApplicationIcon>..\Connect.app.gui.core\Resources\audio.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\audio.ico</ApplicationIcon>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <NoWarn>$(NoWarn);CA1416;IL2026;IL2037;IL2104</NoWarn>
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>partial</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>

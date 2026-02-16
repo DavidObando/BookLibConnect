@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>BookLibConnect.Aux</RootNamespace>
     <AssemblyName>BookLibConnect.Aux.Core</AssemblyName>
+    <NoWarn>$(NoWarn);IL2026</NoWarn>
 
   </PropertyGroup>
 

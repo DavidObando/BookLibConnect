@@ -170,8 +170,6 @@ contains the assemblies it actually needs (see section 4.3 for the project confi
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationIcon Condition="$([MSBuild]::IsOSPlatform('Windows'))">Resources\audio.ico</ApplicationIcon>
     <NoWarn>$(NoWarn);CA1416</NoWarn>
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>partial</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>
