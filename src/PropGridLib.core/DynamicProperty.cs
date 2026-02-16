@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
 using System.Globalization;
 
-namespace BookLibConnect.Aux.PropGird {
+namespace Oahu.Aux.PropGird {
 
   [TypeConverter (typeof (PropertyCommandConverter))]
   public class PropertyCommand {

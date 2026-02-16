@@ -7,15 +7,15 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.Core;
-using BookLibConnect.Core.UI.Avalonia.ViewModels;
-using BookLibConnect.Common.Util;
-using static BookLibConnect.Aux.Logging;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.BooksDatabase;
+using Oahu.Core;
+using Oahu.Core.UI.Avalonia.ViewModels;
+using Oahu.Common.Util;
+using static Oahu.Aux.Logging;
 
-namespace BookLibConnect.App.Avalonia {
+namespace Oahu.App.Avalonia {
   public partial class MainWindow : Window {
 
     private readonly MainWindowViewModel _viewModel;

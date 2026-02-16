@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.CommonTypes;
-using BookLibConnect.Core.ex;
-using static BookLibConnect.Aux.Logging;
+using Oahu.Aux.Extensions;
+using Oahu.CommonTypes;
+using Oahu.Core.ex;
+using static Oahu.Aux.Logging;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
   class AudibleLogin {
 
     public const string DEVICE_TYPE = "A2CZJZGLK2JJVM";

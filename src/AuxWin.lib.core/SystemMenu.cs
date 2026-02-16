@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace BookLibConnect.Aux.Win {
+namespace Oahu.Aux.Win {
   /// <summary>
   /// Extends the system menu of a window with additional commands.
   /// Copyright Yves Goergen

@@ -1,7 +1,7 @@
 ﻿
-using BookLibConnect.BooksDatabase;
+using Oahu.BooksDatabase;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
   public enum EDownloadQualityReducedChoices {
     Normal,
     High,

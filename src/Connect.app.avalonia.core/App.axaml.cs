@@ -3,16 +3,16 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using BookLibConnect.Aux;
-using BookLibConnect.Core;
-using BookLibConnect.Core.UI.Avalonia.ViewModels;
-using BookLibConnect.CommonTypes;
-using BookLibConnect.SystemManagement;
-using BookLibConnect.SystemManagement.Linux;
-using BookLibConnect.SystemManagement.Mac;
-using static BookLibConnect.Aux.Logging;
+using Oahu.Aux;
+using Oahu.Core;
+using Oahu.Core.UI.Avalonia.ViewModels;
+using Oahu.CommonTypes;
+using Oahu.SystemManagement;
+using Oahu.SystemManagement.Linux;
+using Oahu.SystemManagement.Mac;
+using static Oahu.Aux.Logging;
 
-namespace BookLibConnect.App.Avalonia {
+namespace Oahu.App.Avalonia {
   public partial class App : Application {
     public override void Initialize () {
       AvaloniaXamlLoader.Load (this);
@@ -45,7 +45,7 @@ namespace BookLibConnect.App.Avalonia {
           userSettings.ExportSettings,
           userSettings.ConfigSettings
         );
-        viewModel.Title = ApplEnv.AssemblyTitle ?? "Book Lib Connect";
+        viewModel.Title = ApplEnv.AssemblyTitle ?? "Oahu";
 
         var mainWindow = new MainWindow (viewModel, userSettings);
         desktop.MainWindow = mainWindow;

@@ -6,21 +6,21 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Diagnostics;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.Aux.Win;
-using BookLibConnect.Aux.Win.Extensions;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.Core.UI;
-using BookLibConnect.SystemManagement;
-using BookLibConnect.Common.Util;
-using static BookLibConnect.Aux.ApplEnv;
-using static BookLibConnect.Aux.Logging;
-using R = BookLibConnect.App.Gui.Properties.Resources;
-using BookLibConnect.Core;
+using Oahu.Aux;
+using Oahu.Aux.Diagnostics;
+using Oahu.Aux.Extensions;
+using Oahu.Aux.Win;
+using Oahu.Aux.Win.Extensions;
+using Oahu.BooksDatabase;
+using Oahu.Core.UI;
+using Oahu.SystemManagement;
+using Oahu.Common.Util;
+using static Oahu.Aux.ApplEnv;
+using static Oahu.Aux.Logging;
+using R = Oahu.App.Gui.Properties.Resources;
+using Oahu.Core;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   public partial class MainForm : Form {
     private bool _ignoreFlag;
     private CancellationTokenSource _cts;
@@ -564,7 +564,7 @@ namespace BookLibConnect.App.Gui {
           // fallback 1: user profile = user root folder 
           defdir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
           if (defdir.IsNullOrWhiteSpace () || !Directory.Exists (defdir)) {
-            // fallback 2: ...\AppData\Local\BookLibConnect
+            // fallback 2: ...\AppData\Local\Oahu
             defdir = LocalApplDirectory;
           }
           defdir = Path.Combine (defdir, "Audio");

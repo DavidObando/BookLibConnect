@@ -5,10 +5,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using BookLibConnect.Aux;
-using static BookLibConnect.Aux.Logging;
+using Oahu.Aux;
+using static Oahu.Aux.Logging;
 
-namespace BookLibConnect.Core.ex {
+namespace Oahu.Core.ex {
   public static class LoggingExtensions {
     const string BEFORE = "Before request, "; 
     const string AFTER =  "After request,  "; 

@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Common.Util {
+namespace Oahu.Common.Util {
   public class LogTmpFileMaintenance {
     record DirectoryStatistics (int NumFiles, long TotalSize, DateTime Timestamp);
     //record DirectoryFilesAndStatistics (List<FileInfo> Files, DirectoryStatistics Statistics);

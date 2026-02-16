@@ -2,10 +2,10 @@ using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.Core;
+using Oahu.Aux.Extensions;
+using Oahu.Core;
 
-namespace BookLibConnect.Core.UI.Avalonia.ViewModels {
+namespace Oahu.Core.UI.Avalonia.ViewModels {
   public partial class SettingsViewModel : ObservableObject {
 
     private readonly DownloadSettings _downloadSettings;

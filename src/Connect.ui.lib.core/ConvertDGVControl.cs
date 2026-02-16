@@ -8,17 +8,17 @@ using System.Resources;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.Aux.Win;
-using BookLibConnect.Aux.Win.Extensions;
-using BookLibConnect.BooksDatabase;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.Aux.Win;
+using Oahu.Aux.Win.Extensions;
+using Oahu.BooksDatabase;
 
-using static BookLibConnect.Aux.Logging;
+using static Oahu.Aux.Logging;
 
-using BooksDb = BookLibConnect.BooksDatabase;
+using BooksDb = Oahu.BooksDatabase;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public partial class ConvertDGVControl : UserControl {
     private ResourceManager RM { get; }
 

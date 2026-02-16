@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
-using BookLibConnect.Aux.Win;
+using Oahu.Aux.Win;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   public partial class WizStepDownload : UserControl, ICompleted {
     public event EventHandler Completed;
 

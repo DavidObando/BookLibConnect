@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_InnoSetup", "_InnoSetup", "{0C275DDF-DE38-4547-A835-6C121199055A}"
 	ProjectSection(SolutionItems) = preProject
-		InnoSetup\BookLibConnect setup.iss = InnoSetup\BookLibConnect setup.iss
+		InnoSetup\Oahu setup.iss = InnoSetup\Oahu setup.iss
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuxLib.core", "AuxLib.core\AuxLib.core.csproj", "{1FA5944E-7FB8-4AC7-B719-360C2EAEDEF3}"
@@ -38,7 +38,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TreeDecomposition.core", "T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "app", "app", "{A189B370-85AB-4CAE-B004-59094BE8904F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BookLibConnect", "BookLibConnect", "{B20CD91A-7438-4798-A690-D562AA1F6548}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Oahu", "Oahu", "{B20CD91A-7438-4798-A690-D562AA1F6548}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{3741E117-F35C-4BC1-880B-B4C1B9FFF4B0}"
 EndProject

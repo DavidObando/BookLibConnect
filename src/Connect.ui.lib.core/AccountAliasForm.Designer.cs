@@ -1,5 +1,5 @@
 ﻿
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   partial class AccountAliasForm {
     /// <summary>
     /// Required designer variable.

@@ -1,4 +1,4 @@
-﻿namespace BookLibConnect.Audible.Json {
+﻿namespace Oahu.Audible.Json {
   public class RegistrationResponse : Serialization<RegistrationResponse> {
     public Response response { get; set; }
     public string request_id { get; set; }

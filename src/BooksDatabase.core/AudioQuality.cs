@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.CommonTypes;
+using Oahu.Aux.Extensions;
+using Oahu.CommonTypes;
 
-namespace BookLibConnect.BooksDatabase {
+namespace Oahu.BooksDatabase {
   public record AudioQuality (int? SampleRate, int? BitRate) : IAudioQuality;
 
   namespace ex {

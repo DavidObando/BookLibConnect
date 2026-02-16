@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.Aux.Win.Extensions;
+using Oahu.Aux.Extensions;
+using Oahu.Aux.Win.Extensions;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public partial class AccountAliasForm : Form {
     private AccountAliasContext Context { get; }
 

@@ -6,9 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using BookLibConnect.BooksDatabase;
+using Oahu.BooksDatabase;
 
-namespace BookLibConnect.Core.UI.Avalonia.ViewModels {
+namespace Oahu.Core.UI.Avalonia.ViewModels {
   public partial class ConversionViewModel : ObservableObject {
 
     [ObservableProperty]

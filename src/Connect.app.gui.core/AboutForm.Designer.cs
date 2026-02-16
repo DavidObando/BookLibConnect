@@ -1,4 +1,4 @@
-﻿namespace BookLibConnect.App.Gui {
+﻿namespace Oahu.App.Gui {
   partial class AboutForm {
     /// <summary>
     /// Required designer variable.
@@ -37,7 +37,7 @@
       // 
       // lblIcon
       // 
-      this.lblIcon.Image = global::BookLibConnect.App.Gui.Properties.Resources.Audio48;
+      this.lblIcon.Image = global::Oahu.App.Gui.Properties.Resources.Audio48;
       resources.ApplyResources(this.lblIcon, "lblIcon");
       this.lblIcon.Name = "lblIcon";
       // 

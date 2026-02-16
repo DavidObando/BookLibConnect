@@ -2,12 +2,12 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.PropGird;
-using BookLibConnect.BooksDatabase;
-using R = BookLibConnect.Core.UI.Properties.Resources;
+using Oahu.Aux;
+using Oahu.Aux.PropGird;
+using Oahu.BooksDatabase;
+using R = Oahu.Core.UI.Properties.Resources;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public class BookDataSource : BookDataSourceBase {
     public BookDataSource (Book book, IDownloadSettings settings) : base (book, settings) { }
 

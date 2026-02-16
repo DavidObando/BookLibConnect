@@ -1,8 +1,8 @@
 ﻿using System;
-using BookLibConnect.Aux.Diagnostics;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux.Diagnostics;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Common.Util {
+namespace Oahu.Common.Util {
   public class ToStringConverterActivationCode : ToStringConverter {
     public override string ToString (object o, string format = null) {
       try {

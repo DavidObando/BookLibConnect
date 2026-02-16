@@ -1,7 +1,7 @@
 using System;
 using Avalonia;
 
-namespace BookLibConnect.App.Avalonia {
+namespace Oahu.App.Avalonia {
   class Program {
     [STAThread]
     public static void Main (string[] args) => BuildAvaloniaApp ()

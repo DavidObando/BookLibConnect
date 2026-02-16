@@ -4,9 +4,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Resources;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   public class BooleanYesNoConverter : BooleanConverter {
 
     const string TRUE = "Yes";

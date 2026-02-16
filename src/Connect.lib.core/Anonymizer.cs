@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Core.ex {
+namespace Oahu.Core.ex {
   static class Anonymizer {
 
     private static Dictionary<uint, string> Usernames { get; } = new Dictionary<uint, string> ();

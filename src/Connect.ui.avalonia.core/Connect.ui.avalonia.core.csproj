@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>BookLibConnect.Core.UI.Avalonia</RootNamespace>
-    <AssemblyName>BookLibConnect.UI.Avalonia.Core</AssemblyName>
+    <RootNamespace>Oahu.Core.UI.Avalonia</RootNamespace>
+    <AssemblyName>Oahu.UI.Avalonia.Core</AssemblyName>
 
   </PropertyGroup>
 

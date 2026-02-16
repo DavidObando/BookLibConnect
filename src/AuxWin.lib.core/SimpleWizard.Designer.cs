@@ -1,5 +1,5 @@
 ﻿
-namespace BookLibConnect.Aux.Win {
+namespace Oahu.Aux.Win {
   partial class SimpleWizard {
     /// <summary>
     /// Required designer variable.

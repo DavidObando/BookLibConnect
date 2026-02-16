@@ -2,7 +2,7 @@
 
 ## Goal
 
-Create a macOS GUI client for BookLibConnect that maximizes reuse of existing
+Create a macOS GUI client for Oahu that maximizes reuse of existing
 platform-neutral business logic while providing a native-feeling macOS experience.
 
 ---
@@ -285,8 +285,8 @@ for high-performance file copy. This crashes on macOS.
   </PropertyGroup>
   ```
 - Consider separate solution filter files:
-  - `BookLibConnect.Windows.slnf` — includes only Windows projects
-  - `BookLibConnect.macOS.slnf` — includes only macOS + shared projects
+  - `Oahu.Windows.slnf` — includes only Windows projects
+  - `Oahu.macOS.slnf` — includes only macOS + shared projects
 
 #### Step 4.3 — Update README
 

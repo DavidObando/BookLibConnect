@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using BookLibConnect.Aux.Extensions;
-using static BookLibConnect.Aux.ApplEnv;
+using Oahu.Aux.Extensions;
+using static Oahu.Aux.ApplEnv;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
 
   public class Logging {
 

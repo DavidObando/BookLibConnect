@@ -24,10 +24,10 @@ using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
-using BookLibConnect.Aux.Win.Win32API;
-using BookLibConnect.Aux.Win.Win32API.Hook;
+using Oahu.Aux.Win.Win32API;
+using Oahu.Aux.Win.Win32API.Hook;
 
-namespace BookLibConnect.Aux.Win 
+namespace Oahu.Aux.Win 
 {
 	///////////////////////////////////////////////////////////////////////
 	#region DlgBox

@@ -1,5 +1,5 @@
 ﻿
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   partial class BookLibForm {
     /// <summary>
     /// Required designer variable.
@@ -25,7 +25,7 @@ namespace BookLibConnect.Core.UI {
     /// </summary>
     private void InitializeComponent () {
       this.splitContainerOuter = new System.Windows.Forms.SplitContainer();
-      this.bookLibdgvControl1 = new BookLibConnect.Core.UI.BookLibDGVControl();
+      this.bookLibdgvControl1 = new Oahu.Core.UI.BookLibDGVControl();
       this.splitContainerBottom = new System.Windows.Forms.SplitContainer();
       this.splitContainerInner = new System.Windows.Forms.SplitContainer();
       this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   // https://tomrucki.com/posts/aes-encryption-in-csharp/
   // possibly way over the top for some applications. 
 

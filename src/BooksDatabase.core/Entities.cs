@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.CommonTypes;
-using BookLibConnect.BooksDatabase.ex;
+using Oahu.Aux.Extensions;
+using Oahu.CommonTypes;
+using Oahu.BooksDatabase.ex;
 
-namespace BookLibConnect.BooksDatabase {
+namespace Oahu.BooksDatabase {
   public class Book : IBookMeta, IBookCommon {
     public int Id { get; internal set; }
     public string Asin { get; set; }

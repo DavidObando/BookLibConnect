@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using BookLibConnect.Aux;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.CommonTypes;
+using Oahu.Aux;
+using Oahu.BooksDatabase;
+using Oahu.CommonTypes;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
   interface IProfile {
     uint Id { get; }
     bool PreAmazon { get; }
@@ -76,11 +76,11 @@ namespace BookLibConnect.Core {
   public interface IAudibleApi : IProfileAliasKey, IDisposable {
     Func<Task> RefreshTokenAsyncFunc { get; }
     Func<AccountAliasContext, bool> GetAccountAliasFunc { set; }
-    Task<BookLibConnect.Audible.Json.LibraryResponse> GetLibraryAsync (bool resync);
+    Task<Oahu.Audible.Json.LibraryResponse> GetLibraryAsync (bool resync);
     Task<string> GetAccountInfoAsync ();
     Task<string> GetUserProfileAsync ();
     Task<bool> GetActivationBytesAsync ();
-    Task<BookLibConnect.Audible.Json.LicenseResponse> GetDownloadLicenseAsync (
+    Task<Oahu.Audible.Json.LicenseResponse> GetDownloadLicenseAsync (
       string asin, EDownloadQuality quality
     );
     Task<bool> DownloadAsync (

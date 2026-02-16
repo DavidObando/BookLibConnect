@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace BookLibConnect.Aux.Win.Extensions {
+namespace Oahu.Aux.Win.Extensions {
   /// <summary>
   /// Initial position of new form in relation to parent. 
   /// Defines edges and corners.

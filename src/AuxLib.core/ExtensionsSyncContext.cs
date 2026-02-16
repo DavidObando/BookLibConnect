@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace BookLibConnect.Aux.Extensions {
+namespace Oahu.Aux.Extensions {
 
   /// <summary>
   ///   <para>Type-safe extensions for invoking methods via a synchronization context. 

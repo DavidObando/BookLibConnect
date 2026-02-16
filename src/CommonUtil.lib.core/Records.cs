@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BookLibConnect.Common.Util {
+namespace Oahu.Common.Util {
 
   public record ProgressMessage (
     int? ItemCount,

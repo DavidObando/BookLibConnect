@@ -5,9 +5,9 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
 
-    <AssemblyName>BookLibConnect</AssemblyName>
-    <AssemblyTitle>Book Lib Connect</AssemblyTitle>
-    <RootNamespace>BookLibConnect.App.Gui</RootNamespace>
+    <AssemblyName>Oahu</AssemblyName>
+    <AssemblyTitle>Oahu</AssemblyTitle>
+    <RootNamespace>Oahu.App.Gui</RootNamespace>
     <ApplicationIcon>Resources\audio.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -61,7 +61,7 @@
     <None Update="x appsettings.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Update="BookLibConnect.pdf">
+    <None Update="Oahu.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 
 
-namespace BookLibConnect.Aux.Diagnostics {
+namespace Oahu.Aux.Diagnostics {
   /// <summary>
   /// <see cref="TreeDecomposition{T}"/>
   /// </summary>

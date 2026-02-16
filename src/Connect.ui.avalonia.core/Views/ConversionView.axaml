@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:BookLibConnect.Core.UI.Avalonia.ViewModels"
-             x:Class="BookLibConnect.Core.UI.Avalonia.Views.ConversionView"
+             xmlns:vm="using:Oahu.Core.UI.Avalonia.ViewModels"
+             x:Class="Oahu.Core.UI.Avalonia.Views.ConversionView"
              x:DataType="vm:ConversionViewModel"
              x:CompileBindings="True">
 

@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.BooksDatabase.ex;
-using BookLibConnect.Core.ex;
-using BookLibConnect.Common.Util;
-using R = BookLibConnect.Core.Properties.Resources;
-using static BookLibConnect.Aux.Logging;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.BooksDatabase;
+using Oahu.BooksDatabase.ex;
+using Oahu.Core.ex;
+using Oahu.Common.Util;
+using R = Oahu.Core.Properties.Resources;
+using static Oahu.Aux.Logging;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
   public class AaxExporter {
     const string JSON = ".json";
     const string CONTENT_METADATA = "content_metadata_";
@@ -119,18 +119,18 @@ namespace BookLibConnect.Core {
       var chapterInfo = book.ChapterInfo;
 
 
-      var cr = new BookLibConnect.Audible.Json.ContentReference {
+      var cr = new Oahu.Audible.Json.ContentReference {
         asin = book.Asin,
         content_size_in_bytes = book.FileSizeBytes ?? 0,
         sku = book.Sku
       };
 
-      var ci = new BookLibConnect.Audible.Json.ChapterInfo ();
-      var metadata = new BookLibConnect.Audible.Json.ContentMetadata {
+      var ci = new Oahu.Audible.Json.ChapterInfo ();
+      var metadata = new Oahu.Audible.Json.ContentMetadata {
         chapter_info = ci,
         content_reference = cr
       };
-      var container = new BookLibConnect.Audible.Json.MetadataContainer {
+      var container = new Oahu.Audible.Json.MetadataContainer {
         content_metadata = metadata
       };
 
@@ -145,12 +145,12 @@ namespace BookLibConnect.Core {
 
      
       if (!flattenedChapters.IsNullOrEmpty()) {
-        var chapters = new List<BookLibConnect.Audible.Json.Chapter> ();
+        var chapters = new List<Oahu.Audible.Json.Chapter> ();
         foreach (var chapter in flattenedChapters) {
           if (chapters.Count == 0 && skipChapter (chapter))
             continue;
 
-          var ch = new BookLibConnect.Audible.Json.Chapter {
+          var ch = new Oahu.Audible.Json.Chapter {
             length_ms = chapter.LengthMs,
             start_offset_ms = chapter.StartOffsetMs,
             start_offset_sec = chapter.StartOffsetMs / 1000,
@@ -201,7 +201,7 @@ namespace BookLibConnect.Core {
       Log (3, this, () => book.ToString ());
       var product = makeProduct (book);
 
-      var container = new BookLibConnect.Audible.Json.ProductResponse {
+      var container = new Oahu.Audible.Json.ProductResponse {
         product = product
       };
 
@@ -225,7 +225,7 @@ namespace BookLibConnect.Core {
         var series = serbook.Series;       
         string asin = series.Asin;
 
-        var products = new List<BookLibConnect.Audible.Json.Product> ();
+        var products = new List<Oahu.Audible.Json.Product> ();
 
         // sort by sort/num+sub/sequence
         IOrderedEnumerable<SeriesBook> sbks;
@@ -241,7 +241,7 @@ namespace BookLibConnect.Core {
           products.Add (p);
         }
 
-        var container = new BookLibConnect.Audible.Json.SimsBySeriesResponse {
+        var container = new Oahu.Audible.Json.SimsBySeriesResponse {
           similar_products = products.ToArray ()
         };
 
@@ -255,7 +255,7 @@ namespace BookLibConnect.Core {
       }
     }
 
-    private BookLibConnect.Audible.Json.Product makeProduct (IBookCommon prod) {
+    private Oahu.Audible.Json.Product makeProduct (IBookCommon prod) {
 
       Book book = prod.GetBook ();
       Log (3, this, () => book.ToString ());
@@ -267,7 +267,7 @@ namespace BookLibConnect.Core {
       // series:title,sequence
       // sku; sku_lite
 
-      var product = new BookLibConnect.Audible.Json.Product {
+      var product = new Oahu.Audible.Json.Product {
         asin = prod.Asin,
         title = prod.Title,
         sku = prod.Sku,
@@ -279,9 +279,9 @@ namespace BookLibConnect.Core {
       };
 
       if (!book.Authors.IsNullOrEmpty ()) {
-        var authors = new List<BookLibConnect.Audible.Json.Author> ();
+        var authors = new List<Oahu.Audible.Json.Author> ();
         foreach (var author in book.Authors) {
-          var a = new BookLibConnect.Audible.Json.Author {
+          var a = new Oahu.Audible.Json.Author {
             asin = author.Asin,
             name = author.Name
           };
@@ -291,9 +291,9 @@ namespace BookLibConnect.Core {
       }
 
       if (!book.Series.IsNullOrEmpty()) {
-        var series = new List<BookLibConnect.Audible.Json.Series> ();
+        var series = new List<Oahu.Audible.Json.Series> ();
         foreach (var serbook in book.Series) {
-          var s = new BookLibConnect.Audible.Json.Series {
+          var s = new Oahu.Audible.Json.Series {
             asin = serbook.Series.Asin,
             title = serbook.Series.Title,
             sequence = serbook.SeqString

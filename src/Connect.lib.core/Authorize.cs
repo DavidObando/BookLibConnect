@@ -6,12 +6,12 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.Core.ex;
-using static BookLibConnect.Aux.Logging;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.Core.ex;
+using static Oahu.Aux.Logging;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
 
   class Authorize {
     const string HTTP_AUTHORITY_AMZN = @"https://api.amazon.";
@@ -373,7 +373,7 @@ namespace BookLibConnect.Core {
           if (jsonCleaned is not null)
           jsonCleaned.WriteTempJsonFile (REGISTRATION + "(cleared)");
         }
-        var root = BookLibConnect.Audible.Json.RegistrationResponse.Deserialize (json);
+        var root = Oahu.Audible.Json.RegistrationResponse.Deserialize (json);
         if (root is null)
           return false;
 

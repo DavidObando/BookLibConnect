@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.Aux.PropGird;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.CommonTypes;
-using R = BookLibConnect.Core.UI.Properties.Resources;
+using Oahu.Aux.Extensions;
+using Oahu.Aux.PropGird;
+using Oahu.BooksDatabase;
+using Oahu.CommonTypes;
+using R = Oahu.Core.UI.Properties.Resources;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public abstract class DataSourceBase<T> : BasePropertyGridAdapter<T> 
     where T: IBookMeta
   {

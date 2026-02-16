@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   public partial class WaitForm : Form {
     public WaitForm () {
       InitializeComponent ();

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BookLibConnect.Common.Util {
+namespace Oahu.Common.Util {
   public abstract class ThreadProgressBase<T> : IDisposable {
 
     private readonly Action<T> _report;

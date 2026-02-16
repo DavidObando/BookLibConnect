@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>BookLibConnect.Aux.Win32</RootNamespace>
-    <AssemblyName>BookLibConnect.Aux.Win32.Core</AssemblyName>
+    <RootNamespace>Oahu.Aux.Win32</RootNamespace>
+    <AssemblyName>Oahu.Aux.Win32.Core</AssemblyName>
 
     <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>

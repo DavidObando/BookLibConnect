@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
-using BookLibConnect.Core;
-using BookLibConnect.Common.Util;
+using Oahu.Core;
+using Oahu.Common.Util;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   class ConversionContext : ICancellation {
     public IProgress<ProgressMessage> Progress { get; }
     public CancellationToken CancellationToken { get; }

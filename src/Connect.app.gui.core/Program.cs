@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
 using System.Windows.Forms;
-using BookLibConnect.Aux;
+using Oahu.Aux;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   static class Program {
     /// <summary>
     ///  The main entry point for the application.

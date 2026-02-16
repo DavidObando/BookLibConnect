@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>BookLibConnect.Aux</RootNamespace>
-    <AssemblyName>BookLibConnect.Aux.Core</AssemblyName>
+    <RootNamespace>Oahu.Aux</RootNamespace>
+    <AssemblyName>Oahu.Aux.Core</AssemblyName>
     <NoWarn>$(NoWarn);IL2026</NoWarn>
 
   </PropertyGroup>

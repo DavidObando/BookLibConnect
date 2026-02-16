@@ -4,15 +4,15 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Win;
-using BookLibConnect.Core.ex;
-using R = BookLibConnect.Core.UI.Properties.Resources;
-using static BookLibConnect.Aux.Logging;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux;
+using Oahu.Aux.Win;
+using Oahu.Core.ex;
+using R = Oahu.Core.UI.Properties.Resources;
+using static Oahu.Aux.Logging;
+using Oahu.Aux.Extensions;
 using System.ComponentModel;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public partial class ManageProfilesForm : Form {
     record ProfileDesc (string Tag, IProfileKeyEx Key, string Alias);
 

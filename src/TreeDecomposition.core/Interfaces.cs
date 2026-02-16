@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BookLibConnect.Aux.Diagnostics {
+namespace Oahu.Aux.Diagnostics {
   /// <summary>
   /// Interface for custom primitive types, to be used with <see cref="TreeDecomposition{T}"/>
   /// </summary>

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BookLibConnect.Aux.Diagnostics {
+namespace Oahu.Aux.Diagnostics {
   /// <summary>
   /// Base class to implement <see cref="IPrimitiveTypes"/> with a dictionary. 
   /// Derived classes simply need to call the provided add method with custom function delegates.
   /// </summary>
-  /// <seealso cref="BookLibConnect.Aux.Diagnostics.IPrimitiveTypes" />
+  /// <seealso cref="Oahu.Aux.Diagnostics.IPrimitiveTypes" />
   public abstract class AbstractPrimitiveTypes : IPrimitiveTypes {
 
     Dictionary<Type, Delegate> _dict = new Dictionary<Type, Delegate> ();
@@ -110,7 +110,7 @@ namespace BookLibConnect.Aux.Diagnostics {
   /// <summary>
   /// Convenience class as default implementation of <see cref="IPrimitiveTypes"/> with no additional custom types.  
   /// </summary>
-  /// <seealso cref="BookLibConnect.Aux.Diagnostics.AbstractPrimitiveTypes" />
+  /// <seealso cref="Oahu.Aux.Diagnostics.AbstractPrimitiveTypes" />
   internal class NoPrimitiveTypes : AbstractPrimitiveTypes {  }
 
 }

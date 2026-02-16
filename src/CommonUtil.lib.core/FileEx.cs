@@ -2,7 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace BookLibConnect.Common.Util {
+namespace Oahu.Common.Util {
   public interface IFileCopyCallout {
     void ProcessBuffer (byte[] buffer, int size, long globalOffset);
   }
@@ -38,8 +38,8 @@ namespace BookLibConnect.Common.Util {
       long count = 0;
 
       using (var threadProgress = new ThreadProgressPerMille (report)) { 
-        using (var wfioRd = new BookLibConnect.Aux.Win32.WinFileIO (buf)) 
-        using (var wfioWr = new BookLibConnect.Aux.Win32.WinFileIO (buf)) {
+        using (var wfioRd = new Oahu.Aux.Win32.WinFileIO (buf)) 
+        using (var wfioWr = new Oahu.Aux.Win32.WinFileIO (buf)) {
           wfioRd.OpenForReading (sourceFileName);
           wfioWr.OpenForWriting (destFileName, overwrite);
 

@@ -1,6 +1,6 @@
 using System;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   /// <summary>
   /// Implementation of the "Singleton" pattern.
   /// </summary>

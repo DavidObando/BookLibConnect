@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace BookLibConnect.Aux.Win {
+namespace Oahu.Aux.Win {
   public interface ISortingEvents {
     event EventHandler BeginSorting;
     event EventHandler EndSorting;

@@ -1,8 +1,8 @@
 ﻿using System;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   class EnumConverterRM<TEnum> : EnumConverter<TEnum>
      where TEnum : struct, Enum {
     

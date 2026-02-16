@@ -1,5 +1,5 @@
 ﻿
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   partial class WizStepExport {
     /// <summary> 
     /// Required designer variable.

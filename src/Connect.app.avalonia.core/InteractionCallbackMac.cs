@@ -2,9 +2,9 @@ using System;
 using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using BookLibConnect.Aux;
+using Oahu.Aux;
 
-namespace BookLibConnect.App.Avalonia {
+namespace Oahu.App.Avalonia {
   /// <summary>
   /// macOS implementation of IInteractionCallback using Avalonia message boxes.
   /// Bridges the business logic interaction pattern to Avalonia dialog windows.

@@ -84,11 +84,11 @@ jobs:
 
       - name: Restore dependencies
         working-directory: src
-        run: dotnet restore BookLibConnect.Avalonia.slnf
+        run: dotnet restore Oahu.Avalonia.slnf
 
       - name: Build
         working-directory: src
-        run: dotnet build BookLibConnect.Avalonia.slnf --configuration Release --no-restore
+        run: dotnet build Oahu.Avalonia.slnf --configuration Release --no-restore
 
       - name: Create .app bundle, sign, and create DMG
         env:
@@ -124,7 +124,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: BookLibConnect-${{ matrix.runtime }}-dmg
+          name: Oahu-${{ matrix.runtime }}-dmg
           path: ./artifacts/*.dmg
           retention-days: 30
 
@@ -156,11 +156,11 @@ jobs:
 
       - name: Restore dependencies
         working-directory: src
-        run: dotnet restore BookLibConnect.Avalonia.slnf
+        run: dotnet restore Oahu.Avalonia.slnf
 
       - name: Build
         working-directory: src
-        run: dotnet build BookLibConnect.Avalonia.slnf --configuration Release --no-restore
+        run: dotnet build Oahu.Avalonia.slnf --configuration Release --no-restore
 
       - name: Publish app
         run: |
@@ -168,14 +168,13 @@ jobs:
             -Configuration Release `
             -Runtime ${{ matrix.runtime }} `
             -OutputDir ./artifacts `
-            -AvaloniaApp `
             -CreateInstaller
 
       - name: Upload installer
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: BookLibConnect-${{ matrix.runtime }}-installer
+          name: Oahu-${{ matrix.runtime }}-installer
           path: ./artifacts/installer/*.exe
           retention-days: 30
 
@@ -207,11 +206,11 @@ jobs:
 
       - name: Restore dependencies
         working-directory: src
-        run: dotnet restore BookLibConnect.Avalonia.slnf
+        run: dotnet restore Oahu.Avalonia.slnf
 
       - name: Build
         working-directory: src
-        run: dotnet build BookLibConnect.Avalonia.slnf --configuration Release --no-restore
+        run: dotnet build Oahu.Avalonia.slnf --configuration Release --no-restore
 
       - name: Publish and package
         run: |
@@ -225,7 +224,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: BookLibConnect-${{ matrix.runtime }}-tarball
+          name: Oahu-${{ matrix.runtime }}-tarball
           path: ./artifacts/*.tar.gz
           retention-days: 30
 

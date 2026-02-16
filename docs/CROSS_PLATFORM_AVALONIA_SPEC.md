@@ -88,15 +88,15 @@ platforms.
 |----------|-----|-----|
 | **Project file** | `Connect.ui.mac.core.csproj` | `Connect.ui.avalonia.core.csproj` |
 | **Directory** | `src/Connect.ui.mac.core/` | `src/Connect.ui.avalonia.core/` |
-| **AssemblyName** | `BookLibConnect.UI.Mac.Core` | `BookLibConnect.UI.Avalonia.Core` |
-| **RootNamespace** | `BookLibConnect.Core.UI.Mac` | `BookLibConnect.Core.UI.Avalonia` |
+| **AssemblyName** | `Oahu.UI.Mac.Core` | `Oahu.UI.Avalonia.Core` |
+| **RootNamespace** | `Oahu.Core.UI.Mac` | `Oahu.Core.UI.Avalonia` |
 
 **Internal changes:**
-- Update all `namespace` declarations from `BookLibConnect.Core.UI.Mac` →
-  `BookLibConnect.Core.UI.Avalonia` across all `.cs` files.
-- Update all `xmlns:vm="using:BookLibConnect.Core.UI.Mac.ViewModels"` and similar XAML namespace
+- Update all `namespace` declarations from `Oahu.Core.UI.Mac` →
+  `Oahu.Core.UI.Avalonia` across all `.cs` files.
+- Update all `xmlns:vm="using:Oahu.Core.UI.Mac.ViewModels"` and similar XAML namespace
   references in all `.axaml` files.
-- Update all `using BookLibConnect.Core.UI.Mac.*` statements in consuming projects.
+- Update all `using Oahu.Core.UI.Mac.*` statements in consuming projects.
 
 **No functional changes.** The views and view models are identical.
 
@@ -109,8 +109,8 @@ correct `IHardwareIdProvider` and handle platform-specific bootstrapping.
 |----------|-----|-----|
 | **Project file** | `Connect.app.mac.core.csproj` | `Connect.app.avalonia.core.csproj` |
 | **Directory** | `src/Connect.app.mac.core/` | `src/Connect.app.avalonia.core/` |
-| **AssemblyName** | `BookLibConnect.Mac` | `BookLibConnect` |
-| **RootNamespace** | `BookLibConnect.App.Mac` | `BookLibConnect.App.Avalonia` |
+| **AssemblyName** | `Oahu.Mac` | `Oahu` |
+| **RootNamespace** | `Oahu.App.Mac` | `Oahu.App.Avalonia` |
 
 #### 4.1.3 New project: `SystemMgmt.linux.core`
 
@@ -119,8 +119,8 @@ A new project for the Linux `IHardwareIdProvider` implementation.
 | Property | Value |
 |----------|-------|
 | **Target** | `net10.0` |
-| **AssemblyName** | `BookLibConnect.SystemManagement.Linux.Core` |
-| **RootNamespace** | `BookLibConnect.SystemManagement.Linux` |
+| **AssemblyName** | `Oahu.SystemManagement.Linux.Core` |
+| **RootNamespace** | `Oahu.SystemManagement.Linux` |
 | **References** | `CommonTypes.lib.core` |
 | **Files** | `LinuxHardwareIdProvider.cs` |
 
@@ -165,8 +165,8 @@ contains the assemblies it actually needs (see section 4.3 for the project confi
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
-    <AssemblyName>BookLibConnect</AssemblyName>
-    <RootNamespace>BookLibConnect.App.Avalonia</RootNamespace>
+    <AssemblyName>Oahu</AssemblyName>
+    <RootNamespace>Oahu.App.Avalonia</RootNamespace>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationIcon Condition="$([MSBuild]::IsOSPlatform('Windows'))">Resources\audio.ico</ApplicationIcon>
     <NoWarn>$(NoWarn);CA1416</NoWarn>
@@ -254,12 +254,12 @@ Add the new projects and update the macOS section to become a cross-platform sec
 | Solution Folder | Projects |
 |-----------------|----------|
 | **global** | `AuxLib.core`, `AuxWin.DialogBox.core`, `AuxWin.lib.core`, `AuxWin32Lib.core`, `SystemMgmt.core`, `SystemMgmt.mac.core`, `SystemMgmt.linux.core`, `TreeDecomposition.core` |
-| **BookLibConnect** | `Audible.json.core`, `BooksDatabase.core`, `CommonTypes.lib.core`, `CommonUtil.lib.core`, `Connect.lib.core`, `Connect.ui.lib.core`, `Connect.ui.avalonia.core`, `PropGridLib.core` |
-| **app** (under BookLibConnect) | `Connect.app.gui.core`, `Connect.app.avalonia.core` |
+| **Oahu** | `Audible.json.core`, `BooksDatabase.core`, `CommonTypes.lib.core`, `CommonUtil.lib.core`, `Connect.lib.core`, `Connect.ui.lib.core`, `Connect.ui.avalonia.core`, `PropGridLib.core` |
+| **app** (under Oahu) | `Connect.app.gui.core`, `Connect.app.avalonia.core` |
 
-#### 4.5.2 New solution filter: `BookLibConnect.Avalonia.slnf`
+#### 4.5.2 New solution filter: `Oahu.Avalonia.slnf`
 
-Replaces `BookLibConnect.macOS.slnf`. Includes all projects needed for the cross-platform
+Replaces `Oahu.macOS.slnf`. Includes all projects needed for the cross-platform
 Avalonia app:
 
 ```json
@@ -288,14 +288,14 @@ Avalonia app:
 Note: `AuxWin32Lib.core` is included because `CommonUtil.lib.core` references it (and it
 compiles fine on all platforms since it's just P/Invoke declarations with `net10.0` TFM).
 
-#### 4.5.3 `BookLibConnect.Windows.slnf` — unchanged
+#### 4.5.3 `Oahu.Windows.slnf` — unchanged
 
 The WinForms app continues to work as-is. No changes needed. It remains available for users who
 prefer the legacy WinForms experience on Windows.
 
-#### 4.5.4 `BookLibConnect.macOS.slnf` — deprecate
+#### 4.5.4 `Oahu.macOS.slnf` — deprecate
 
-This file is superseded by `BookLibConnect.Avalonia.slnf`. It can be removed or kept
+This file is superseded by `Oahu.Avalonia.slnf`. It can be removed or kept
 temporarily with a note that it is deprecated.
 
 ### 4.6 Build scripts
@@ -350,13 +350,13 @@ All namespace changes follow a single find-and-replace pattern:
 
 | Scope | Old | New |
 |-------|-----|-----|
-| C# namespaces | `BookLibConnect.Core.UI.Mac` | `BookLibConnect.Core.UI.Avalonia` |
-| C# namespaces | `BookLibConnect.App.Mac` | `BookLibConnect.App.Avalonia` |
-| AXAML xmlns | `using:BookLibConnect.Core.UI.Mac.ViewModels` | `using:BookLibConnect.Core.UI.Avalonia.ViewModels` |
-| AXAML xmlns | `using:BookLibConnect.Core.UI.Mac.Views` | `using:BookLibConnect.Core.UI.Avalonia.Views` |
-| AXAML xmlns | `using:BookLibConnect.Core.UI.Mac.Converters` | `using:BookLibConnect.Core.UI.Avalonia.Converters` |
-| AXAML x:Class | `BookLibConnect.App.Mac.*` | `BookLibConnect.App.Avalonia.*` |
-| C# using | `using BookLibConnect.SystemManagement.Mac` | (keep — plus add conditional Windows/Linux usings) |
+| C# namespaces | `Oahu.Core.UI.Mac` | `Oahu.Core.UI.Avalonia` |
+| C# namespaces | `Oahu.App.Mac` | `Oahu.App.Avalonia` |
+| AXAML xmlns | `using:Oahu.Core.UI.Mac.ViewModels` | `using:Oahu.Core.UI.Avalonia.ViewModels` |
+| AXAML xmlns | `using:Oahu.Core.UI.Mac.Views` | `using:Oahu.Core.UI.Avalonia.Views` |
+| AXAML xmlns | `using:Oahu.Core.UI.Mac.Converters` | `using:Oahu.Core.UI.Avalonia.Converters` |
+| AXAML x:Class | `Oahu.App.Mac.*` | `Oahu.App.Avalonia.*` |
+| C# using | `using Oahu.SystemManagement.Mac` | (keep — plus add conditional Windows/Linux usings) |
 
 ---
 
@@ -367,13 +367,13 @@ All namespace changes follow a single find-and-replace pattern:
 1. **Rename directory** `src/Connect.ui.mac.core/` → `src/Connect.ui.avalonia.core/`
 2. **Rename project file** within it to `Connect.ui.avalonia.core.csproj`
 3. **Update** `AssemblyName` and `RootNamespace` in the `.csproj`
-4. **Find-and-replace** all `BookLibConnect.Core.UI.Mac` → `BookLibConnect.Core.UI.Avalonia`
+4. **Find-and-replace** all `Oahu.Core.UI.Mac` → `Oahu.Core.UI.Avalonia`
    in all `.cs` and `.axaml` files within the project
 5. **Rename directory** `src/Connect.app.mac.core/` → `src/Connect.app.avalonia.core/`
 6. **Rename project file** within it to `Connect.app.avalonia.core.csproj`
-7. **Update** `AssemblyName` to `BookLibConnect` and `RootNamespace` to
-   `BookLibConnect.App.Avalonia` in the `.csproj`
-8. **Find-and-replace** all `BookLibConnect.App.Mac` → `BookLibConnect.App.Avalonia` in all
+7. **Update** `AssemblyName` to `Oahu` and `RootNamespace` to
+   `Oahu.App.Avalonia` in the `.csproj`
+8. **Find-and-replace** all `Oahu.App.Mac` → `Oahu.App.Avalonia` in all
    `.cs` and `.axaml` files within the project
 9. **Update** the project reference in `Connect.app.avalonia.core.csproj` from
    `Connect.ui.mac.core` → `Connect.ui.avalonia.core`
@@ -396,8 +396,8 @@ All namespace changes follow a single find-and-replace pattern:
 
 ### Phase 3: Solution filters and build scripts
 
-1. **Create** `BookLibConnect.Avalonia.slnf` with all required projects
-2. **Deprecate** `BookLibConnect.macOS.slnf` (add deprecation note or remove)
+1. **Create** `Oahu.Avalonia.slnf` with all required projects
+2. **Deprecate** `Oahu.macOS.slnf` (add deprecation note or remove)
 3. **Update** `build/build-macos.sh` to reference the new project path
 4. **Update** `build/build-windows.ps1` to support building the Avalonia app for Windows
 5. **Create** `build/build-linux.sh` for Linux builds
@@ -458,7 +458,7 @@ Audible.json BooksDatabase  TreeDecomp    AuxWin32Lib.core
    ├── SystemMgmt.mac.core (Mac)
    ├── SystemMgmt.linux.core (Linux)     ◄── NEW
    ├── Publishes to: win-x64, osx-arm64, osx-x64, linux-x64
-   └── AssemblyName=BookLibConnect
+   └── AssemblyName=Oahu
 
 
    ┌─────────────────────────────────────────────┐
@@ -493,7 +493,7 @@ Audible.json BooksDatabase  TreeDecomp    AuxWin32Lib.core
 |------|-------------|
 | `src/SystemMgmt.linux.core/SystemMgmt.linux.core.csproj` | Linux hardware ID project |
 | `src/SystemMgmt.linux.core/LinuxHardwareIdProvider.cs` | Linux `IHardwareIdProvider` impl |
-| `src/BookLibConnect.Avalonia.slnf` | Solution filter for cross-platform Avalonia build |
+| `src/Oahu.Avalonia.slnf` | Solution filter for cross-platform Avalonia build |
 | `build/build-linux.sh` | Linux build + packaging script |
 
 ### Renamed files (git mv)
@@ -518,7 +518,7 @@ Audible.json BooksDatabase  TreeDecomp    AuxWin32Lib.core
 |------|--------|
 | `src/Connect.app.gui.core/*` | WinForms app remains as legacy Windows client |
 | `src/Connect.ui.lib.core/*` | WinForms UI library remains for legacy client |
-| `src/BookLibConnect.Windows.slnf` | WinForms solution filter unchanged |
+| `src/Oahu.Windows.slnf` | WinForms solution filter unchanged |
 | All shared libraries | No changes needed — already cross-platform |
 
 ---

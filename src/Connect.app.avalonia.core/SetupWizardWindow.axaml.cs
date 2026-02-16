@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using BookLibConnect.Core.UI.Avalonia.ViewModels;
+using Oahu.Core.UI.Avalonia.ViewModels;
 
-namespace BookLibConnect.App.Avalonia {
+namespace Oahu.App.Avalonia {
   public partial class SetupWizardWindow : Window {
     private readonly ProfileWizardViewModel _viewModel;
 

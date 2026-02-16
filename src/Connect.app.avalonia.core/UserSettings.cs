@@ -1,8 +1,8 @@
 using System;
-using BookLibConnect.Aux;
-using BookLibConnect.Core;
+using Oahu.Aux;
+using Oahu.Core;
 
-namespace BookLibConnect.App.Avalonia {
+namespace Oahu.App.Avalonia {
 
   public class UserSettings : IUserSettings, IInitSettings {
     public DownloadSettings DownloadSettings { get; set; } = new DownloadSettings ();

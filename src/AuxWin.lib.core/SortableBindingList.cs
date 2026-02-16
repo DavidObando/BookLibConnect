@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Aux.Win {
+namespace Oahu.Aux.Win {
 
   /// <summary>
   /// http://www.timvw.be/2008/08/02/presenting-the-sortablebindinglistt-take-two/

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Media;
 using System.Windows.Forms;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Aux.Win {
+namespace Oahu.Aux.Win {
   public class InteractionCallbackHandler : IInteractionCallback<InteractionMessage, bool?> {
     private readonly Control _parent;
     private Control Parent => _parent;

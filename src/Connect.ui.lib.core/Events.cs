@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using BookLibConnect.BooksDatabase;
+using Oahu.BooksDatabase;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public class BookEventArgs : EventArgs {
     public IEnumerable<Book> Books { get; }
 

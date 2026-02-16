@@ -1,9 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using BookLibConnect.CommonTypes;
+using Oahu.CommonTypes;
 
-namespace BookLibConnect.SystemManagement.Linux {
+namespace Oahu.SystemManagement.Linux {
   public class LinuxHardwareIdProvider : IHardwareIdProvider {
 
     private string _cachedCpuId;

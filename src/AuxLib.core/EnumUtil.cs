@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Resources;
 using System.Text;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   public static class EnumUtil {
     // Note: constraint System.Enum available in C# 7.3 
     public static IEnumerable<T> GetValues<T> () where T : struct, Enum {

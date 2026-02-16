@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
 
-    <RootNamespace>BookLibConnect.Core</RootNamespace>
-    <AssemblyName>BookLibConnect.Core</AssemblyName>
+    <RootNamespace>Oahu.Core</RootNamespace>
+    <AssemblyName>Oahu.Core</AssemblyName>
 
   </PropertyGroup>
 

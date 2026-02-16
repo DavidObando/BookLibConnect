@@ -1,13 +1,10 @@
-# Book Lib Connect
+# Oahu
 A standalone Audible downloader and decrypter
 
-[![GitHub All Releases](https://img.shields.io/github/downloads/DavidObando/BookLibConnect/total)](https://github.com/DavidObando/BookLibConnect/releases) [![GitHub](https://img.shields.io/github/license/DavidObando/BookLibConnect)](https://github.com/DavidObando/BookLibConnect/blob/main/LICENSE) [![](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](http://microsoft.com/windows) [![](https://img.shields.io/badge/language-C%23-blue)](http://csharp.net/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/DavidObando/BookLibConnect)](https://github.com/DavidObando/BookLibConnect/releases/latest)
+[![GitHub All Releases](https://img.shields.io/github/downloads/DavidObando/Oahu/total)](https://github.com/DavidObando/Oahu/releases) [![GitHub](https://img.shields.io/github/license/DavidObando/Oahu)](https://github.com/DavidObando/Oahu/blob/main/LICENSE) [![](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](http://microsoft.com/windows) [![](https://img.shields.io/badge/language-C%23-blue)](http://csharp.net/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/DavidObando/Oahu)](https://github.com/DavidObando/Oahu/releases/latest)
 
-![](res/mainwnd.png?raw=true)
 
-![](res/libwnd.png?raw=true)
-
-Book Lib Connect is an Audible downloader app for Windows, macOS, and Linux. Forked from [audiamus/BookLibConnect](https://github.com/audiamus/BookLibConnect).
+Oahu is an Audible downloader app for Windows, macOS, and Linux. Forked from [audiamus/Oahu](https://github.com/audiamus/BookLibConnect).
 
 ## Features
 - **Free** and **Open Source** software. 
@@ -20,11 +17,11 @@ Book Lib Connect is an Audible downloader app for Windows, macOS, and Linux. For
 
 
 ## Download
-Go to the [Releases](https://github.com/DavidObando/BookLibConnect/releases) section of this repository.
+Go to the [Releases](https://github.com/DavidObando/Oahu/releases) section of this repository.
  
 
 ## Dependencies
-Book Lib Connect will run on Windows 64bit, macOS, or Linux. Minimum Windows version is 7. Minimum macOS version is 13 (Ventura).
+Oahu will run on Windows 64bit, macOS, or Linux. Minimum Windows version is 7. Minimum macOS version is 13 (Ventura).
 
 ### Building from source
 
@@ -35,10 +32,10 @@ The solution contains a legacy Windows WinForms client and a cross-platform Aval
 dotnet build "AaxAudioConverter 2.x.sln"
 
 # Build only the cross-platform Avalonia projects
-dotnet build BookLibConnect.Avalonia.slnf
+dotnet build Oahu.Avalonia.slnf
 
 # Build only Windows WinForms projects
-dotnet build BookLibConnect.Windows.slnf
+dotnet build Oahu.Windows.slnf
 
 # Run the Avalonia app
 dotnet run --project Connect.app.avalonia.core/Connect.app.avalonia.core.csproj

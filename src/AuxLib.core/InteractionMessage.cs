@@ -1,4 +1,4 @@
-﻿namespace BookLibConnect.Aux {
+﻿namespace Oahu.Aux {
   public enum ECallbackType { info, infoCancel, warning, error, errorQuestion, errorQuestion3, question, question3 }
 
   public record InteractionMessage (

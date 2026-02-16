@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Threading;
 
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.CommonTypes;
-using BookLibConnect.Common.Util;
+using Oahu.Aux.Extensions;
+using Oahu.BooksDatabase;
+using Oahu.CommonTypes;
+using Oahu.Common.Util;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
   public record Callbacks {
     public Func<byte[], string> CaptchaCallback { get; init; }
     public Action ApprovalCallback { get; init; }
@@ -53,7 +53,7 @@ namespace BookLibConnect.Core {
 
   public record ChapterExtract (string Title, int Length);
 
-  record ProductComponentPair (BookLibConnect.Audible.Json.Product Product, Component Component);
+  record ProductComponentPair (Oahu.Audible.Json.Product Product, Component Component);
 
   record ProfileBundle (IProfile Profile, IProfileKey Key, IProfileAliasKey AliasKey);
 

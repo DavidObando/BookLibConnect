@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace BookLibConnect.App.Gui {
+namespace Oahu.App.Gui {
   public partial class WizStepHelp : UserControl {
 
     private Action BtnAction { get; }

@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Linq;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.BooksDatabase.ex;
+using Oahu.BooksDatabase;
+using Oahu.BooksDatabase.ex;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public abstract class BookDataSourceBase : DataSourceBase<Book> {
 
     [Browsable (false)]

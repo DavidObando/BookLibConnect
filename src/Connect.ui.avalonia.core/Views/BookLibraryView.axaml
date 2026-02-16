@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:BookLibConnect.Core.UI.Avalonia.ViewModels"
-             xmlns:conv="using:BookLibConnect.Core.UI.Avalonia.Converters"
-             x:Class="BookLibConnect.Core.UI.Avalonia.Views.BookLibraryView"
+             xmlns:vm="using:Oahu.Core.UI.Avalonia.ViewModels"
+             xmlns:conv="using:Oahu.Core.UI.Avalonia.Converters"
+             x:Class="Oahu.Core.UI.Avalonia.Views.BookLibraryView"
              x:DataType="vm:BookLibraryViewModel"
              x:CompileBindings="True">
 

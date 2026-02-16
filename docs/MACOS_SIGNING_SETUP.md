@@ -1,6 +1,6 @@
 # macOS Code Signing & Notarization Setup
 
-This guide explains how to configure the GitHub repository secrets required to code sign and notarize the macOS build of BookLibConnect.
+This guide explains how to configure the GitHub repository secrets required to code sign and notarize the macOS build of Oahu.
 
 ## Prerequisites
 
@@ -97,8 +97,8 @@ If the secrets are **not configured**, the workflow still runs successfully — 
 
 ### "App is damaged and can't be opened"
 - This usually means the app wasn't signed or notarized correctly.
-- Verify with: `codesign --verify --deep --strict "Book Lib Connect.app"`
-- Check stapling: `stapler validate BookLibConnect-*.dmg`
+- Verify with: `codesign --verify --deep --strict "Oahu.app"`
+- Check stapling: `stapler validate Oahu-*.dmg`
 
 ## Local Signing (Optional)
 

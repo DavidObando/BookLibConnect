@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
 
   public class ArgParser {
     readonly string[] _args;

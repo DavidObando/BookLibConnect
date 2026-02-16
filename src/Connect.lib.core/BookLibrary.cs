@@ -7,19 +7,19 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.Extensions;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.BooksDatabase.ex;
-using BookLibConnect.Core.ex;
+using Oahu.Aux;
+using Oahu.Aux.Extensions;
+using Oahu.BooksDatabase;
+using Oahu.BooksDatabase.ex;
+using Oahu.Core.ex;
 
 using Microsoft.EntityFrameworkCore;
 
-using static BookLibConnect.Aux.Logging;
+using static Oahu.Aux.Logging;
 
-using R = BookLibConnect.Core.Properties.Resources;
+using R = Oahu.Core.Properties.Resources;
 
-namespace BookLibConnect.Core {
+namespace Oahu.Core {
   class BookLibrary : IBookLibrary {
     const int PAGE_SIZE = 200;
 
@@ -40,7 +40,7 @@ namespace BookLibConnect.Core {
       return await Task.Run (() => sinceLatestPurchaseDate (profileId, resync));
     }
 
-    public async Task AddRemBooksAsync (List<BookLibConnect.Audible.Json.Product> libProducts, ProfileId profileId, bool resync) {
+    public async Task AddRemBooksAsync (List<Oahu.Audible.Json.Product> libProducts, ProfileId profileId, bool resync) {
       using var _ = new LogGuard (3, this, () => $"#items={libProducts.Count}, resync={resync}");
       await Task.Run (() => addRemBooks (libProducts, profileId, resync));
       await Task.Run (() => cleanupDuplicateAuthors ());
@@ -305,7 +305,7 @@ namespace BookLibConnect.Core {
 
 
     public AudioQuality UpdateLicenseAndChapters (
-      BookLibConnect.Audible.Json.ContentLicense license, 
+      Oahu.Audible.Json.ContentLicense license, 
       Conversion conversion, 
       EDownloadQuality downloadQuality
     ) {
@@ -580,7 +580,7 @@ namespace BookLibConnect.Core {
     }
 
     private static AudioQuality setDownloadFilenameAndCodec (
-      BookLibConnect.Audible.Json.ContentLicense license, 
+      Oahu.Audible.Json.ContentLicense license, 
       Conversion conversion,
       EDownloadQuality downloadQuality
     ) {
@@ -624,7 +624,7 @@ namespace BookLibConnect.Core {
     }
 
     // internal instead of private for testing only
-    internal static void addChapters (BookDbContext dbContext, BookLibConnect.Audible.Json.ContentLicense license, Conversion conversion) {
+    internal static void addChapters (BookDbContext dbContext, Oahu.Audible.Json.ContentLicense license, Conversion conversion) {
       var source = license?.content_metadata?.chapter_info;
       if (source is null)
         return;
@@ -665,13 +665,13 @@ namespace BookLibConnect.Core {
       }
     }
 
-    private static void setChapter (BookLibConnect.Audible.Json.Chapter src, Chapter chapter) {
+    private static void setChapter (Oahu.Audible.Json.Chapter src, Chapter chapter) {
       chapter.LengthMs = src.length_ms ?? 0;
       chapter.StartOffsetMs = src.start_offset_ms ?? 0;
       chapter.Title = src.title;
     }
 
-    private static void addChapters (BookDbContext dbContext, BookLibConnect.Audible.Json.Chapter source, Chapter parent) {
+    private static void addChapters (BookDbContext dbContext, Oahu.Audible.Json.Chapter source, Chapter parent) {
       foreach (var ch in source.chapters) {
         Chapter chapter = new Chapter ();
         dbContext.Chapters.Add (chapter);
@@ -685,7 +685,7 @@ namespace BookLibConnect.Core {
       }
     }
 
-    private void addRemBooks (List<BookLibConnect.Audible.Json.Product> libProducts, ProfileId profileId, bool resync) {
+    private void addRemBooks (List<Oahu.Audible.Json.Product> libProducts, ProfileId profileId, bool resync) {
       lock (_bookCache)
         _bookCache.Remove (profileId);
 
@@ -774,7 +774,7 @@ namespace BookLibConnect.Core {
       dbContext.SaveChanges ();
     }
 
-    private void addPageBooks (BookDbContextLazyLoad dbContext, BookCompositeLists bcl, IEnumerable<BookLibConnect.Audible.Json.Product> products, ProfileId profileId, bool resync) {
+    private void addPageBooks (BookDbContextLazyLoad dbContext, BookCompositeLists bcl, IEnumerable<Oahu.Audible.Json.Product> products, ProfileId profileId, bool resync) {
       try {
         using var _ = new LogGuard (3, this, () => $"#items={products.Count ()}");
 
@@ -818,7 +818,7 @@ namespace BookLibConnect.Core {
       }
     }
 
-    private bool readd (BookCompositeLists bcl, BookLibConnect.Audible.Json.Product product, ProfileId profileId, bool resync) {
+    private bool readd (BookCompositeLists bcl, Oahu.Audible.Json.Product product, ProfileId profileId, bool resync) {
       if (bcl.BookAsins.Contains (product.asin)) {
         if (!resync)
           return true;
@@ -848,7 +848,7 @@ namespace BookLibConnect.Core {
         return false;
     }
 
-    private static Book addBook (BookDbContextLazyLoad dbContext, BookLibConnect.Audible.Json.Product product) {
+    private static Book addBook (BookDbContextLazyLoad dbContext, Oahu.Audible.Json.Product product) {
       Book book = new Book {
         Asin = product.asin,
         Title = product.title,
@@ -878,7 +878,7 @@ namespace BookLibConnect.Core {
       return book;
     }
 
-    private static void addComponents (Book book, ICollection<Component> components, IEnumerable<BookLibConnect.Audible.Json.Relationship> itmRelations) {
+    private static void addComponents (Book book, ICollection<Component> components, IEnumerable<Oahu.Audible.Json.Relationship> itmRelations) {
       var relations = itmRelations?
         .Where (r => r.relationship_to_product == "child" && r.relationship_type == "component")
         .ToList ();
@@ -904,7 +904,7 @@ namespace BookLibConnect.Core {
     const string REGEX_SERIES = @"(\d+)(\.(\d+))?";
     static readonly Regex _regexSeries = new Regex (REGEX_SERIES, RegexOptions.Compiled);
 
-    private static void addSeries (Book book, ICollection<Series> series, ICollection<SeriesBook> seriesBooks, IEnumerable<BookLibConnect.Audible.Json.Relationship> itmRelations) {
+    private static void addSeries (Book book, ICollection<Series> series, ICollection<SeriesBook> seriesBooks, IEnumerable<Oahu.Audible.Json.Relationship> itmRelations) {
       if (itmRelations is null)
         return;
 
@@ -962,7 +962,7 @@ namespace BookLibConnect.Core {
       BookDbContextLazyLoad dbContext,
       Book book,
       ICollection<TPerson> persons,
-      IEnumerable<BookLibConnect.Audible.Json.IPerson> itmPersons,
+      IEnumerable<Oahu.Audible.Json.IPerson> itmPersons,
       Func<Book, ICollection<TPerson>> getBookPersons
     )
       where TPerson : class, IPerson, new() {
@@ -994,7 +994,7 @@ namespace BookLibConnect.Core {
     }
 
 
-    private static void addGenres (Book book, ICollection<Genre> genres, ICollection<Ladder> ladders, ICollection<Rung> rungs, IEnumerable<BookLibConnect.Audible.Json.Category> itmCategories) {
+    private static void addGenres (Book book, ICollection<Genre> genres, ICollection<Ladder> ladders, ICollection<Rung> rungs, IEnumerable<Oahu.Audible.Json.Category> itmCategories) {
       if (itmCategories is null)
         return;
 
@@ -1064,7 +1064,7 @@ namespace BookLibConnect.Core {
     }
 
 
-    private static void addCodecs (Book book, ICollection<Codec> codecList, IEnumerable<BookLibConnect.Audible.Json.Codec> itmCodecs) {
+    private static void addCodecs (Book book, ICollection<Codec> codecList, IEnumerable<Oahu.Audible.Json.Codec> itmCodecs) {
       if (itmCodecs is null)
         return;
 
@@ -1117,7 +1117,7 @@ namespace BookLibConnect.Core {
     private void removeBooks (
       BookDbContextLazyLoad dbContext, 
       BookCompositeLists bcl, 
-      IEnumerable<BookLibConnect.Audible.Json.Product> products, 
+      IEnumerable<Oahu.Audible.Json.Product> products, 
       ProfileId profileId
     ) {
       try {

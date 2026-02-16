@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
-using BookLibConnect.Aux.Extensions;
+using Oahu.Aux.Extensions;
 
-namespace BookLibConnect.Aux {
+namespace Oahu.Aux {
   public class AffineSynchronizationContext {
 
 #region Private Fields

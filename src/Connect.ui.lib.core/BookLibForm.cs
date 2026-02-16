@@ -6,15 +6,15 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using BookLibConnect.Aux;
-using BookLibConnect.Aux.PropGird;
-using BookLibConnect.BooksDatabase;
-using BookLibConnect.Core.ex;
-using R = BookLibConnect.Core.UI.Properties.Resources;
-using static BookLibConnect.Aux.Logging;
-using BookLibConnect.Aux.Win;
+using Oahu.Aux;
+using Oahu.Aux.PropGird;
+using Oahu.BooksDatabase;
+using Oahu.Core.ex;
+using R = Oahu.Core.UI.Properties.Resources;
+using static Oahu.Aux.Logging;
+using Oahu.Aux.Win;
 
-namespace BookLibConnect.Core.UI {
+namespace Oahu.Core.UI {
   public partial class BookLibForm : Form {
     const double REL_SPLITTER_DIST_BOTTOM = 0.75;
     const double REL_SPLITTER_DIST_INNER = 0.40;
