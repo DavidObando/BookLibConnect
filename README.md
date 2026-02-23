@@ -18,7 +18,14 @@ Oahu is an Audible downloader app for Windows, macOS, and Linux. Forked from [au
 
 
 ## Download
-Go to the [Releases](https://github.com/DavidObando/Oahu/releases) section of this repository.
+Go to the [Releases](https://github.com/DavidObando/Oahu/releases) section of this repository to download installers for Windows (arm64, x64), DMG images for macOS (arm64, x64), or tarballs with the compiled binaries for Linux and macOS (arm64, x64).
+
+### Install via Homebrew (macOS / Linux)
+
+```bash
+brew tap DavidObando/oahu https://github.com/DavidObando/Oahu
+brew install oahu
+```
  
 
 ## Dependencies
