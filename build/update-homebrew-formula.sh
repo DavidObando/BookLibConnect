@@ -27,12 +27,13 @@ echo "Updating formula for $REPO $TAG (version $VERSION)..."
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# Define the expected tarballs
-PLATFORMS=("osx-arm64" "osx-x64" "linux-arm64" "linux-x64")
+# Define the expected tarballs and download them
+SHA_OSX_ARM64=""
+SHA_OSX_X64=""
+SHA_LINUX_ARM64=""
+SHA_LINUX_X64=""
 
-declare -A SHAS
-
-for PLATFORM in "${PLATFORMS[@]}"; do
+for PLATFORM in osx-arm64 osx-x64 linux-arm64 linux-x64; do
   TARBALL="Oahu-${VERSION}-${PLATFORM}.tar.gz"
   echo "  Downloading $TARBALL..."
   gh release download "$TAG" --repo "$REPO" --pattern "$TARBALL" --dir "$TMPDIR" 2>/dev/null || {
@@ -40,8 +41,13 @@ for PLATFORM in "${PLATFORMS[@]}"; do
     continue
   }
   SHA=$(shasum -a 256 "$TMPDIR/$TARBALL" | awk '{print $1}')
-  SHAS[$PLATFORM]="$SHA"
   echo "    SHA256: $SHA"
+  case "$PLATFORM" in
+    osx-arm64)   SHA_OSX_ARM64="$SHA" ;;
+    osx-x64)     SHA_OSX_X64="$SHA" ;;
+    linux-arm64)  SHA_LINUX_ARM64="$SHA" ;;
+    linux-x64)    SHA_LINUX_X64="$SHA" ;;
+  esac
 done
 
 # Patch the formula
@@ -52,18 +58,18 @@ echo "Patching $FORMULA..."
 sed -i.bak -E "s/^  version \".*\"/  version \"$VERSION\"/" "$FORMULA"
 
 # Update SHA256 for each platform using contextual replacement
-if [[ -n "${SHAS[osx-arm64]:-}" ]]; then
+if [[ -n "$SHA_OSX_ARM64" ]]; then
   # macOS ARM64: the sha256 line right after the osx-arm64 URL
-  sed -i.bak "/osx-arm64\.tar\.gz/{n;s/sha256 \".*\"/sha256 \"${SHAS[osx-arm64]}\"/;}" "$FORMULA"
+  sed -i.bak "/osx-arm64\.tar\.gz/{n;s/sha256 \".*\"/sha256 \"${SHA_OSX_ARM64}\"/;}" "$FORMULA"
 fi
-if [[ -n "${SHAS[osx-x64]:-}" ]]; then
-  sed -i.bak "/osx-x64\.tar\.gz/{n;s/sha256 \".*\"/sha256 \"${SHAS[osx-x64]}\"/;}" "$FORMULA"
+if [[ -n "$SHA_OSX_X64" ]]; then
+  sed -i.bak "/osx-x64\.tar\.gz/{n;s/sha256 \".*\"/sha256 \"${SHA_OSX_X64}\"/;}" "$FORMULA"
 fi
-if [[ -n "${SHAS[linux-arm64]:-}" ]]; then
-  sed -i.bak "/linux-arm64\.tar\.gz/{n;s/sha256 \".*\"/sha256 \"${SHAS[linux-arm64]}\"/;}" "$FORMULA"
+if [[ -n "$SHA_LINUX_ARM64" ]]; then
+  sed -i.bak "/linux-arm64\.tar\.gz/{n;s/sha256 \".*\"/sha256 \"${SHA_LINUX_ARM64}\"/;}" "$FORMULA"
 fi
-if [[ -n "${SHAS[linux-x64]:-}" ]]; then
-  sed -i.bak "/linux-x64\.tar\.gz/{n;s/sha256 \".*\"/sha256 \"${SHAS[linux-x64]}\"/;}" "$FORMULA"
+if [[ -n "$SHA_LINUX_X64" ]]; then
+  sed -i.bak "/linux-x64\.tar\.gz/{n;s/sha256 \".*\"/sha256 \"${SHA_LINUX_X64}\"/;}" "$FORMULA"
 fi
 
 # Clean up sed backup files
