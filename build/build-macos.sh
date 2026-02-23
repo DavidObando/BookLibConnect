@@ -162,6 +162,14 @@ fi
 
 echo "==> .app bundle created at: $APP_BUNDLE"
 
+# Create a standalone tarball for Homebrew / non-.app distribution
+# Sourced from MacOS dir so binaries are code-signed when signing is enabled
+TARBALL_NAME="${APP_NAME}-${APP_VERSION}-${RUNTIME}.tar.gz"
+TARBALL_PATH="$OUTPUT_DIR/$TARBALL_NAME"
+echo "==> Creating tarball for Homebrew..."
+tar -czf "$TARBALL_PATH" -C "$MACOS_DIR" .
+echo "  Tarball: $TARBALL_PATH"
+
 # Create DMG
 DMG_NAME="Oahu-${APP_VERSION}-${RUNTIME}"
 DMG_PATH="$OUTPUT_DIR/${DMG_NAME}.dmg"
@@ -217,3 +225,4 @@ echo "=== Build complete ==="
 echo "Artifacts:"
 echo "  .app bundle: $APP_BUNDLE"
 echo "  .dmg:        $DMG_PATH"
+echo "  Tarball:     $TARBALL_PATH"

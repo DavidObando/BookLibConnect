@@ -128,6 +128,14 @@ jobs:
           path: ./artifacts/*.dmg
           retention-days: 30
 
+      - name: Upload tarball
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Oahu-${{ matrix.runtime }}-tarball
+          path: ./artifacts/*.tar.gz
+          retention-days: 30
+
   build-windows:
     strategy:
       matrix:
