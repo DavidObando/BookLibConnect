@@ -146,6 +146,17 @@ if [[ -n "$CODESIGN_IDENTITY" ]]; then
       "$bin" 2>/dev/null || true
   done
 
+  # Create the Homebrew tarball BEFORE bundle signing.
+  # Bundle signing (codesign --deep on the .app) re-signs the main executable
+  # in an app-bundle context, binding it to Contents/Info.plist. That signature
+  # becomes invalid when the binary runs standalone outside the bundle.
+  # The individual signatures applied above are valid for standalone use.
+  TARBALL_NAME="${APP_NAME}-${APP_VERSION}-${RUNTIME}.tar.gz"
+  TARBALL_PATH="$OUTPUT_DIR/$TARBALL_NAME"
+  echo "==> Creating tarball for Homebrew (before bundle signing)..."
+  tar -czf "$TARBALL_PATH" -C "$MACOS_DIR" .
+  echo "  Tarball: $TARBALL_PATH"
+
   # Sign the .app bundle itself
   codesign --force --deep --options runtime \
     --entitlements "$ENTITLEMENTS" \
@@ -162,13 +173,14 @@ fi
 
 echo "==> .app bundle created at: $APP_BUNDLE"
 
-# Create a standalone tarball for Homebrew / non-.app distribution
-# Sourced from MacOS dir so binaries are code-signed when signing is enabled
-TARBALL_NAME="${APP_NAME}-${APP_VERSION}-${RUNTIME}.tar.gz"
-TARBALL_PATH="$OUTPUT_DIR/$TARBALL_NAME"
-echo "==> Creating tarball for Homebrew..."
-tar -czf "$TARBALL_PATH" -C "$MACOS_DIR" .
-echo "  Tarball: $TARBALL_PATH"
+# Create tarball when code signing was skipped (unsigned/ad-hoc)
+if [[ -z "${TARBALL_PATH:-}" ]]; then
+  TARBALL_NAME="${APP_NAME}-${APP_VERSION}-${RUNTIME}.tar.gz"
+  TARBALL_PATH="$OUTPUT_DIR/$TARBALL_NAME"
+  echo "==> Creating tarball for Homebrew..."
+  tar -czf "$TARBALL_PATH" -C "$OUTPUT_DIR/publish" .
+  echo "  Tarball: $TARBALL_PATH"
+fi
 
 # Create DMG
 DMG_NAME="Oahu-${APP_VERSION}-${RUNTIME}"
