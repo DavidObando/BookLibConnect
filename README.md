@@ -26,7 +26,11 @@ Go to the [Releases](https://github.com/DavidObando/Oahu/releases) section of th
 brew tap DavidObando/oahu https://github.com/DavidObando/Oahu
 brew install oahu
 ```
- 
+### Install via WinGet (Windows)
+
+```powershell
+winget install DavidObando.Oahu
+```
 
 ## Dependencies
 Oahu will run on Windows 64bit, macOS, or Linux. Minimum Windows version is 7. Minimum macOS version is 13 (Ventura).
