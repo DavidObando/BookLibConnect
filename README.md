@@ -41,7 +41,7 @@ The repository now ships a single cross-platform Avalonia client (Windows, macOS
 
 ```bash
 # Build the full solution
-dotnet build src/Oahu.sln
+dotnet build Oahu.sln
 
 # Run the Avalonia app
 dotnet run --project src/Oahu.App/Oahu.App.csproj

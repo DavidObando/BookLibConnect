@@ -11,7 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using AAXClean;
+using Oahu.Decrypt;
 using Oahu.Aux;
 using Oahu.Aux.Extensions;
 using Oahu.BooksDatabase;
@@ -337,6 +337,8 @@ namespace Oahu.Core {
       string outputFile = (conversion.DownloadFileName + R.DecryptedFileExt).AsUncIfLong ();
 
       
+      Mp4Operation operation = null;
+
       try {
         if (!File.Exists (inputFile))
           return false;
@@ -344,21 +346,18 @@ namespace Oahu.Core {
         using (var ifStream = File.OpenRead (inputFile)) {
 
           aaxFile = new AaxFile (ifStream);
-          aaxFile.ConversionProgressUpdate += aaxFile_ConversionProgressUpdate;
           aaxFile.SetDecryptionKey (conversion.BookCommon.LicenseKey, conversion.BookCommon.LicenseIv);
 
           numChannels = aaxFile.AudioChannels;
 
-          ConversionResult result;
-          using (var fileStream = File.OpenWrite (outputFile))
-            result = await Task.Run (() => {
-              var result = aaxFile.ConvertToMp4a (fileStream);
-              if (result == ConversionResult.NoErrorsDetected)
-                progressAction.Invoke (conversion, TimeSpan.FromSeconds (conversion.BookMeta.RunTimeLengthSeconds ?? 0));
-              return result;
-            });
-
-          succ = result == ConversionResult.NoErrorsDetected;
+          using (var fileStream = File.OpenWrite (outputFile)) {
+            operation = aaxFile.ConvertToMp4aAsync (fileStream);
+            operation.ConversionProgressUpdate += aaxFile_ConversionProgressUpdate;
+            await operation;
+            succ = operation.IsCompletedSuccessfully;
+            if (succ)
+              progressAction.Invoke (conversion, TimeSpan.FromSeconds (conversion.BookMeta.RunTimeLengthSeconds ?? 0));
+          }
         }
 
         if (succ)
@@ -398,7 +397,7 @@ namespace Oahu.Core {
 
       async void aaxFile_ConversionProgressUpdate (object sender, ConversionProgressEventArgs e) {
         if (cancToken.IsCancellationRequested)
-          await aaxFile?.CancelAsync ();
+          await (operation?.CancelAsync () ?? Task.CompletedTask);
         progressAction.Invoke (conversion, e.ProcessPosition);
       }
     }
