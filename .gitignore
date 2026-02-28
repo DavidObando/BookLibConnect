@@ -18,6 +18,7 @@ artifacts/
 x64/
 x86/
 [Ww][Ii][Nn]32/
+!src/Oahu.Foundation/Win32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
