@@ -6,7 +6,7 @@
 #define MyCompany = 'DavidObando'
 #define MyAppName = 'Oahu'
 #ifndef MySourceDir
-  #define MySourceDir '..\Connect.app.gui.core\bin\Release\net10.0-windows\publish'
+  #define MySourceDir '..\Oahu.App\bin\Release\net10.0\publish'
 #endif
 #ifndef MyArchitecture
   #define MyArchitecture 'x64'

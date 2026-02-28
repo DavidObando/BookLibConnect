@@ -2,10 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-
     <RootNamespace>Oahu.Core</RootNamespace>
     <AssemblyName>Oahu.Core</AssemblyName>
-
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,12 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Audible.json.core\Audible.json.core.csproj" />
-    <ProjectReference Include="..\AuxLib.core\AuxLib.core.csproj" />
-    <ProjectReference Include="..\BooksDatabase.core\BooksDatabase.core.csproj" />
-    <ProjectReference Include="..\CommonTypes.lib.core\CommonTypes.lib.core.csproj" />
-    <ProjectReference Include="..\CommonUtil.lib.core\CommonUtil.lib.core.csproj" />
-    <ProjectReference Include="..\TreeDecomposition.core\TreeDecomposition.core.csproj" />
+    <ProjectReference Include="..\Oahu.Foundation\Oahu.Foundation.csproj" />
+    <ProjectReference Include="..\Oahu.Data\Oahu.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>

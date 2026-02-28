@@ -12,7 +12,7 @@ OUTPUT_DIR="./artifacts"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SRC_DIR="$REPO_ROOT/src"
-PROJECT="$SRC_DIR/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj"
+PROJECT="$SRC_DIR/Oahu.App/Oahu.App.csproj"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -42,8 +42,8 @@ echo "Output:        $OUTPUT_DIR"
 # Resolve version from Nerdbank.GitVersioning
 dotnet tool restore
 APP_VERSION=""
-if dotnet nbgv get-version -v SimpleVersion --project "$SRC_DIR/Connect.app.avalonia.core" &> /dev/null; then
-  APP_VERSION=$(dotnet nbgv get-version -v SimpleVersion --project "$SRC_DIR/Connect.app.avalonia.core")
+if dotnet nbgv get-version -v SimpleVersion --project "$SRC_DIR/Oahu.App" &> /dev/null; then
+  APP_VERSION=$(dotnet nbgv get-version -v SimpleVersion --project "$SRC_DIR/Oahu.App")
 else
   # Fallback: read base version from version.json
   APP_VERSION=$(grep '"version"' "$REPO_ROOT/version.json" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1.0/')

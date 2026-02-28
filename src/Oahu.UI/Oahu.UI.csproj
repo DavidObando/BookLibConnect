@@ -3,8 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Oahu.Core.UI.Avalonia</RootNamespace>
-    <AssemblyName>Oahu.UI.Avalonia.Core</AssemblyName>
-
+    <AssemblyName>Oahu.UI</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,10 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AuxLib.core\AuxLib.core.csproj" />
-    <ProjectReference Include="..\BooksDatabase.core\BooksDatabase.core.csproj" />
-    <ProjectReference Include="..\CommonTypes.lib.core\CommonTypes.lib.core.csproj" />
-    <ProjectReference Include="..\Connect.lib.core\Connect.lib.core.csproj" />
+    <ProjectReference Include="..\Oahu.Foundation\Oahu.Foundation.csproj" />
+    <ProjectReference Include="..\Oahu.Data\Oahu.Data.csproj" />
+    <ProjectReference Include="..\Oahu.Core\Oahu.Core.csproj" />
   </ItemGroup>
 
 </Project>

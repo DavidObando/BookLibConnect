@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Oahu.App.Avalonia</RootNamespace>
+    <AssemblyName>Oahu</AssemblyName>
+    <ApplicationIcon>Resources\audio.ico</ApplicationIcon>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <NoWarn>$(NoWarn);CA1416;IL2026;IL2037;IL2104</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.7" />
+    <PackageReference Include="System.Management" Version="9.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Oahu.Foundation\Oahu.Foundation.csproj" />
+    <ProjectReference Include="..\Oahu.Data\Oahu.Data.csproj" />
+    <ProjectReference Include="..\Oahu.Core\Oahu.Core.csproj" />
+    <ProjectReference Include="..\Oahu.UI\Oahu.UI.csproj" />
+  </ItemGroup>
+
+</Project>

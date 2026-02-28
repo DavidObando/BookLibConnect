@@ -85,8 +85,8 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $RepoRoot  = (Resolve-Path "$ScriptDir/..").Path
 $SrcDir    = Join-Path $RepoRoot "src"
 
-$Project    = Join-Path $SrcDir "Connect.app.avalonia.core/Connect.app.avalonia.core.csproj"
-$ProjectDir = "Connect.app.avalonia.core"
+$Project    = Join-Path $SrcDir "Oahu.App/Oahu.App.csproj"
+$ProjectDir = "Oahu.App"
 
 $PublishDir = Join-Path $OutputDir "publish"
 
