@@ -1,47 +1,54 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Oahu.Aux {
-  public class ProcessList : IDisposable, IProcessList {
+namespace Oahu.Aux
+{
+  public class ProcessList : IDisposable, IProcessList
+  {
 
-    private readonly object _lockable = new object ();
+    private readonly object _lockable = new object();
     private bool _disposed = false;
 
-    HashSet<Process> _processes = new HashSet<Process> ();
+    HashSet<Process> _processes = new HashSet<Process>();
 
     public IProcessList Notify { private get; set; }
 
-    public bool Add (Process process) {
-      Notify?.Add (process);
+    public bool Add(Process process)
+    {
+      Notify?.Add(process);
       lock (_lockable)
-        return _processes.Add (process);
+        return _processes.Add(process);
     }
 
-    public bool Remove (Process process) {
-      Notify?.Remove (process);
+    public bool Remove(Process process)
+    {
+      Notify?.Remove(process);
       lock (_lockable)
-        return _processes.Remove (process);
+        return _processes.Remove(process);
     }
 
     #region IDisposable Members
 
-    public void Dispose () {
-      Dispose (true);
-      GC.SuppressFinalize (this);
+    public void Dispose()
+    {
+      Dispose(true);
+      GC.SuppressFinalize(this);
     }
 
     #endregion
-    private void Dispose (bool disposing) {
+    private void Dispose(bool disposing)
+    {
       if (_disposed)
         return;
 
-      if (disposing) {
+      if (disposing)
+      {
       }
 
       lock (_lockable)
         foreach (Process p in _processes)
-          p.Kill ();
+          p.Kill();
 
       _disposed = true;
     }

@@ -1,18 +1,18 @@
-﻿using System.IO;
+using System.IO;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class TrakBox : Box
 {
-	public TrakBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
-	{
-		LoadChildren(file);
-	}
+  public TrakBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
+  {
+    LoadChildren(file);
+  }
 
-	public TkhdBox Tkhd => GetChildOrThrow<TkhdBox>();
-	public MdiaBox Mdia => GetChildOrThrow<MdiaBox>();
-	protected override void Render(Stream file)
-	{
-		return;
-	}
+  public TkhdBox Tkhd => GetChildOrThrow<TkhdBox>();
+  public MdiaBox Mdia => GetChildOrThrow<MdiaBox>();
+  protected override void Render(Stream file)
+  {
+    return;
+  }
 }

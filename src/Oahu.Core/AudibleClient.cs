@@ -9,8 +9,10 @@ using Oahu.CommonTypes;
 using Oahu.Core.ex;
 using static Oahu.Aux.Logging;
 
-namespace Oahu.Core {
-  public class AudibleClient {
+namespace Oahu.Core
+{
+  public class AudibleClient
+  {
 
     private IAudibleApi _audibleApi;
     private IHardwareIdProvider _hardwareIdProvider;
@@ -29,13 +31,16 @@ namespace Oahu.Core {
 
     public Action WeakConfigEncryptionCallback { set => Authorize.WeakConfigEncryptionCallback = value; }
 
-    public IAudibleApi Api {
-      get {
-        if (_audibleApi is null) {
+    public IAudibleApi Api
+    {
+      get
+      {
+        if (_audibleApi is null)
+        {
           if (Profile is null)
             return null;
 
-          _audibleApi = new AudibleApi (
+          _audibleApi = new AudibleApi(
             Profile.Profile,
             Authorize.HttpClientAmazon,
             Authorize.HttpClientAudible,
@@ -48,238 +53,250 @@ namespace Oahu.Core {
 
     internal AudibleApi FullApi => _audibleApi as AudibleApi;
 
-    public AudibleClient (ConfigSettings configSettings, IAuthorizeSettings authSettings, IHardwareIdProvider hardwareIdProvider = null, string dbDir = null) {
-      Log (3, this);
+    public AudibleClient(ConfigSettings configSettings, IAuthorizeSettings authSettings, IHardwareIdProvider hardwareIdProvider = null, string dbDir = null)
+    {
+      Log(3, this);
 
       _hardwareIdProvider = hardwareIdProvider;
       ConfigSettings = configSettings;
       if (ConfigSettings is not null)
         ConfigSettings.ChangedSettings += settings_ChangedSettings;
       AuthorizeSettings = authSettings;
-      BookLibrary = new BookLibrary (dbDir);
+      BookLibrary = new BookLibrary(dbDir);
       Authorize = new Authorize(getConfigurationToken, authSettings);
-      AudibleLogin = new AudibleLogin ();
+      AudibleLogin = new AudibleLogin();
     }
 
 
-    public async Task<RegisterResult> ConfigFromExternalLoginAsync (
+    public async Task<RegisterResult> ConfigFromExternalLoginAsync(
       ERegion region,
       bool withPreAmazonUsername,
-      Callbacks callbacks
-    ) {
-      Log (3, this, () => $"reg={region}, preAmznAccnt={withPreAmazonUsername}");
-      Uri uri = ConfigBuildNewLoginUri (region, withPreAmazonUsername);
+      Callbacks callbacks)
+    {
+      Log(3, this, () => $"reg={region}, preAmznAccnt={withPreAmazonUsername}");
+      Uri uri = ConfigBuildNewLoginUri(region, withPreAmazonUsername);
 
       if (callbacks.ExternalLoginCallback is null)
         return null;
 
-      Uri responseUri = callbacks.ExternalLoginCallback (uri);
+      Uri responseUri = callbacks.ExternalLoginCallback(uri);
 
-      var result = await ConfigParseExternalLoginResponseAsync (responseUri, callbacks);
+      var result = await ConfigParseExternalLoginResponseAsync(responseUri, callbacks);
 
       return result;
     }
 
-    public Uri ConfigBuildNewLoginUri (
+    public Uri ConfigBuildNewLoginUri(
       ERegion region,
-      bool withPreAmazonUsername
-    ) {
-      Log (3, this, () => $"reg={region}, preAmznAccnt={withPreAmazonUsername}");
-      disposeProfileAndApi ();
+      bool withPreAmazonUsername)
+    {
+      Log(3, this, () => $"reg={region}, preAmznAccnt={withPreAmazonUsername}");
+      disposeProfileAndApi();
 
-      return AudibleLogin.BuildAuthUri (region, withPreAmazonUsername);
+      return AudibleLogin.BuildAuthUri(region, withPreAmazonUsername);
     }
 
-    public async Task<RegisterResult> ConfigParseExternalLoginResponseAsync (
+    public async Task<RegisterResult> ConfigParseExternalLoginResponseAsync(
       Uri uri,
-      Callbacks callbacks
-    ) {
-      using var _ = new LogGuard (3, this);
+      Callbacks callbacks)
+    {
+      using var _ = new LogGuard(3, this);
 
       var profile = AudibleLogin.ParseExternalResponse(uri);
 
-      if (profile is null) {
-        Log (1, this, () => "response parsing failed.");
+      if (profile is null)
+      {
+        Log(1, this, () => "response parsing failed.");
         return new RegisterResult(EAuthorizeResult.authorizationFailed, null, null);
       }
 
-      var (succ, prevProfile) = await Authorize.RegisterAsync (profile);
+      var (succ, prevProfile) = await Authorize.RegisterAsync(profile);
       if (!succ)
-        return new RegisterResult (EAuthorizeResult.registrationFailed, null, null);
+        return new RegisterResult(EAuthorizeResult.registrationFailed, null, null);
 
       EAuthorizeResult result = EAuthorizeResult.succ;
 
-      if (profile.Matches (prevProfile))
+      if (profile.Matches(prevProfile))
         Profile = null;
 
       // TODO modify/test
-      //bool deregister = prevProfile is not null &&
+      // bool deregister = prevProfile is not null &&
       //  (callbacks.DeregisterDeviceConfirmCallback?.Invoke (prevProfile.CreateKeyEx ()) ?? true);
 
-      //if (deregister) {
+      // if (deregister) {
       //  succ = await Authorize.DeregisterAsync (prevProfile);
       //  if (!succ)
       //    result = EAuthorizeResult.deregistrationFailed;
-      //}
+      // }
       bool deregister = prevProfile is not null;
       if (deregister)
         result = EAuthorizeResult.deregistrationFailed;
 
-      return new (result, profile.CreateKeyEx(), prevProfile?.DeviceInfo?.Name);
+      return new(result, profile.CreateKeyEx(), prevProfile?.DeviceInfo?.Name);
     }
 
-    public async Task<IProfileAliasKey> ConfigFromFileAsync (
+    public async Task<IProfileAliasKey> ConfigFromFileAsync(
       IProfileAliasKey aliasKey,
-      Func<AccountAliasContext, bool> getAccountAliasFunc
-    ) {
-      Log (3, typeof (AudibleClient), () => aliasKey?.ToString());
-      disposeProfileAndApi ();
-      var resultKey = await fromFileAsync (aliasKey, getAccountAliasFunc);
+      Func<AccountAliasContext, bool> getAccountAliasFunc)
+    {
+      Log(3, typeof(AudibleClient), () => aliasKey?.ToString());
+      disposeProfileAndApi();
+      var resultKey = await fromFileAsync(aliasKey, getAccountAliasFunc);
       return resultKey;
     }
 
-    public IEnumerable<AccountAlias> GetAccountAliases () =>
-      BookLibrary.GetAccountAliases ();
+    public IEnumerable<AccountAlias> GetAccountAliases() =>
+      BookLibrary.GetAccountAliases();
 
-    public void SetAccountAlias (IProfileKey key, string alias) =>
-      BookLibrary.SetAccountAlias (key, alias);
+    public void SetAccountAlias(IProfileKey key, string alias) =>
+      BookLibrary.SetAccountAlias(key, alias);
 
 
-    public async Task<string> GetProfileAliasAsync (
-      IProfileKey key, Func<AccountAliasContext, bool> getAccountAliasFunc, bool newAlias
-    ) {
-      var profiles = await Authorize.GetRegisteredProfilesAsync ();
+    public async Task<string> GetProfileAliasAsync(
+      IProfileKey key, Func<AccountAliasContext, bool> getAccountAliasFunc, bool newAlias)
+    {
+      var profiles = await Authorize.GetRegisteredProfilesAsync();
       if (profiles is null)
         return null;
 
-      var profile = profiles.FirstOrDefault (p => p.Region == key.Region && string.Equals (p.CustomerInfo.AccountId, key.AccountId));
+      var profile = profiles.FirstOrDefault(p => p.Region == key.Region && string.Equals(p.CustomerInfo.AccountId, key.AccountId));
       if (profile is null)
         return null;
-      string alias = profile.GetAccountAlias (BookLibrary, getAccountAliasFunc, newAlias);
+      string alias = profile.GetAccountAlias(BookLibrary, getAccountAliasFunc, newAlias);
       return alias;
     }
 
-    public async Task<IEnumerable<IProfileKeyEx>> GetProfilesAsync () {
-      Log (3, this);
-      var profiles = await Authorize.GetRegisteredProfilesAsync ();
+    public async Task<IEnumerable<IProfileKeyEx>> GetProfilesAsync()
+    {
+      Log(3, this);
+      var profiles = await Authorize.GetRegisteredProfilesAsync();
       if (profiles is null)
         return null;
 
       var profileKeys = profiles
-        .Select (p => p.CreateKeyEx ())
-        .ToList ();
+        .Select(p => p.CreateKeyEx())
+        .ToList();
       return profileKeys;
     }
 
-    public async Task<EAuthorizeResult> RemoveProfileAsync (IProfileKey key) {
-      Log (3, this, () => key.ToString());
-      var result = await Authorize.RemoveProfileAsync (key);
-      if (result >= EAuthorizeResult.succ) {
-        BookLibrary.RemoveAccountId (key);
-        setProfile (null, null);
+    public async Task<EAuthorizeResult> RemoveProfileAsync(IProfileKey key)
+    {
+      Log(3, this, () => key.ToString());
+      var result = await Authorize.RemoveProfileAsync(key);
+      if (result >= EAuthorizeResult.succ)
+      {
+        BookLibrary.RemoveAccountId(key);
+        setProfile(null, null);
       }
       return result;
     }
 
-    public async Task<bool?> ChangeProfileAsync (IProfileKey key, bool aliasChanged) {
-      Log (3, this, () => key.ToString());
-      //Key may be the same but profile could still be different, check Id instead
-      bool profileChanged = !Profile.MatchesId (key);
+    public async Task<bool?> ChangeProfileAsync(IProfileKey key, bool aliasChanged)
+    {
+      Log(3, this, () => key.ToString());
+      // Key may be the same but profile could still be different, check Id instead
+      bool profileChanged = !Profile.MatchesId(key);
       if (!profileChanged && !aliasChanged)
         return false;
 
-      Log (3, this, () => Authorize?.GetProfile (key)?.CreateAliasKey(BookLibrary, null)?.ToString());
-      disposeProfileAndApi ();
+      Log(3, this, () => Authorize?.GetProfile(key)?.CreateAliasKey(BookLibrary, null)?.ToString());
+      disposeProfileAndApi();
 
-      var profiles = await Authorize.GetRegisteredProfilesAsync ();
+      var profiles = await Authorize.GetRegisteredProfilesAsync();
       if (profiles is null)
         return null;
 
-      var profile = profiles.FirstOrDefault (p => p.Matches(key));
+      var profile = profiles.FirstOrDefault(p => p.Matches(key));
       if (profile is null)
         return null;
 
-      setProfile (profile, null);
+      setProfile(profile, null);
 
       if (profileChanged)
-        await Authorize.RefreshTokenAsync (profile, true);
+        await Authorize.RefreshTokenAsync(profile, true);
 
       return true;
     }
 
-    private IProfileAliasKey setProfile (IProfile profile, Func<AccountAliasContext, bool> getAccountAliasFunc) {
-      if (profile is null) {
+    private IProfileAliasKey setProfile(IProfile profile, Func<AccountAliasContext, bool> getAccountAliasFunc)
+    {
+      if (profile is null)
+      {
         Profile = null;
         return null;
       }
 
-      var key = profile.CreateKey ();
-      var aliasKey = profile.CreateAliasKey (BookLibrary, getAccountAliasFunc);
-      Profile = new ProfileBundle (profile, key, aliasKey);
+      var key = profile.CreateKey();
+      var aliasKey = profile.CreateAliasKey(BookLibrary, getAccountAliasFunc);
+      Profile = new ProfileBundle(profile, key, aliasKey);
       return aliasKey;
     }
 
-    private void disposeProfileAndApi () {
+    private void disposeProfileAndApi()
+    {
       Profile = null;
-      _audibleApi?.Dispose ();
+      _audibleApi?.Dispose();
       _audibleApi = null;
     }
 
-    private async void settings_ChangedSettings (object sender, EventArgs e) =>
-      await Authorize.WriteConfigurationAsync ();
+    private async void settings_ChangedSettings(object sender, EventArgs e) =>
+      await Authorize.WriteConfigurationAsync();
 
-    private ConfigurationTokenResult getConfigurationToken (bool enforce) {
+    private ConfigurationTokenResult getConfigurationToken(bool enforce)
+    {
       if (!(ConfigSettings?.EncryptConfiguration ?? false) && !enforce)
         return default;
       bool weak = false;
-      var sb = new StringBuilder ();
+      var sb = new StringBuilder();
 
-      string uid = ApplEnv.UserName.Rot13 ();
-      sb.Append (uid);
+      string uid = ApplEnv.UserName.Rot13();
+      sb.Append(uid);
 
-      string cid = _hardwareIdProvider?.GetCpuId ();
-      if (cid.IsNullOrWhiteSpace ())
+      string cid = _hardwareIdProvider?.GetCpuId();
+      if (cid.IsNullOrWhiteSpace())
         weak = true;
       else
-        sb.Append (cid);
+        sb.Append(cid);
 
-      string mbId = _hardwareIdProvider?.GetMotherboardId ();
-      if (mbId.IsNullOrWhiteSpace ())
-        mbId = _hardwareIdProvider?.GetMotherboardPnpDeviceId ();
-      if (mbId.IsNullOrWhiteSpace ())
+      string mbId = _hardwareIdProvider?.GetMotherboardId();
+      if (mbId.IsNullOrWhiteSpace())
+        mbId = _hardwareIdProvider?.GetMotherboardPnpDeviceId();
+      if (mbId.IsNullOrWhiteSpace())
         weak = true;
       else
-        sb.Append (mbId);
+        sb.Append(mbId);
 
-      return new (sb.ToString (), weak);
+      return new(sb.ToString(), weak);
     }
 
-    private async Task<IProfileAliasKey> fromFileAsync (
+    private async Task<IProfileAliasKey> fromFileAsync(
       IProfileAliasKey aliasKey,
-      Func<AccountAliasContext, bool> getAccountAliasFunc
-    ) {
-      var accountAlisases = GetAccountAliases ();
-      var profiles = await Authorize.GetRegisteredProfilesAsync ();
+      Func<AccountAliasContext, bool> getAccountAliasFunc)
+    {
+      var accountAlisases = GetAccountAliases();
+      var profiles = await Authorize.GetRegisteredProfilesAsync();
       if (profiles is null)
         return null;
 
-      if (aliasKey is not null) {
-        profiles = profiles.Where (p => p.Region == aliasKey.Region);
-        if (!aliasKey.AccountAlias.IsNullOrWhiteSpace ()) {
-          string accountId = accountAlisases.FirstOrDefault (aa => aa.Alias == aliasKey.AccountAlias)?.AccountId;
+      if (aliasKey is not null)
+      {
+        profiles = profiles.Where(p => p.Region == aliasKey.Region);
+        if (!aliasKey.AccountAlias.IsNullOrWhiteSpace())
+        {
+          string accountId = accountAlisases.FirstOrDefault(aa => aa.Alias == aliasKey.AccountAlias)?.AccountId;
           if (accountId is not null)
-            profiles = profiles.Where (p => string.Equals(p.CustomerInfo.AccountId, accountId));
+            profiles = profiles.Where(p => string.Equals(p.CustomerInfo.AccountId, accountId));
         }
       }
 
-      if (!profiles.Any ())
+      if (!profiles.Any())
         return null;
 
-      var profile = profiles.First ();
+      var profile = profiles.First();
 
-      await Authorize.RefreshTokenAsync (profile, true);
+      await Authorize.RefreshTokenAsync(profile, true);
 
-      var resultKey = setProfile (profile, getAccountAliasFunc);
+      var resultKey = setProfile(profile, getAccountAliasFunc);
       return resultKey;
     }
 

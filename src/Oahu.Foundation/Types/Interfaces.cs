@@ -1,7 +1,9 @@
-﻿using System;
+using System;
 
-namespace Oahu.CommonTypes {
-  public interface IBookMeta : IAudioQuality {
+namespace Oahu.CommonTypes
+{
+  public interface IBookMeta : IAudioQuality
+  {
     string Asin { get; }
     string Title { get; }
     string Author { get; }
@@ -16,7 +18,8 @@ namespace Oahu.CommonTypes {
     DateTime? PurchaseDate { get; }
   }
 
-  public interface IAudioQuality {
+  public interface IAudioQuality
+  {
     int? SampleRate { get; }
     int? BitRate { get; }
   }

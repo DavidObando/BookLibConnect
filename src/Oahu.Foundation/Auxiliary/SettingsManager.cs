@@ -2,19 +2,22 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Oahu.Aux {
+namespace Oahu.Aux
+{
   /// <summary>
   /// Simple settings manager for app and user settings serialized as json.
   /// Does not use Microsoft.Extensions.Configuration
   /// </summary>
-  public static class SettingsManager {
+  public static class SettingsManager
+  {
 
-    class UserConfig {
+    class UserConfig
+    {
       public object Settings { get; set; }
       public string File { get; set; }
     }
 
-    private static Dictionary<Type, UserConfig> __userSettingsDict = new  ();
+    private static Dictionary<Type, UserConfig> __userSettingsDict = new();
     private static object __appSettings;
 
 
@@ -49,25 +52,27 @@ namespace Oahu.Aux {
     /// <typeparam name="T">Type of the application settings</typeparam>
     /// <param name="optional">Whether app settings file must exist.</param>
     /// <returns>Application settings, or new default instance if optional and not found.</returns>
-    public static T GetAppSettings<T> (bool optional = false)
-      where T: class, new()
+    public static T GetAppSettings<T>(bool optional = false)
+      where T : class, new()
     {
       T settings = __appSettings as T;
 
-      if (settings is null) {
-        string path = Path.Combine (AppSettingsDirectory, APP_SETTINGS_FILE);
-        bool exists = File.Exists (path);
+      if (settings is null)
+      {
+        string path = Path.Combine(AppSettingsDirectory, APP_SETTINGS_FILE);
+        bool exists = File.Exists(path);
         if (!optional && !exists)
-          throw new InvalidOperationException ($"{path} not found.");
-        settings = deserializeJsonFile<T> (path, !optional);
-        if (settings is null) {
-          //if (!optional)
+          throw new InvalidOperationException($"{path} not found.");
+        settings = deserializeJsonFile<T>(path, !optional);
+        if (settings is null)
+        {
+          // if (!optional)
           //  throw new InvalidOperationException ($"{path}: content does not match.");
-          //else
-            settings = new T ();
+          // else
+          settings = new T();
 
           if (settings is IInitSettings init)
-            init.Init ();
+            init.Init();
 
         }
         __appSettings = settings;
@@ -89,9 +94,9 @@ namespace Oahu.Aux {
     /// <returns>
     /// User settings, or new default instance if no settings found.
     /// </returns>
-    public static T GetUserSettings<T> (bool renew = false, string settingsFile = null)
+    public static T GetUserSettings<T>(bool renew = false, string settingsFile = null)
     where T : class, IUserSettings, new() =>
-      GetUserSettings<T> (settingsFile, renew);
+      GetUserSettings<T>(settingsFile, renew);
 
 
     /// <summary>
@@ -106,48 +111,56 @@ namespace Oahu.Aux {
     /// <returns>
     /// User settings, or new default instance if if no settings found.
     /// </returns>
-    public static T GetUserSettings<T> (string settingsFile, bool renew = false)
-      where T : class, IUserSettings, new() {
+    public static T GetUserSettings<T>(string settingsFile, bool renew = false)
+      where T : class, IUserSettings, new()
+    {
 
       T settings = null;
 
-      if (!renew) {
-        lock (__userSettingsDict) {
-          bool succ = __userSettingsDict.TryGetValue (typeof (T), out var userConfig);
+      if (!renew)
+      {
+        lock (__userSettingsDict)
+        {
+          bool succ = __userSettingsDict.TryGetValue(typeof(T), out var userConfig);
           if (succ)
             settings = userConfig.Settings as T;
         }
       }
 
-      if (settings is null) {
-        (string dir, string file) = getUserSettingsPath (settingsFile);
+      if (settings is null)
+      {
+        (string dir, string file) = getUserSettingsPath(settingsFile);
 
-        string path = Path.Combine (dir, file);
-        settings = deserializeJsonFile<T> (path);
+        string path = Path.Combine(dir, file);
+        settings = deserializeJsonFile<T>(path);
 
-        if (settings is null) {
-          path = Path.Combine (AppSettingsDirectory, file);
-          settings = deserializeJsonFile<T> (path);
+        if (settings is null)
+        {
+          path = Path.Combine(AppSettingsDirectory, file);
+          settings = deserializeJsonFile<T>(path);
         }
 
         if (settings is null)
-          settings = new T ();
+          settings = new T();
 
-        lock (__userSettingsDict) {
-          bool succ = __userSettingsDict.TryGetValue (typeof (T), out var userConfig);
+        lock (__userSettingsDict)
+        {
+          bool succ = __userSettingsDict.TryGetValue(typeof(T), out var userConfig);
           if (succ && userConfig.Settings != settings)
             userConfig.Settings = settings;
-          else {
-            userConfig = new UserConfig {
+          else
+          {
+            userConfig = new UserConfig
+            {
               Settings = settings,
               File = settingsFile
             };
-            __userSettingsDict[typeof (T)] = userConfig;
+            __userSettingsDict[typeof(T)] = userConfig;
           }
         }
 
         if (settings is IInitSettings init)
-          init.Init ();
+          init.Init();
       }
 
       return settings;
@@ -161,59 +174,69 @@ namespace Oahu.Aux {
     /// </summary>
     /// <typeparam name="T">Type of the user settings</typeparam>
     /// <param name="settings">The user settings.</param>
-    public static bool Save<T> (this T settings)
+    public static bool Save<T>(this T settings)
       where T : IUserSettings
     {
 
       string settingsFile;
 
       // use actual arg type, not the generic type which may be an interface.
-      Type type = settings.GetType ();
+      Type type = settings.GetType();
 
-      lock (__userSettingsDict) {
-        bool succ = __userSettingsDict.TryGetValue (type, out var userConfig);
+      lock (__userSettingsDict)
+      {
+        bool succ = __userSettingsDict.TryGetValue(type, out var userConfig);
         if (!succ)
           return false;
-        if (!ReferenceEquals (userConfig.Settings,settings))
+        if (!ReferenceEquals(userConfig.Settings, settings))
           userConfig.Settings = settings;
         settingsFile = userConfig.File;
       }
 
-      (string dir, string file) = getUserSettingsPath (settingsFile);
-      Directory.CreateDirectory (dir);
-      var filename = Path.Combine (dir, file);
-      try {
-        settings.ToJsonFile (filename);
+      (string dir, string file) = getUserSettingsPath(settingsFile);
+      Directory.CreateDirectory(dir);
+      var filename = Path.Combine(dir, file);
+      try
+      {
+        settings.ToJsonFile(filename);
         return true;
-      } catch (IOException) {
+      }
+      catch (IOException)
+      {
         return false;
       }
     }
 
 
 
-    private static (string dir, string path) getUserSettingsPath (string settingsFile) {
-      if (string.IsNullOrWhiteSpace (settingsFile))
+    private static (string dir, string path) getUserSettingsPath(string settingsFile)
+    {
+      if (string.IsNullOrWhiteSpace(settingsFile))
         return (UserSettingsDirectory, USER_SETTINGS_FILE);
-      string dir = Path.GetDirectoryName (settingsFile);
-      if (string.IsNullOrWhiteSpace (dir))
+      string dir = Path.GetDirectoryName(settingsFile);
+      if (string.IsNullOrWhiteSpace(dir))
         dir = UserSettingsDirectory;
 
-      string file = Path.GetFileName (settingsFile);
-      if (!string.IsNullOrWhiteSpace (file)) {
-        string ext = Path.GetExtension (file).ToLower ();
+      string file = Path.GetFileName(settingsFile);
+      if (!string.IsNullOrWhiteSpace(file))
+      {
+        string ext = Path.GetExtension(file).ToLower();
         if (ext != JSON)
           file += JSON;
       }
       return (dir, file);
     }
 
-    private static T deserializeJsonFile<T> (string path, bool doThrow = false) where T : class, new() {
-      try {
-        return JsonSerialization.FromJsonFile<T> (path);
-      } catch (Exception exc) {
+    private static T deserializeJsonFile<T>(string path, bool doThrow = false) where T : class, new()
+    {
+      try
+      {
+        return JsonSerialization.FromJsonFile<T>(path);
+      }
+      catch (Exception exc)
+      {
         if (doThrow)
-          throw new InvalidOperationException (path, exc);
+          throw new InvalidOperationException(path, exc);
         return null;
       }
     }

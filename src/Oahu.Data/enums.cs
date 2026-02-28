@@ -1,5 +1,7 @@
-﻿namespace Oahu.BooksDatabase {
-  public enum ECodec {
+﻿namespace Oahu.BooksDatabase
+{
+  public enum ECodec
+  {
     format4,
     mp4_22_32,
     mp4_22_64,
@@ -12,7 +14,8 @@
     aax_44_128,
   }
 
-  public enum EDeliveryType {
+  public enum EDeliveryType
+  {
     SinglePartBook,
     MultiPartBook,
     AudioPart,
@@ -20,7 +23,8 @@
     Periodical
   }
 
-  public enum EConversionState {
+  public enum EConversionState
+  {
     unknown,          // strikethru globe
     remote,           // globe
     download,         // globe with down arrow
@@ -35,22 +39,25 @@
     exported,         // checkmark mauve
     converting,       // right arrow
     converted,        // checkmark green
-    converted_unknown,// checkmark gray
-    conversion_error  // strikethru right arrow
+    converted_unknown, // checkmark gray
+    conversion_error // strikethru right arrow
   }
 
-  public enum ELicenseStatusCode {
+  public enum ELicenseStatusCode
+  {
     Unknown,
     Granted
   }
 
-  internal enum EPseudoAsinId {
+  internal enum EPseudoAsinId
+  {
     none,
     author,
     narrator
   }
 
-  public enum EDownloadQuality {
+  public enum EDownloadQuality
+  {
     Low,
     Normal,
     High,

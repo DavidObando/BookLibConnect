@@ -1,14 +1,17 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Oahu.CommonTypes;
 
-namespace Oahu.BooksDatabase {
-  public interface IPerson {
+namespace Oahu.BooksDatabase
+{
+  public interface IPerson
+  {
     string Asin { get; set; }
     string Name { get; set; }
     ICollection<Book> Books { get; }
   }
 
-  public interface IBookCommon : IBookMeta {
+  public interface IBookCommon : IBookMeta
+  {
     new long? FileSizeBytes { get; set; }
     new int? RunTimeLengthSeconds { get; set; }
     new int? SampleRate { get; set; }
@@ -24,7 +27,8 @@ namespace Oahu.BooksDatabase {
     Conversion Conversion { get; }
   }
 
-  public interface IConversion {
+  public interface IConversion
+  {
     int Id { get; }
     EConversionState State { get; }
     string DownloadFileName { get; }

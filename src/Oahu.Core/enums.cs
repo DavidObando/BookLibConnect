@@ -1,8 +1,10 @@
-﻿using System;
+using System;
 
-namespace Oahu.Core {
+namespace Oahu.Core
+{
 
-  public enum EInitialSorting {
+  public enum EInitialSorting
+  {
     state_date,
     date,
     author_title,
@@ -11,18 +13,21 @@ namespace Oahu.Core {
   }
 
   [Flags]
-  enum ECheckFile {
+  enum ECheckFile
+  {
     none = 0,
     deleteIfMissing = 1,
     relocatable = 2
   }
 
-  public enum EBookLibInteract {
+  public enum EBookLibInteract
+  {
     none,
     checkFile
   }
 
-  public enum EAuthorizeResult {
+  public enum EAuthorizeResult
+  {
     none,
     invalidUrl,
     authorizationFailed,

@@ -1,13 +1,15 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 
-namespace Oahu.Aux.Diagnostics {
+namespace Oahu.Aux.Diagnostics
+{
 
   /// <summary>
   /// Flags to control dump output
   /// </summary>
   [Flags]
-  public enum EDumpFlags {
+  public enum EDumpFlags
+  {
     none = 0,
 
     /// <summary>

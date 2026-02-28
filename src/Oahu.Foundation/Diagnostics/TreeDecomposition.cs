@@ -8,9 +8,11 @@ using System.Linq;
 using System.Reflection;
 using Oahu.Aux.Extensions;
 
-namespace Oahu.Aux.Diagnostics {
+namespace Oahu.Aux.Diagnostics
+{
 
-  public static class TreeDecomposition {
+  public static class TreeDecomposition
+  {
     /// <summary>
     /// Custom marker/separator for description text. Will use default if <c>null</c>.
     /// </summary>
@@ -47,34 +49,39 @@ namespace Oahu.Aux.Diagnostics {
   /// </summary>
   /// <typeparam name="T">Additional primitive types, implementing <see cref="IPrimitiveTypes"/></typeparam>
   internal class TreeDecomposition<T>
-    where T : IPrimitiveTypes, new() {
+    where T : IPrimitiveTypes, new()
+  {
 
     abstract class CustomFormat { }
 
-    class CustomFormatString : CustomFormat {
+    class CustomFormatString : CustomFormat
+    {
       public readonly string Format;
-      public CustomFormatString (string format) => Format = format;
+      public CustomFormatString(string format) => Format = format;
     }
 
-    class CustomToString : CustomFormatString {
+    class CustomToString : CustomFormatString
+    {
       public readonly ToStringConverter Converter;
-      public CustomToString (ToStringConverter converter, string format) : base (format) => Converter = converter;
+      public CustomToString(ToStringConverter converter, string format) : base(format) => Converter = converter;
     }
 
 
-    static IPrimitiveTypes __primitveTypes = new T ();
+    static IPrimitiveTypes __primitveTypes = new T();
 
     static TreeDecomposition<T> __default;
 
-    public static TreeDecomposition<T> Default {
-      get {
+    public static TreeDecomposition<T> Default
+    {
+      get
+      {
         if (__default is null)
-          __default = new TreeDecomposition<T> ();
+          __default = new TreeDecomposition<T>();
         return __default;
       }
     }
 
-    private TreeDecomposition () { }
+    private TreeDecomposition() { }
 
     /// <summary>
     /// Dumps the specified object as a text tree. Will be used recursively.
@@ -84,123 +91,134 @@ namespace Oahu.Aux.Diagnostics {
     /// <param name="ind">The indentation.</param>
     /// <param name="falgs">The output modifier flags.</param>
     /// <param name="caption">The optional caption for this indentation level.</param>
-    public void Dump (object o, TextWriter tw, Indent ind, EDumpFlags flags = default, string caption = null) =>
-      dump (o, new Stack<Type> (), tw, ind, flags, caption, null, null, null, false);
+    public void Dump(object o, TextWriter tw, Indent ind, EDumpFlags flags = default, string caption = null) =>
+      dump(o, new Stack<Type>(), tw, ind, flags, caption, null, null, null, false);
 
 
     [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Type metadata is preserved via TrimMode=partial.")]
     [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Type metadata is preserved via TrimMode=partial.")]
     [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Type metadata is preserved via TrimMode=partial.")]
-    private void dump (
+    private void dump(
       object o, Stack<Type> stack, TextWriter tw, Indent ind, EDumpFlags flags,
-      string caption, string itemCaption, CustomFormat itemFormat, string oDesc, bool inEnum
-    ) {
+      string caption, string itemCaption, CustomFormat itemFormat, string oDesc, bool inEnum)
+    {
       if (o is null)
         return;
 
       // via reflection
-      Type objectType = o.GetType ();
-      stack.Push (objectType);
+      Type objectType = o.GetType();
+      stack.Push(objectType);
 
       if (caption is null && ind.Level == 0)
         caption = objectType.Name;
 
       // caption
-      write (tw, ind, caption, flags, oDesc);
+      write(tw, ind, caption, flags, oDesc);
 
       // next level
-      using (new ResourceGuard (ind)) {
+      using (new ResourceGuard(ind))
+      {
 
 
         // is it a collection?
-        bool isEnumerable = typeof (IEnumerable).IsAssignableFrom (objectType);
+        bool isEnumerable = typeof(IEnumerable).IsAssignableFrom(objectType);
 
-        if (isEnumerable) {
+        if (isEnumerable)
+        {
 
-          dumpCollection (o, stack, objectType, tw, ind, flags, itemCaption, itemFormat);
+          dumpCollection(o, stack, objectType, tw, ind, flags, itemCaption, itemFormat);
 
-        } else {
+        }
+        else
+        {
 
           // all public properties, including inherited ones
-          IEnumerable<PropertyInfo> propInfos = objectType.GetProperties (BindingFlags.Public | BindingFlags.Instance);
+          IEnumerable<PropertyInfo> propInfos = objectType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-          if (flags.HasFlag(EDumpFlags.byInterface) && (stack.Count < 2 || flags.HasFlag(EDumpFlags.byInterfaceNestedTypes))) {
-            var interfaceHierarchy = objectType.GetInterfaceHierarchy ();
-            if (interfaceHierarchy.Count () > 0) {
+          if (flags.HasFlag(EDumpFlags.byInterface) && (stack.Count < 2 || flags.HasFlag(EDumpFlags.byInterfaceNestedTypes)))
+          {
+            var interfaceHierarchy = objectType.GetInterfaceHierarchy();
+            if (interfaceHierarchy.Count() > 0)
+            {
               foreach (var path in interfaceHierarchy)
-                dump (ref propInfos, o, path, stack, tw, ind, flags, inEnum);
-              dump (o, propInfos, stack, tw, ind, flags, inEnum);
-            } else
-              dump (o, propInfos, stack, tw, ind, flags, inEnum);
-          } else
-            dump (o, propInfos, stack, tw, ind, flags, inEnum);
+                dump(ref propInfos, o, path, stack, tw, ind, flags, inEnum);
+              dump(o, propInfos, stack, tw, ind, flags, inEnum);
+            }
+            else
+              dump(o, propInfos, stack, tw, ind, flags, inEnum);
+          }
+          else
+            dump(o, propInfos, stack, tw, ind, flags, inEnum);
         }
       }
 
-      stack.Pop ();
+      stack.Pop();
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Interface types are preserved via TrimMode=partial.")]
-    private void dump (
+    private void dump(
       ref IEnumerable<PropertyInfo> propInfos, object o, IEnumerable<Type> path,
-      Stack<Type> stack, TextWriter tw, Indent ind, EDumpFlags flags, bool inEnum
-    ) {
+      Stack<Type> stack, TextWriter tw, Indent ind, EDumpFlags flags, bool inEnum)
+    {
 
-      Type ifcType = path.Last ();
+      Type ifcType = path.Last();
       if (!ifcType.IsInterface)
         return;
-      IEnumerable<PropertyInfo> ifcPropInfos = ifcType.GetProperties ();
-      if (ifcPropInfos.Count () == 0)
+      IEnumerable<PropertyInfo> ifcPropInfos = ifcType.GetProperties();
+      if (ifcPropInfos.Count() == 0)
         return;
 
-      var propNames = ifcPropInfos.Select (pi => pi.Name);
-      var filteredPropInfos = propInfos.Where (pi => propNames.Contains (pi.Name));
-      if (filteredPropInfos.Count () == 0)
+      var propNames = ifcPropInfos.Select(pi => pi.Name);
+      var filteredPropInfos = propInfos.Where(pi => propNames.Contains(pi.Name));
+      if (filteredPropInfos.Count() == 0)
         return;
 
-      propInfos = propInfos.Except (filteredPropInfos);
+      propInfos = propInfos.Except(filteredPropInfos);
 
-      string sPath = path.ToHierarchyString ();
-      tw.WriteLine ($"{ind}:{sPath}");
-      using (new ResourceGuard (ind))
-        dump (o, filteredPropInfos, stack, tw, ind, flags, inEnum);
+      string sPath = path.ToHierarchyString();
+      tw.WriteLine($"{ind}:{sPath}");
+      using (new ResourceGuard(ind))
+        dump(o, filteredPropInfos, stack, tw, ind, flags, inEnum);
 
     }
 
-    private void dump (object o, IEnumerable<PropertyInfo> propInfos, Stack<Type> stack, TextWriter tw, Indent ind, EDumpFlags flags, bool inEnum) {
-      foreach (var propInfo in propInfos) {
+    private void dump(object o, IEnumerable<PropertyInfo> propInfos, Stack<Type> stack, TextWriter tw, Indent ind, EDumpFlags flags, bool inEnum)
+    {
+      foreach (var propInfo in propInfos)
+      {
 
-        //skip indexed
-        bool isIndexed = propInfo.GetIndexParameters ().Length > 0;
+        // skip indexed
+        bool isIndexed = propInfo.GetIndexParameters().Length > 0;
         if (isIndexed)
           continue;
 
         // value
-        object propValue = propInfo.GetValue (o);
+        object propValue = propInfo.GetValue(o);
 
-        //skip null
-        if (!flags.HasFlag (EDumpFlags.inclNullVals)) {
+        // skip null
+        if (!flags.HasFlag(EDumpFlags.inclNullVals))
+        {
           if (propValue is null)
             continue;
           else
-          //skip whitespace
+          // skip whitespace
           if (propValue is string sPropValue)
-            if (sPropValue.IsNullOrWhiteSpace ())
+            if (sPropValue.IsNullOrWhiteSpace())
               continue;
         }
 
         // recursive types only allowed to maximum depth, exceeding instance will be handled as primitive type
-        bool isRecursive = stack.Where (t => t == propInfo.PropertyType).Count () > 20;
+        bool isRecursive = stack.Where(t => t == propInfo.PropertyType).Count() > 20;
 
         // check for modification attributes
         IEnumerable<object> attrs = null;
         if (flags.HasFlag(EDumpFlags.inherInterfaceAttribs))
-          attrs = propInfo.GetCustomAttributesIncludingBaseInterfaces ();
+          attrs = propInfo.GetCustomAttributesIncludingBaseInterfaces();
         else
-          attrs = propInfo.GetCustomAttributes (true);
+          attrs = propInfo.GetCustomAttributes(true);
 
         // shall be ignored?
-        var browsable = attrs.FirstOfType<BrowsableAttribute> ();
+        var browsable = attrs.FirstOfType<BrowsableAttribute>();
         if (!(browsable?.Browsable ?? true))
           continue;
 
@@ -208,118 +226,129 @@ namespace Oahu.Aux.Diagnostics {
         string propName = propInfo.Name;
 
         // alternative name
-        var displName = attrs.FirstOfType<DisplayNameAttribute> ();
+        var displName = attrs.FirstOfType<DisplayNameAttribute>();
         if (displName != null)
           propName = displName.DisplayName;
 
         // alternative item name for collection
-        string itemName = attrs.FirstOfType<DisplayItemNameAttribute> ()?.Name;
+        string itemName = attrs.FirstOfType<DisplayItemNameAttribute>()?.Name;
 
         // optional custom formats
-        CustomFormat customFormat = getCustomFormat (attrs);
+        CustomFormat customFormat = getCustomFormat(attrs);
 
         // optional description
-        string desc = getDesc (propInfo, attrs, flags, inEnum);
+        string desc = getDesc(propInfo, attrs, flags, inEnum);
 
         // actual type
-        Type propType = propValue?.GetType ();
+        Type propType = propValue?.GetType();
 
         // how to dump
-        if (isPrimitiveType (propType) || isRecursive)
+        if (isPrimitiveType(propType) || isRecursive)
 
           // this level, as primitive
-          write (tw, ind, propName, propValue, customFormat, desc, flags.HasFlag (EDumpFlags.descOnTop));
+          write(tw, ind, propName, propValue, customFormat, desc, flags.HasFlag(EDumpFlags.descOnTop));
 
         else
 
-          //deeper level, recursive call
-          dump (propValue, stack, tw, ind, flags, propName, itemName, customFormat, desc, inEnum);
+          // deeper level, recursive call
+          dump(propValue, stack, tw, ind, flags, propName, itemName, customFormat, desc, inEnum);
 
       }
 
     }
 
-    private static CustomFormat getCustomFormat (IEnumerable<object> attrs) {
+    private static CustomFormat getCustomFormat(IEnumerable<object> attrs)
+    {
       CustomFormat customFormat = null;
-      var toStringAttr = attrs.FirstOfType<ToStringAttribute> ();
-      if (toStringAttr.IsNull()) {
-        string format = attrs.FirstOfType<TextFormatAttribute> ()?.Format;
+      var toStringAttr = attrs.FirstOfType<ToStringAttribute>();
+      if (toStringAttr.IsNull())
+      {
+        string format = attrs.FirstOfType<TextFormatAttribute>()?.Format;
         if (!format.IsNull())
-          customFormat = new CustomFormatString (format);
-      } else
+          customFormat = new CustomFormatString(format);
+      }
+      else
         if (!toStringAttr.Converter.IsNull())
-        customFormat = new CustomToString (toStringAttr.Converter, toStringAttr.Format);
+        customFormat = new CustomToString(toStringAttr.Converter, toStringAttr.Format);
       return customFormat;
     }
 
-    private string getDesc (PropertyInfo propInfo, IEnumerable<object> attrs, EDumpFlags flags, bool inEnum) {
-      if (!flags.HasFlag (EDumpFlags.inclDesc) || (inEnum && !flags.HasFlag (EDumpFlags.inclDescInEnum)))
+    private string getDesc(PropertyInfo propInfo, IEnumerable<object> attrs, EDumpFlags flags, bool inEnum)
+    {
+      if (!flags.HasFlag(EDumpFlags.inclDesc) || (inEnum && !flags.HasFlag(EDumpFlags.inclDescInEnum)))
         return null;
 
-      string desc = attrs.FirstOfType<DescriptionAttribute> ()?.Description;
-      if (desc.IsNull ())
-        desc = getTypeDesc (propInfo.PropertyType, flags, inEnum);
+      string desc = attrs.FirstOfType<DescriptionAttribute>()?.Description;
+      if (desc.IsNull())
+        desc = getTypeDesc(propInfo.PropertyType, flags, inEnum);
 
       return desc;
     }
 
-    private string getTypeDesc (Type type, EDumpFlags flags, bool inEnum) {
-      if (!flags.HasFlag (EDumpFlags.inclDesc) || !flags.HasFlag (EDumpFlags.inclTypeDesc) || (inEnum && !flags.HasFlag (EDumpFlags.inclDescInEnum)))
+    private string getTypeDesc(Type type, EDumpFlags flags, bool inEnum)
+    {
+      if (!flags.HasFlag(EDumpFlags.inclDesc) || !flags.HasFlag(EDumpFlags.inclTypeDesc) || (inEnum && !flags.HasFlag(EDumpFlags.inclDescInEnum)))
         return null;
-      object[] attrs = type.GetCustomAttributes (true);
-      return attrs.FirstOfType<DescriptionAttribute> ()?.Description;
+      object[] attrs = type.GetCustomAttributes(true);
+      return attrs.FirstOfType<DescriptionAttribute>()?.Description;
     }
 
-    private void dumpCollection (object o, Stack<Type> stack, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type objectType, TextWriter tw, Indent ind,
-      EDumpFlags flags, string itemCaption, CustomFormat itemFormat
-    ) {
+    private void dumpCollection(object o, Stack<Type> stack, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type objectType, TextWriter tw, Indent ind,
+      EDumpFlags flags, string itemCaption, CustomFormat itemFormat)
+    {
 
       // item type
-      Type itemType = objectType.GetInterfaces ()
-        .Where (t => t.IsGenericType && t.GetGenericTypeDefinition ().Equals (typeof (IEnumerable<>)))
-          .Select (t => t.GetGenericArguments ()[0])
-            .FirstOrDefault () ?? typeof (object);
-      string desc = getTypeDesc (itemType, flags, true);
-      //if (!desc.IsNull())
+      Type itemType = objectType.GetInterfaces()
+        .Where(t => t.IsGenericType && t.GetGenericTypeDefinition().Equals(typeof(IEnumerable<>)))
+          .Select(t => t.GetGenericArguments()[0])
+            .FirstOrDefault() ?? typeof(object);
+      string desc = getTypeDesc(itemType, flags, true);
+      // if (!desc.IsNull())
       //  ; // for debug
 
-      bool isPrimitive = isPrimitiveType (itemType);
+      bool isPrimitive = isPrimitiveType(itemType);
 
-      if (flags.HasFlag (EDumpFlags.withItmCnt)) {
-        if (itemCaption.IsNullOrWhiteSpace ()) {
+      if (flags.HasFlag(EDumpFlags.withItmCnt))
+      {
+        if (itemCaption.IsNullOrWhiteSpace())
+        {
           if (isPrimitive)
             itemCaption = "#";
           else
             itemCaption = itemType.Name + " ";
-        } else
+        }
+        else
           itemCaption += " ";
-      } else if (itemCaption.IsNullOrWhiteSpace () && !isPrimitive)
+      }
+      else if (itemCaption.IsNullOrWhiteSpace() && !isPrimitive)
         itemCaption = itemType.Name;
 
       int i = 0;
       // hard cast
-      foreach (var item in (IEnumerable)o) {
+      foreach (var item in (IEnumerable)o)
+      {
         i++;
         string caption;
-        if (flags.HasFlag (EDumpFlags.withItmCnt))
+        if (flags.HasFlag(EDumpFlags.withItmCnt))
           caption = $"{itemCaption}{i}";
         else
           caption = itemCaption;
 
         if (isPrimitive)
 
-          //  this level, as primitive
-          write (tw, ind, caption, item, itemFormat, desc, flags.HasFlag(EDumpFlags.descOnTop));
+          // this level, as primitive
+          write(tw, ind, caption, item, itemFormat, desc, flags.HasFlag(EDumpFlags.descOnTop));
 
         else
 
-          //  deeper level, recursive call
-          dump (item, stack, tw, ind, flags, caption, itemCaption, itemFormat, desc, true);
+          // deeper level, recursive call
+          dump(item, stack, tw, ind, flags, caption, itemCaption, itemFormat, desc, true);
 
       }
     }
 
-    private static bool isPrimitiveType (Type type) {
+    private static bool isPrimitiveType(Type type)
+    {
       // determine what defines a primitive type
 
       if (type is null)
@@ -328,120 +357,137 @@ namespace Oahu.Aux.Diagnostics {
       // simple cases
       bool isBuiltInPrimitive =
           type.IsPrimitive ||
-          type == typeof (decimal) ||
-          type == typeof (string) ||
+          type == typeof(decimal) ||
+          type == typeof(string) ||
           type.IsEnum;
 
       // "catch all"
       bool isSystemType =
-          type.Namespace.StartsWith (nameof (System));
+          type.Namespace.StartsWith(nameof(System));
 
       // but not if it is enumerable
-      bool isEnumerableSystemType = typeof (IEnumerable).IsAssignableFrom (type);
+      bool isEnumerableSystemType = typeof(IEnumerable).IsAssignableFrom(type);
       if (isEnumerableSystemType)
         isSystemType = false;
 
-      //type.IsPrimitive ||
-      //type == typeof (decimal) ||
-      //type == typeof (string) ||
-      //type == typeof (DateTime) ||
-      //type == typeof (DateTimeOffset) ||
-      //type == typeof (TimeSpan);
-      //||  Nullable.GetUnderlyingType (type) != null;
+      // type.IsPrimitive ||
+      // type == typeof (decimal) ||
+      // type == typeof (string) ||
+      // type == typeof (DateTime) ||
+      // type == typeof (DateTimeOffset) ||
+      // type == typeof (TimeSpan);
+      // ||  Nullable.GetUnderlyingType (type) != null;
 
-      bool isAddedPrimitive = __primitveTypes.IsPrimitiveType (type);
+      bool isAddedPrimitive = __primitveTypes.IsPrimitiveType(type);
 
       bool isPrimitive = isBuiltInPrimitive || isSystemType || isAddedPrimitive;
       return isPrimitive;
 
     }
 
-    private static void write (TextWriter tw, Indent ind, string value, EDumpFlags flags, string desc = null) {
-      if (value.IsNullOrWhiteSpace ())
+    private static void write(TextWriter tw, Indent ind, string value, EDumpFlags flags, string desc = null)
+    {
+      if (value.IsNullOrWhiteSpace())
         return;
 
-      var (m1, m2) = mkr ();
-      string c = flags.HasFlag (EDumpFlags.byInterface) ? string.Empty : ":";
+      var (m1, m2) = mkr();
+      string c = flags.HasFlag(EDumpFlags.byInterface) ? string.Empty : ":";
 
-      if (desc.IsNullOrWhiteSpace ())
-        tw.WriteLine ($"{ind}{value}{c}");
-      else if (flags.HasFlag (EDumpFlags.descOnTop)) {
-        tw.WriteLine ();
-        tw.WriteLine (ind + m1 + desc);
-        tw.WriteLine ($"{ind}{value}{c}");
-      } else
-        tw.WriteLine ($"{ind}{value}{m2}{desc}");
+      if (desc.IsNullOrWhiteSpace())
+        tw.WriteLine($"{ind}{value}{c}");
+      else if (flags.HasFlag(EDumpFlags.descOnTop))
+      {
+        tw.WriteLine();
+        tw.WriteLine(ind + m1 + desc);
+        tw.WriteLine($"{ind}{value}{c}");
+      }
+      else
+        tw.WriteLine($"{ind}{value}{m2}{desc}");
     }
 
-    private static void write (TextWriter tw, Indent ind, string name, object value, CustomFormat format, string desc = null, bool descOnTop = false) {
+    private static void write(TextWriter tw, Indent ind, string name, object value, CustomFormat format, string desc = null, bool descOnTop = false)
+    {
 
-      var (m1, m2) = mkr ();
+      var (m1, m2) = mkr();
 
       string sValue;
-      if (!format.IsNull()) {
-        try {
-          switch (format) {
+      if (!format.IsNull())
+      {
+        try
+        {
+          switch (format)
+          {
             case CustomToString c:
               sValue = c.Converter.ToString(value, c.Format);
               break;
             case CustomFormatString s:
-              sValue = string.Format ($"{{0:{s.Format}}}", value);
+              sValue = string.Format($"{{0:{s.Format}}}", value);
               break;
             default:
-              sValue = value.ToString ();
+              sValue = value.ToString();
               break;
           }
-        } catch {
-          sValue = value.ToString ();
         }
-      } else {
-        sValue = __primitveTypes.ToString (value);
-        if (sValue is null && value.GetType ().IsEnum)
-          sValue = __primitveTypes.ToString<Enum> (value);
+        catch
+        {
+          sValue = value.ToString();
+        }
+      }
+      else
+      {
+        sValue = __primitveTypes.ToString(value);
+        if (sValue is null && value.GetType().IsEnum)
+          sValue = __primitveTypes.ToString<Enum>(value);
         if (sValue is null)
-          sValue = value.ToString ();
+          sValue = value.ToString();
       }
 
-      if (name.IsNullOrWhiteSpace ())
-        tw.WriteLine (ind + sValue);
-      else if (desc.IsNullOrWhiteSpace ())
-        tw.WriteLine (snamval (ind, name, sValue));
-      else if (descOnTop) {
-        tw.WriteLine ();
-        tw.WriteLine (ind + m1 + desc);
-        tw.WriteLine (snamval (ind, name, sValue));
-      } else
-        tw.WriteLine (snamval (ind, name, sValue) + m2 + desc);
+      if (name.IsNullOrWhiteSpace())
+        tw.WriteLine(ind + sValue);
+      else if (desc.IsNullOrWhiteSpace())
+        tw.WriteLine(snamval(ind, name, sValue));
+      else if (descOnTop)
+      {
+        tw.WriteLine();
+        tw.WriteLine(ind + m1 + desc);
+        tw.WriteLine(snamval(ind, name, sValue));
+      }
+      else
+        tw.WriteLine(snamval(ind, name, sValue) + m2 + desc);
 
     }
 
-    private static (string m1, string m2) mkr () {
+    private static (string m1, string m2) mkr()
+    {
       string m = TreeDecomposition.DescriptionMarker ?? "!";
       string m1 = m + " ";
       string m2 = "  " + m1;
       return (m1, m2);
     }
 
-    private static string snamval (Indent ind, string name, string sValue) => $"{ind}{name} = {sValue}";
+    private static string snamval(Indent ind, string name, string sValue) => $"{ind}{name} = {sValue}";
 
   }
 
 
-  static class WhereSelectEx {
-    public static T FirstOfType<T> (this IEnumerable<object> enumerable) where T : class {
-      return enumerable.OfType<T>().FirstOrDefault ();
+  static class WhereSelectEx
+  {
+    public static T FirstOfType<T>(this IEnumerable<object> enumerable) where T : class
+    {
+      return enumerable.OfType<T>().FirstOrDefault();
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "DeclaringType is expected to preserve interface metadata at runtime.")]
     [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Interface types preserve property metadata at runtime.")]
-    public static IEnumerable<object> GetCustomAttributesIncludingBaseInterfaces (this PropertyInfo pi) {
-      return pi.GetCustomAttributes (true).
-        Union (pi.DeclaringType.GetInterfaces ().
-          Select (it => it.GetProperty (pi.Name, pi.PropertyType)).
-          Where (p => !p.IsNull()).
-          SelectMany (p => p.GetCustomAttributes (true))).
-        Distinct ().
-        ToList ();
+    public static IEnumerable<object> GetCustomAttributesIncludingBaseInterfaces(this PropertyInfo pi)
+    {
+      return pi.GetCustomAttributes(true).
+        Union(pi.DeclaringType.GetInterfaces().
+          Select(it => it.GetProperty(pi.Name, pi.PropertyType)).
+          Where(p => !p.IsNull()).
+          SelectMany(p => p.GetCustomAttributes(true))).
+        Distinct().
+        ToList();
     }
   }
 }

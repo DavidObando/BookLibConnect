@@ -1,7 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Oahu.Core.UI.Avalonia.ViewModels {
-  public partial class AboutViewModel : ObservableObject {
+namespace Oahu.Core.UI.Avalonia.ViewModels
+{
+  public partial class AboutViewModel : ObservableObject
+  {
 
     public string AppName => "Oahu";
     public string Version => ThisAssembly.AssemblyFileVersion;

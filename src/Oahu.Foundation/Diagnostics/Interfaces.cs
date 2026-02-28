@@ -1,23 +1,25 @@
-﻿using System;
+using System;
 
-namespace Oahu.Aux.Diagnostics {
+namespace Oahu.Aux.Diagnostics
+{
   /// <summary>
   /// Interface for custom primitive types, to be used with <see cref="TreeDecomposition{T}"/>
   /// </summary>
-  public interface IPrimitiveTypes {
+  public interface IPrimitiveTypes
+  {
 
     /// <summary>
     /// Determines whether the specified generic type is regarded as a custom primitive type.
     /// </summary>
     /// <typeparam name="T">generic type</typeparam>
-    bool IsPrimitiveType<T> ();
+    bool IsPrimitiveType<T>();
 
 
     /// <summary>
     /// Determines whether the specified type is regarded as a custom primitive type.
     /// </summary>
     /// <param name="type">The type to be checked.</param>
-    bool IsPrimitiveType (Type type);
+    bool IsPrimitiveType(Type type);
 
     /// <summary>
     /// Returns a <see cref="System.String" /> that represents this instance,
@@ -28,7 +30,7 @@ namespace Oahu.Aux.Diagnostics {
     /// <returns>
     /// A <see cref="System.String" /> that represents this instance or <c>null</c>.
     /// </returns>
-    string ToString<T> (T val);
+    string ToString<T>(T val);
 
     /// <summary>
     /// Returns a <see cref="System.String" /> that represents this instance,
@@ -38,7 +40,7 @@ namespace Oahu.Aux.Diagnostics {
     /// <returns>
     /// A <see cref="System.String" /> that represents this instance or <c>null</c>.
     /// </returns>
-    string ToString (object val);
+    string ToString(object val);
 
     /// <summary>
     /// Returns a <see cref="System.String" /> that represents this instance,
@@ -49,6 +51,6 @@ namespace Oahu.Aux.Diagnostics {
     /// <returns>
     /// A <see cref="System.String" /> that represents this instance.
     /// </returns>
-    string ToString<T> (object val);
+    string ToString<T>(object val);
   }
 }

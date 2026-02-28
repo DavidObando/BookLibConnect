@@ -1,29 +1,35 @@
-﻿using System;
+using System;
 using System.Text.Json.Serialization;
 
-namespace Oahu.Audible.Json {
+namespace Oahu.Audible.Json
+{
 
-  public interface IPerson {
+  public interface IPerson
+  {
     string asin { get; set; }
     string name { get; set; }
   }
 
-  public class LibraryResponse : Serialization<LibraryResponse> {
+  public class LibraryResponse : Serialization<LibraryResponse>
+  {
     public Product[] items { get; set; }
     public string[] response_groups { get; set; }
   }
 
-  public class ProductResponse : Serialization<ProductResponse> {
+  public class ProductResponse : Serialization<ProductResponse>
+  {
     public Product product { get; set; }
     public string[] response_groups { get; set; }
   }
 
-  public class SimsBySeriesResponse : Serialization<SimsBySeriesResponse> {
+  public class SimsBySeriesResponse : Serialization<SimsBySeriesResponse>
+  {
     public Product[] similar_products { get; set; }
     public string[] response_groups { get; set; }
   }
 
-  public class Product {
+  public class Product
+  {
     public string asin { get; set; }
     public string audible_editors_summary { get; set; }
     public Author[] authors { get; set; }
@@ -88,11 +94,13 @@ namespace Oahu.Audible.Json {
     public string voice_description { get; set; }
   }
 
-  public class Content_Rating {
+  public class Content_Rating
+  {
     public string steaminess { get; set; }
   }
 
-  public class Library_Status {
+  public class Library_Status
+  {
     public DateTime date_added { get; set; }
     public bool? is_pending { get; set; }
     public bool? is_preordered { get; set; }
@@ -100,19 +108,22 @@ namespace Oahu.Audible.Json {
     public bool? is_visible { get; set; }
   }
 
-  public class Product_Images {
-    [JsonPropertyName ("500")]
+  public class Product_Images
+  {
+    [JsonPropertyName("500")]
     public string _500 { get; set; }
   }
 
-  public class Rating {
+  public class Rating
+  {
     public int? num_reviews { get; set; }
     public Distribution overall_distribution { get; set; }
     public Distribution performance_distribution { get; set; }
     public Distribution story_distribution { get; set; }
   }
 
-  public class Distribution {
+  public class Distribution
+  {
     public float? average_rating { get; set; }
     public string display_average_rating { get; set; }
     public float? display_stars { get; set; }
@@ -124,34 +135,40 @@ namespace Oahu.Audible.Json {
     public int? num_two_star_ratings { get; set; }
   }
 
-  public class Social_Media_Images {
+  public class Social_Media_Images
+  {
     public string facebook { get; set; }
     public string twitter { get; set; }
   }
 
-  public class Author : IPerson {
+  public class Author : IPerson
+  {
     public string asin { get; set; }
     public string name { get; set; }
   }
 
-  public class Codec {
+  public class Codec
+  {
     public string enhanced_codec { get; set; }
     public string format { get; set; }
     public bool? is_kindle_enhanced { get; set; }
     public string name { get; set; }
   }
 
-  public class Category {
+  public class Category
+  {
     public Ladder[] ladder { get; set; }
     public string root { get; set; }
   }
 
-  public class Ladder {
+  public class Ladder
+  {
     public string id { get; set; }
     public string name { get; set; }
   }
 
-  public class Customer_Reviews {
+  public class Customer_Reviews
+  {
     public string asin { get; set; }
     public string author_id { get; set; }
     public string author_name { get; set; }
@@ -166,37 +183,43 @@ namespace Oahu.Audible.Json {
     public string title { get; set; }
   }
 
-  public class Ratings {
+  public class Ratings
+  {
     public int? overall_rating { get; set; }
     public int? performance_rating { get; set; }
     public int? story_rating { get; set; }
   }
 
-  public class Review_Content_Scores {
+  public class Review_Content_Scores
+  {
     public int? content_quality { get; set; }
     public int? num_helpful_votes { get; set; }
     public int? num_unhelpful_votes { get; set; }
   }
 
-  public class Guided_Responses {
+  public class Guided_Responses
+  {
     public string answer { get; set; }
     public string id { get; set; }
     public string question { get; set; }
     public string question_type { get; set; }
   }
 
-  public class Narrator : IPerson {
+  public class Narrator : IPerson
+  {
     public string asin { get; set; }
     public string name { get; set; }
   }
 
-  public class Plan {
+  public class Plan
+  {
     public DateTime? end_date { get; set; }
     public string plan_name { get; set; }
     public DateTime? start_date { get; set; }
   }
 
-  public class Relationship {
+  public class Relationship
+  {
     public string asin { get; set; }
     public string content_delivery_type { get; set; }
     public string relationship_to_product { get; set; }
@@ -209,7 +232,8 @@ namespace Oahu.Audible.Json {
     public string url { get; set; }
   }
 
-  public class Series {
+  public class Series
+  {
     public string asin { get; set; }
     public string sequence { get; set; }
     public string title { get; set; }

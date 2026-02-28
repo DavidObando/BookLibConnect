@@ -1,7 +1,9 @@
-﻿using System;
+using System;
 
-namespace Oahu.Common.Util {
-  public abstract class ThreadProgressBase<T> : IDisposable {
+namespace Oahu.Common.Util
+{
+  public abstract class ThreadProgressBase<T> : IDisposable
+  {
 
     private readonly Action<T> _report;
 
@@ -9,41 +11,46 @@ namespace Oahu.Common.Util {
 
     protected abstract int Max { get; }
 
-    protected ThreadProgressBase (Action<T> report) {
+    protected ThreadProgressBase(Action<T> report)
+    {
       _report = report;
     }
 
-    public void Dispose () {
+    public void Dispose()
+    {
       int inc = Max - _accuValuePerMax;
       if (inc > 0)
-        _report?.Invoke (getProgressMessage(inc));
+        _report?.Invoke(getProgressMessage(inc));
     }
 
-    public void Report (double value) {
+    public void Report(double value)
+    {
       int val = (int)(value * Max);
-      int total = Math.Min (Max, val);
+      int total = Math.Min(Max, val);
       int inc = total - _accuValuePerMax;
       _accuValuePerMax = total;
       if (inc > 0)
-        _report?.Invoke (getProgressMessage (inc));
+        _report?.Invoke(getProgressMessage(inc));
     }
 
-    protected abstract T getProgressMessage (int inc);
+    protected abstract T getProgressMessage(int inc);
   }
 
-  public class ThreadProgressPerMille : ThreadProgressBase<ProgressMessage> {
+  public class ThreadProgressPerMille : ThreadProgressBase<ProgressMessage>
+  {
     protected override int Max => 1000;
 
-    public ThreadProgressPerMille (Action<ProgressMessage> report) : base (report) { }
+    public ThreadProgressPerMille(Action<ProgressMessage> report) : base(report) { }
 
-    protected override ProgressMessage getProgressMessage (int inc) => new(null, null, null, inc);
+    protected override ProgressMessage getProgressMessage(int inc) => new(null, null, null, inc);
   }
 
-  public class ThreadProgressPerCent : ThreadProgressBase<ProgressMessage> {
+  public class ThreadProgressPerCent : ThreadProgressBase<ProgressMessage>
+  {
     protected override int Max => 100;
 
-    public ThreadProgressPerCent (Action<ProgressMessage> report) : base (report) { }
+    public ThreadProgressPerCent(Action<ProgressMessage> report) : base(report) { }
 
-    protected override ProgressMessage getProgressMessage (int inc) => new(null, null, inc, null);
+    protected override ProgressMessage getProgressMessage(int inc) => new(null, null, inc, null);
   }
 }

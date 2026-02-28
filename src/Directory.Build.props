@@ -2,6 +2,7 @@
   <PropertyGroup>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)Oahu.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>

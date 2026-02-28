@@ -2,22 +2,22 @@
 
 namespace Oahu.Decrypt.FrameFilters.Audio
 {
-	internal class AacValidateFilter : FrameTransformBase<FrameEntry, FrameEntry>
-	{
-		protected override int InputBufferSize => 1000;
-		public override FrameEntry PerformFiltering(FrameEntry input)
-		{
-			return ValidateFrame(input.FrameData.Span) ? input
-				: throw new Exception("Aac error!");
-		}
+  internal class AacValidateFilter : FrameTransformBase<FrameEntry, FrameEntry>
+  {
+    protected override int InputBufferSize => 1000;
+    public override FrameEntry PerformFiltering(FrameEntry input)
+    {
+      return ValidateFrame(input.FrameData.Span) ? input
+          : throw new Exception("Aac error!");
+    }
 
-		private static bool ValidateFrame(ReadOnlySpan<byte> frame) => (AV_RB16(frame) & 0xfff0) != 0xfff0;
+    private static bool ValidateFrame(ReadOnlySpan<byte> frame) => (AV_RB16(frame) & 0xfff0) != 0xfff0;
 
-		//Defined at
-		//http://man.hubwiz.com/docset/FFmpeg.docset/Contents/Resources/Documents/api/intreadwrite_8h_source.html
-		private static ushort AV_RB16(ReadOnlySpan<byte> frame)
-		{
-			return (ushort)(frame[0] << 8 | frame[1]);
-		}
-	}
+    // Defined at
+    // http://man.hubwiz.com/docset/FFmpeg.docset/Contents/Resources/Documents/api/intreadwrite_8h_source.html
+    private static ushort AV_RB16(ReadOnlySpan<byte> frame)
+    {
+      return (ushort)(frame[0] << 8 | frame[1]);
+    }
+  }
 }

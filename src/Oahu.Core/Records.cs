@@ -7,8 +7,10 @@ using Oahu.BooksDatabase;
 using Oahu.CommonTypes;
 using Oahu.Common.Util;
 
-namespace Oahu.Core {
-  public record Callbacks {
+namespace Oahu.Core
+{
+  public record Callbacks
+  {
     public Func<byte[], string> CaptchaCallback { get; init; }
     public Action ApprovalCallback { get; init; }
     public Func<string> MfaCallback { get; init; }
@@ -19,45 +21,45 @@ namespace Oahu.Core {
     public Func<AccountAliasContext, bool> GetAccountAliasFunc { get; init; }
   };
 
-  public record Credentials (string Username, string Password);
+  public record Credentials(string Username, string Password);
 
-  public record CredentialsUrl (Credentials Credentials, string BaseUriString) :
-    Credentials (Credentials.Username, Credentials.Password);
+  public record CredentialsUrl(Credentials Credentials, string BaseUriString) :
+    Credentials(Credentials.Username, Credentials.Password);
 
-  public record RegisterResult (
+  public record RegisterResult(
     EAuthorizeResult Result,
     IProfileKeyEx NewProfileKey,
-    string PrevDeviceName
-  );
+    string PrevDeviceName);
 
-  public record ProfileKey (uint Id, ERegion Region, string AccountId) : IProfileKey {
-    public override string ToString () =>
-      $"{GetType().Name} {nameof (Id)}={Id}, {nameof (Region)}={Region}, {nameof (AccountId)}=#<{AccountId.Checksum32 ()}>";
+  public record ProfileKey(uint Id, ERegion Region, string AccountId) : IProfileKey
+  {
+    public override string ToString() =>
+      $"{GetType().Name} {nameof(Id)}={Id}, {nameof(Region)}={Region}, {nameof(AccountId)}=#<{AccountId.Checksum32()}>";
   }
-  public record ProfileKeyEx (uint Id, ERegion Region, string AccountName, string AccountId, string DeviceName) :
-    ProfileKey (Id, Region, AccountId), IProfileKeyEx {
-    public override string ToString () =>
-      $"{base.ToString()}, {nameof (AccountName)}=#<{AccountName.Checksum32}>, {nameof (DeviceName)}=#<{DeviceName.Checksum32 ()}>";
+  public record ProfileKeyEx(uint Id, ERegion Region, string AccountName, string AccountId, string DeviceName) :
+    ProfileKey(Id, Region, AccountId), IProfileKeyEx
+  {
+    public override string ToString() =>
+      $"{base.ToString()}, {nameof(AccountName)}=#<{AccountName.Checksum32}>, {nameof(DeviceName)}=#<{DeviceName.Checksum32()}>";
   }
 
-  public record ProfileId (int AccountId, ERegion Region);
+  public record ProfileId(int AccountId, ERegion Region);
 
-  public record AccountAlias (string AccountId, string Alias);
+  public record AccountAlias(string AccountId, string Alias);
 
-  public record SimpleConversionContext (
+  public record SimpleConversionContext(
     IProgress<ProgressMessage> Progress,
-    CancellationToken CancellationToken
-  );
+    CancellationToken CancellationToken);
 
-  public record BookLibInteract (EBookLibInteract Kind);
+  public record BookLibInteract(EBookLibInteract Kind);
 
-  public record ChapterExtract (string Title, int Length);
+  public record ChapterExtract(string Title, int Length);
 
-  record ProductComponentPair (Oahu.Audible.Json.Product Product, Component Component);
+  record ProductComponentPair(Oahu.Audible.Json.Product Product, Component Component);
 
-  record ProfileBundle (IProfile Profile, IProfileKey Key, IProfileAliasKey AliasKey);
+  record ProfileBundle(IProfile Profile, IProfileKey Key, IProfileAliasKey AliasKey);
 
-  record BookCompositeLists (
+  record BookCompositeLists(
     List<string> BookAsins,
     List<Conversion> Conversions,
     List<Component> Components,
@@ -68,11 +70,8 @@ namespace Oahu.Core {
     List<Genre> Genres,
     List<Ladder> Ladders,
     List<Rung> Rungs,
-    List<Codec> Codecs
-  );
+    List<Codec> Codecs);
 
-  record ConfigurationTokenResult (string Token, bool Weak);
+  record ConfigurationTokenResult(string Token, bool Weak);
 
 }
-
-

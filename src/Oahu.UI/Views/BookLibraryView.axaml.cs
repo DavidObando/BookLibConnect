@@ -5,54 +5,63 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Oahu.Core.UI.Avalonia.ViewModels;
 
-namespace Oahu.Core.UI.Avalonia.Views {
-  public partial class BookLibraryView : UserControl {
+namespace Oahu.Core.UI.Avalonia.Views
+{
+  public partial class BookLibraryView : UserControl
+  {
     private bool _sortingSubscribed;
     private bool _restoringSortState;
 
-    public BookLibraryView () {
-      InitializeComponent ();
+    public BookLibraryView()
+    {
+      InitializeComponent();
     }
 
-    protected override void OnLoaded (RoutedEventArgs e) {
-      base.OnLoaded (e);
+    protected override void OnLoaded(RoutedEventArgs e)
+    {
+      base.OnLoaded(e);
 
       if (booksGrid is null)
         return;
 
-      if (!_sortingSubscribed) {
+      if (!_sortingSubscribed)
+      {
         booksGrid.Sorting += OnBooksGridSorting;
         _sortingSubscribed = true;
       }
 
       // Restore previously saved sort state
-      restoreSortState ();
+      restoreSortState();
 
       // Restore previously selected book
-      restoreSelectedBook ();
+      restoreSelectedBook();
     }
 
-    protected override void OnUnloaded (RoutedEventArgs e) {
-      if (DataContext is BookLibraryViewModel vm && booksGrid?.SelectedItem is BookItemViewModel selected) {
+    protected override void OnUnloaded(RoutedEventArgs e)
+    {
+      if (DataContext is BookLibraryViewModel vm && booksGrid?.SelectedItem is BookItemViewModel selected)
+      {
         vm.SelectedBookAsin = selected.Asin;
         vm.SelectedBook = selected;
       }
 
-      if (booksGrid is not null && _sortingSubscribed) {
+      if (booksGrid is not null && _sortingSubscribed)
+      {
         booksGrid.Sorting -= OnBooksGridSorting;
         _sortingSubscribed = false;
       }
 
-      base.OnUnloaded (e);
+      base.OnUnloaded(e);
     }
 
-    private void OnBooksGridSorting (object sender, DataGridColumnEventArgs args) {
+    private void OnBooksGridSorting(object sender, DataGridColumnEventArgs args)
+    {
       if (_restoringSortState)
         return;
       if (DataContext is not BookLibraryViewModel vm || args.Column is null)
         return;
 
-      int colIdx = booksGrid.Columns.IndexOf (args.Column);
+      int colIdx = booksGrid.Columns.IndexOf(args.Column);
       ListSortDirection next;
       if (vm.SortColumnIndex == colIdx && vm.SortDirection == ListSortDirection.Ascending)
         next = ListSortDirection.Descending;
@@ -63,7 +72,8 @@ namespace Oahu.Core.UI.Avalonia.Views {
       vm.SortDirection = next;
     }
 
-    private void restoreSortState () {
+    private void restoreSortState()
+    {
       if (DataContext is not BookLibraryViewModel vm)
         return;
       if (vm.SortColumnIndex is null || vm.SortDirection is null)
@@ -76,22 +86,25 @@ namespace Oahu.Core.UI.Avalonia.Views {
 
       // Clear any existing sort indicators
       foreach (var c in booksGrid.Columns)
-        c.ClearSort ();
+        c.ClearSort();
 
       _restoringSortState = true;
-      try {
-        col.Sort (vm.SortDirection.Value);
+      try
+      {
+        col.Sort(vm.SortDirection.Value);
       }
-      finally {
+      finally
+      {
         _restoringSortState = false;
       }
     }
 
-    private void restoreSelectedBook () {
+    private void restoreSelectedBook()
+    {
       if (DataContext is not BookLibraryViewModel vm)
         return;
-      var selected = !string.IsNullOrWhiteSpace (vm.SelectedBookAsin)
-        ? vm.Books.FirstOrDefault (b => b.Asin == vm.SelectedBookAsin)
+      var selected = !string.IsNullOrWhiteSpace(vm.SelectedBookAsin)
+        ? vm.Books.FirstOrDefault(b => b.Asin == vm.SelectedBookAsin)
         : vm.SelectedBook;
 
       if (selected is null)
@@ -99,18 +112,20 @@ namespace Oahu.Core.UI.Avalonia.Views {
 
       vm.SelectedBook = selected;
       booksGrid.SelectedItem = selected;
-      ensureSelectedBookInView (selected);
+      ensureSelectedBookInView(selected);
     }
 
-    private void ensureSelectedBookInView (BookItemViewModel selected) {
-      booksGrid.Focus ();
-      booksGrid.ScrollIntoView (selected, null);
+    private void ensureSelectedBookInView(BookItemViewModel selected)
+    {
+      booksGrid.Focus();
+      booksGrid.ScrollIntoView(selected, null);
 
-      Dispatcher.UIThread.Post (() => {
-        booksGrid.UpdateLayout ();
-        booksGrid.ScrollIntoView (selected, null);
+      Dispatcher.UIThread.Post(() =>
+      {
+        booksGrid.UpdateLayout();
+        booksGrid.ScrollIntoView(selected, null);
 
-        Dispatcher.UIThread.Post (() => booksGrid.ScrollIntoView (selected, null), DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() => booksGrid.ScrollIntoView(selected, null), DispatcherPriority.Background);
       }, DispatcherPriority.Render);
     }
   }

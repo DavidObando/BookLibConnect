@@ -1,12 +1,16 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 
-namespace Oahu.Aux {
-  public static class ShellExecute {
-    public static void Url (Uri uri) => File (uri.OriginalString);
+namespace Oahu.Aux
+{
+  public static class ShellExecute
+  {
+    public static void Url(Uri uri) => File(uri.OriginalString);
 
-    public static void File (string url) {
-      Process.Start (new ProcessStartInfo () {
+    public static void File(string url)
+    {
+      Process.Start(new ProcessStartInfo()
+      {
         UseShellExecute = true,
         CreateNoWindow = true,
         FileName = url,

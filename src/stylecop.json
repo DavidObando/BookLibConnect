@@ -6,7 +6,20 @@
       "documentExposedElements": true,
       "documentInternalElements": false,
       "documentPrivateElements": false,
-      "documentPrivateFields": false
+      "documentPrivateFields": false,
+      "fileNamingConvention": "stylecop"
+    },
+    "layoutRules": {
+      "newlineAtEndOfFile": "allow"
+    },
+    "maintainabilityRules": {
+      "topLevelTypes": [
+        "class",
+        "delegate",
+        "enum",
+        "interface",
+        "struct"
+      ]
     },
     "orderingRules": {
       "usingDirectivesPlacement": "outsideNamespace",

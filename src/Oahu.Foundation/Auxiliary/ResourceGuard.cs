@@ -1,13 +1,15 @@
-﻿using System;
+using System;
 
-namespace Oahu.Aux {
+namespace Oahu.Aux
+{
   /// <summary>
   /// Implementing <see cref="IResource"/> and using it with <see cref="ResourceGuard"/> allows
   /// RAII behavior within the lifecycle of an instance, beyond ctor/dtor, e.g. for indentation of text.
   /// </summary>
-  public interface IResource {
-    void Acquire ();
-    void Release ();
+  public interface IResource
+  {
+    void Acquire();
+    void Release();
   }
 
   /// <summary>
@@ -45,29 +47,34 @@ namespace Oahu.Aux {
   /// }
   /// </para>
   /// </summary>
-  public class ResourceGuard : IDisposable {
+  public class ResourceGuard : IDisposable
+  {
     readonly Action _onDispose;
     readonly Action<bool> _onNewAndDispose;
     readonly IResource _resource;
 
-    public ResourceGuard (IResource resource) {
+    public ResourceGuard(IResource resource)
+    {
       _resource = resource;
-      _resource.Acquire ();
+      _resource.Acquire();
     }
 
-    public ResourceGuard (Action onDispose) {
+    public ResourceGuard(Action onDispose)
+    {
       _onDispose = onDispose;
     }
 
-    public ResourceGuard (Action<bool> onNewAndDispose) {
+    public ResourceGuard(Action<bool> onNewAndDispose)
+    {
       _onNewAndDispose = onNewAndDispose;
-      _onNewAndDispose?.Invoke (true);
+      _onNewAndDispose?.Invoke(true);
     }
 
-    public void Dispose () {
-      _onDispose?.Invoke ();
-      _onNewAndDispose?.Invoke (false);
-      _resource?.Release ();
+    public void Dispose()
+    {
+      _onDispose?.Invoke();
+      _onNewAndDispose?.Invoke(false);
+      _resource?.Release();
     }
   }
 

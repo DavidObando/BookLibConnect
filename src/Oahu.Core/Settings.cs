@@ -1,22 +1,27 @@
-﻿using System;
+using System;
 using Oahu.Aux.Diagnostics;
 using Oahu.BooksDatabase;
 using Oahu.Common.Util;
 
-namespace Oahu.Core {
-  public interface IConfigSettings {
+namespace Oahu.Core
+{
+  public interface IConfigSettings
+  {
     bool EncryptConfiguration { get; }
   }
 
-  public interface IMultiPartSettings {
+  public interface IMultiPartSettings
+  {
     bool MultiPartDownload { get; }
   }
 
-  public interface IAuthorizeSettings {
+  public interface IAuthorizeSettings
+  {
     bool AutoRefresh { get; }
   }
 
-  public interface IDownloadSettings : IMultiPartSettings, IAuthorizeSettings {
+  public interface IDownloadSettings : IMultiPartSettings, IAuthorizeSettings
+  {
     event EventHandler ChangedSettings;
 
     bool AutoUpdateLibrary { get; }
@@ -29,30 +34,36 @@ namespace Oahu.Core {
     EInitialSorting InitialSorting { get; }
   }
 
-  public interface IExportSettings {
+  public interface IExportSettings
+  {
     bool? ExportToAax { get; }
-    [ToString (typeof (ToStringConverterPath))]
+    [ToString(typeof(ToStringConverterPath))]
     string ExportDirectory { get; }
   }
 
-  public abstract class SettingsBase {
+  public abstract class SettingsBase
+  {
     public event EventHandler ChangedSettings;
-    public void OnChange () => ChangedSettings?.Invoke (this, EventArgs.Empty);
+    public void OnChange() => ChangedSettings?.Invoke(this, EventArgs.Empty);
   }
 
-  public class ConfigSettings : SettingsBase, IConfigSettings {
+  public class ConfigSettings : SettingsBase, IConfigSettings
+  {
     private bool _encryptConfiguration = true;
 
-    public bool EncryptConfiguration {
+    public bool EncryptConfiguration
+    {
       get => _encryptConfiguration;
-      set {
+      set
+      {
         _encryptConfiguration = value;
-        OnChange ();
+        OnChange();
       }
     }
   }
 
-  public class DownloadSettings : SettingsBase, IDownloadSettings {
+  public class DownloadSettings : SettingsBase, IDownloadSettings
+  {
     private EDownloadQualityReducedChoices _downloadQuality = EDownloadQualityReducedChoices.High;
 
     public bool AutoRefresh { get; set; }
@@ -62,9 +73,10 @@ namespace Oahu.Core {
     public bool HideUnavailableProducts { get; set; }
     public bool MultiPartDownload { get; set; }
     public bool KeepEncryptedFiles { get; set; }
-    public EDownloadQuality DownloadQuality {
-      get => _downloadQuality.ToFullChoices ();
-      set => _downloadQuality = value.ToReducedChoices ();
+    public EDownloadQuality DownloadQuality
+    {
+      get => _downloadQuality.ToFullChoices();
+      set => _downloadQuality = value.ToReducedChoices();
     }
     public string DownloadDirectory { get; set; }
     public EInitialSorting InitialSorting { get; set; }
@@ -72,23 +84,28 @@ namespace Oahu.Core {
 
   }
 
-  public class ExportSettings : SettingsBase, IExportSettings {
+  public class ExportSettings : SettingsBase, IExportSettings
+  {
     private bool? _exportToAax;
     private string _exportDirectory;
 
-    public bool? ExportToAax {
+    public bool? ExportToAax
+    {
       get => _exportToAax;
-      set {
+      set
+      {
         _exportToAax = value;
-        OnChange ();
+        OnChange();
       }
     }
 
-    public string ExportDirectory {
+    public string ExportDirectory
+    {
       get => _exportDirectory;
-      set {
+      set
+      {
         _exportDirectory = value;
-        OnChange ();
+        OnChange();
       }
     }
   }

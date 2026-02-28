@@ -1,5 +1,7 @@
-﻿namespace Oahu.CommonTypes {
-  public enum ERegion {
+namespace Oahu.CommonTypes
+{
+  public enum ERegion
+  {
     de,
     us,
     uk,

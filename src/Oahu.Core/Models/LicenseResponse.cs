@@ -1,15 +1,19 @@
-﻿namespace Oahu.Audible.Json {
+namespace Oahu.Audible.Json
+{
 
-  public class LicenseResponse : Serialization<LicenseResponse> {
+  public class LicenseResponse : Serialization<LicenseResponse>
+  {
     public ContentLicense content_license { get; set; }
     public string[] response_groups { get; set; }
   }
 
-  public class MetadataContainer : Serialization<MetadataContainer> {
+  public class MetadataContainer : Serialization<MetadataContainer>
+  {
     public ContentMetadata content_metadata { get; set; }
   }
 
-  public partial class ContentLicense {
+  public partial class ContentLicense
+  {
     public string acr { get; set; }
     public string asin { get; set; }
     public ContentMetadata content_metadata { get; set; }
@@ -25,14 +29,16 @@
     public Voucher voucher { get; set; }
   }
 
-  public class ContentMetadata {
+  public class ContentMetadata
+  {
     public ChapterInfo chapter_info { get; set; }
     public ContentReference content_reference { get; set; }
     public ContentUrl content_url { get; set; }
     public LastPositionHeard last_position_heard { get; set; }
   }
 
-  public class ChapterInfo {
+  public class ChapterInfo
+  {
     public int? brandIntroDurationMs { get; set; }
     public int? brandOutroDurationMs { get; set; }
     public Chapter[] chapters { get; set; }
@@ -41,7 +47,8 @@
     public int? runtime_length_sec { get; set; }
   }
 
-  public class Chapter {
+  public class Chapter
+  {
     public int? length_ms { get; set; }
     public int? start_offset_ms { get; set; }
     public int? start_offset_sec { get; set; }
@@ -49,7 +56,8 @@
     public Chapter[] chapters { get; set; }
   }
 
-  public class ContentReference {
+  public class ContentReference
+  {
     public string acr { get; set; }
     public string asin { get; set; }
     public string content_format { get; set; }
@@ -61,11 +69,13 @@
     public string version { get; set; }
   }
 
-  public class ContentUrl {
+  public class ContentUrl
+  {
     public string offline_url { get; set; }
   }
 
-  public class LastPositionHeard {
+  public class LastPositionHeard
+  {
     public string last_updated { get; set; }
     public int? position_ms { get; set; }
     public string status { get; set; }

@@ -5,8 +5,10 @@ using CommunityToolkit.Mvvm.Input;
 using Oahu.Aux.Extensions;
 using Oahu.Core;
 
-namespace Oahu.Core.UI.Avalonia.ViewModels {
-  public partial class SettingsViewModel : ObservableObject {
+namespace Oahu.Core.UI.Avalonia.ViewModels
+{
+  public partial class SettingsViewModel : ObservableObject
+  {
 
     private readonly DownloadSettings _downloadSettings;
     private readonly ExportSettings _exportSettings;
@@ -18,92 +20,111 @@ namespace Oahu.Core.UI.Avalonia.ViewModels {
     /// </summary>
     public event Func<string, Task<string>> BrowseFolderRequested;
 
-    public SettingsViewModel (DownloadSettings downloadSettings, ExportSettings exportSettings, ConfigSettings configSettings) {
+    public SettingsViewModel(DownloadSettings downloadSettings, ExportSettings exportSettings, ConfigSettings configSettings)
+    {
       _downloadSettings = downloadSettings;
       _exportSettings = exportSettings;
       _configSettings = configSettings;
     }
 
     // Download settings
-    public bool AutoUpdateLibrary {
+    public bool AutoUpdateLibrary
+    {
       get => _downloadSettings.AutoUpdateLibrary;
-      set {
+      set
+      {
         _downloadSettings.AutoUpdateLibrary = value;
-        OnPropertyChanged ();
-        _downloadSettings.OnChange ();
+        OnPropertyChanged();
+        _downloadSettings.OnChange();
       }
     }
 
-    public bool MultiPartDownload {
+    public bool MultiPartDownload
+    {
       get => _downloadSettings.MultiPartDownload;
-      set {
+      set
+      {
         _downloadSettings.MultiPartDownload = value;
-        OnPropertyChanged ();
-        _downloadSettings.OnChange ();
+        OnPropertyChanged();
+        _downloadSettings.OnChange();
       }
     }
 
-    public bool KeepEncryptedFiles {
+    public bool KeepEncryptedFiles
+    {
       get => _downloadSettings.KeepEncryptedFiles;
-      set {
+      set
+      {
         _downloadSettings.KeepEncryptedFiles = value;
-        OnPropertyChanged ();
-        _downloadSettings.OnChange ();
+        OnPropertyChanged();
+        _downloadSettings.OnChange();
       }
     }
 
-    public string DownloadDirectory {
+    public string DownloadDirectory
+    {
       get => _downloadSettings.DownloadDirectory;
-      set {
+      set
+      {
         _downloadSettings.DownloadDirectory = value;
-        OnPropertyChanged ();
-        _downloadSettings.OnChange ();
+        OnPropertyChanged();
+        _downloadSettings.OnChange();
       }
     }
 
     // Export settings
-    public bool? ExportToAax {
+    public bool? ExportToAax
+    {
       get => _exportSettings.ExportToAax;
-      set {
+      set
+      {
         _exportSettings.ExportToAax = value;
-        OnPropertyChanged ();
-        _exportSettings.OnChange ();
+        OnPropertyChanged();
+        _exportSettings.OnChange();
       }
     }
 
-    public string ExportDirectory {
+    public string ExportDirectory
+    {
       get => _exportSettings.ExportDirectory;
-      set {
+      set
+      {
         _exportSettings.ExportDirectory = value;
-        OnPropertyChanged ();
-        _exportSettings.OnChange ();
+        OnPropertyChanged();
+        _exportSettings.OnChange();
       }
     }
 
     // Config settings
-    public bool EncryptConfiguration {
+    public bool EncryptConfiguration
+    {
       get => _configSettings.EncryptConfiguration;
-      set {
+      set
+      {
         _configSettings.EncryptConfiguration = value;
-        OnPropertyChanged ();
-        _configSettings.OnChange ();
+        OnPropertyChanged();
+        _configSettings.OnChange();
       }
     }
 
     [RelayCommand]
-    private async Task BrowseDownloadDirectory () {
-      if (BrowseFolderRequested is not null) {
-        string path = await BrowseFolderRequested.Invoke ("Select Download Folder");
-        if (!path.IsNullOrWhiteSpace ())
+    private async Task BrowseDownloadDirectory()
+    {
+      if (BrowseFolderRequested is not null)
+      {
+        string path = await BrowseFolderRequested.Invoke("Select Download Folder");
+        if (!path.IsNullOrWhiteSpace())
           DownloadDirectory = path;
       }
     }
 
     [RelayCommand]
-    private async Task BrowseExportDirectory () {
-      if (BrowseFolderRequested is not null) {
-        string path = await BrowseFolderRequested.Invoke ("Select Export Folder");
-        if (!path.IsNullOrWhiteSpace ())
+    private async Task BrowseExportDirectory()
+    {
+      if (BrowseFolderRequested is not null)
+      {
+        string path = await BrowseFolderRequested.Invoke("Select Export Folder");
+        if (!path.IsNullOrWhiteSpace())
           ExportDirectory = path;
       }
     }
