@@ -229,7 +229,7 @@ Oahu.App/
 - Clean up any remaining `bin/` and `obj/` artifacts
 
 ### Step 10: Verify
-- `dotnet build src/Oahu.sln` — must compile cleanly
+- `dotnet build Oahu.sln` — must compile cleanly
 - `dotnet ef migrations list --project src/Oahu.Data` — migrations intact
 - `dotnet run --project src/Oahu.App` — app launches
 - Grep for old namespace references — none should remain

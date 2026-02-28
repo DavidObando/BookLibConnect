@@ -1,0 +1,51 @@
+﻿using Oahu.Decrypt.FrameFilters;
+using Oahu.Decrypt.Mpeg4.Boxes;
+using Oahu.Decrypt.Mpeg4.Chunks;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace Oahu.Decrypt.Chunks;
+
+internal class DashChunkReader : ChunkReader
+{
+	private DashFile Dash { get; }
+
+	public DashChunkReader(DashFile dash, Stream inputStream, TimeSpan startTime, TimeSpan endTime)
+		: base(inputStream, startTime, endTime)
+	{
+		ArgumentNullException.ThrowIfNull(dash, nameof(dash));
+		ArgumentNullException.ThrowIfNull(inputStream, nameof(inputStream));
+		Dash = dash;
+	}
+
+	protected override FrameEntry CreateFrameEntry(ChunkEntry chunk, int frameInChunk, uint frameDelta, Memory<byte> frameData)
+	{
+		var entry = base.CreateFrameEntry(chunk, frameInChunk, frameDelta, frameData);
+		if (chunk.ExtraData is byte[][] IVs)
+		{
+			entry.ExtraData = IVs.Length > frameInChunk ? IVs[frameInChunk]
+			: throw new InvalidDataException($"There are only {IVs.Length} in the chunk, but caller requesting frame at index {frameInChunk}.");
+		}
+		return entry;
+	}
+
+	public override void AddTrack(TrakBox track, FrameFilterBase<FrameEntry> filter)
+	{
+		if (TrackEntries.Count > 0)
+			throw new InvalidOperationException($"The {nameof(DashChunkReader)} currently only supports a single track.");
+		base.AddTrack(track, filter);
+	}
+
+	protected override IEnumerable<ChunkEntry> EnumerateChunks()
+	{
+		//Currently support only a single DASH track
+		var singleTrack = TrackEntries.Values.Single();
+
+		long minimumSample = (long)(StartTime.TotalSeconds * singleTrack.Timescale);
+		long maximumSample = (long)(EndTime.TotalSeconds * singleTrack.Timescale);
+
+		return new DashChunkEntryies(InputStream, singleTrack.TrackId, Dash.Sidx, Dash.FirstMoof, Dash.FirstMdat, minimumSample, maximumSample);
+	}
+}

@@ -6,7 +6,7 @@ The migration to a single Avalonia client is complete.
 
 - Legacy WinForms projects were removed from the repository.
 - Solution filter files (`*.slnf`) were removed.
-- The canonical solution is `src/Oahu.sln`.
+- The canonical solution is `Oahu.sln`.
 
 ## Active App Architecture
 
@@ -39,8 +39,8 @@ The migration to a single Avalonia client is complete.
 Use this solution for restore/build across local and CI workflows:
 
 ```bash
-dotnet restore src/Oahu.sln
-dotnet build src/Oahu.sln
+dotnet restore Oahu.sln
+dotnet build Oahu.sln
 ```
 
 ### Platform Build Scripts
