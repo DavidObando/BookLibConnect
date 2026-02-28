@@ -15,17 +15,21 @@ namespace Oahu.BooksDatabase.ex
         return state;
       }
       else
+      {
         return ApplicableState(book.Conversion);
-
-
+      }
     }
 
     public static EConversionState ApplicableState(this Conversion conv)
     {
       if (conv.State == EConversionState.download && conv.PersistState.HasValue)
+      {
         return conv.PersistState.Value;
+      }
       else
+      {
         return conv.State;
+      }
     }
 
     public static EDownloadQuality ApplicableDownloadQuality(this Book book, bool multipart)
@@ -39,7 +43,9 @@ namespace Oahu.BooksDatabase.ex
         return dnldqual;
       }
       else
+      {
         return book.ApplicableDownloadQuality();
+      }
     }
 
     public static EDownloadQuality ApplicableDownloadQuality(this IBookCommon book) =>

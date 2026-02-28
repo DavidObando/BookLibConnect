@@ -29,6 +29,7 @@ public static class EnumerableExtensions
   private class InterleavedIterator<T> : IEnumerable<T>
   {
     private IEnumerable<T>[] Enumerables { get; }
+
     private Comparer<T> Comparer { get; }
 
     public InterleavedIterator(IEnumerable<T>[] enumerables, Comparer<T> comparer)
@@ -49,7 +50,9 @@ public static class EnumerableExtensions
       {
         yield return currentEnumerator.Current;
         if (!currentEnumerator.MoveNext())
+        {
           enumerators[currentIndex] = null;
+        }
       }
     }
 
@@ -61,7 +64,9 @@ public static class EnumerableExtensions
       for (int i = 0; i < enumerators.Length; i++)
       {
         if (enumerators[i] is IEnumerator<T> ei && (minValue is null || Comparer.Compare(minValue.Current, ei.Current) > 0))
+        {
           (minIndex, minValue) = (i, ei);
+        }
       }
 
       return minIndex != -1;

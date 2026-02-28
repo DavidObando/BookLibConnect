@@ -11,7 +11,6 @@ namespace Oahu.App.Avalonia
   /// </summary>
   public class InteractionCallbackMac<T> : IInteractionCallback<T, bool?> where T : InteractionMessage
   {
-
     private readonly Window _owner;
 
     public InteractionCallbackMac(Window owner)

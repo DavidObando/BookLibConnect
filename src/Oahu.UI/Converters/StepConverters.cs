@@ -13,7 +13,10 @@ namespace Oahu.Core.UI.Avalonia.Converters
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
       if (value is int currentStep && parameter is string paramStr && int.TryParse(paramStr, out int targetStep))
+      {
         return currentStep == targetStep;
+      }
+
       return false;
     }
 
@@ -29,7 +32,10 @@ namespace Oahu.Core.UI.Avalonia.Converters
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
       if (value is int step)
+      {
         return step + 1;
+      }
+
       return value;
     }
 

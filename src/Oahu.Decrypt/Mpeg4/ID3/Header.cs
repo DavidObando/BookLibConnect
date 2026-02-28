@@ -6,8 +6,11 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 public abstract class Header
 {
   public abstract string Identifier { get; }
+
   public int Size { get; protected init; }
+
   public abstract int HeaderSize { get; }
+
   public abstract void Render(Stream stream, int renderSize, ushort version);
 
   public static ushort ReadUInt16BE(Stream stream)
@@ -53,7 +56,9 @@ public abstract class Header
     {
       // ID3 tag is padded. Seek to end of tag.
       if (file.CanSeek)
+      {
         file.Position = endPos;
+      }
       else
       {
         var buffer = new byte[4096];

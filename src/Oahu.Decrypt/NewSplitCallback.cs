@@ -6,9 +6,13 @@ namespace Oahu.Decrypt
   public interface INewSplitCallback
   {
     Chapter Chapter { get; }
+
     int? TrackNumber { get; set; }
+
     int? TrackCount { get; set; }
+
     string? TrackTitle { get; set; }
+
     Stream? OutputFile { get; set; }
   }
 
@@ -20,9 +24,13 @@ namespace Oahu.Decrypt
   public class NewSplitCallback : INewSplitCallback<NewSplitCallback>
   {
     public Chapter Chapter { get; }
+
     public int? TrackNumber { get; set; }
+
     public int? TrackCount { get; set; }
+
     public string? TrackTitle { get; set; }
+
     public Stream? OutputFile { get; set; }
 
     private NewSplitCallback(Chapter chapter)

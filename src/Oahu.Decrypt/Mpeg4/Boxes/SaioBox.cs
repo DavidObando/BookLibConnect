@@ -6,15 +6,20 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public interface ISaioBox : IBox
 {
   uint AuxInfoType { get; }
+
   uint AuxInfoTypeParameter { get; }
+
   int EntryCount { get; }
 }
 
 public class SaioBox : FullBox, ISaioBox
 {
   public override long RenderSize => base.RenderSize + ((Flags & 1) == 1 ? 8 : 0) + 4 + (Version == 0 ? (offsets_32?.Length ?? 0) * 4 : (offsets_64?.Length ?? 0) * 8);
+
   public uint AuxInfoType { get; }
+
   public uint AuxInfoTypeParameter { get; }
+
   public int EntryCount { get; }
 
   private readonly uint[]? offsets_32;
@@ -39,7 +44,6 @@ public class SaioBox : FullBox, ISaioBox
     }
     else
     {
-
       offsets_64 = new long[EntryCount];
       for (int i = 0; i < EntryCount; i++)
       {
@@ -56,17 +60,22 @@ public class SaioBox : FullBox, ISaioBox
       file.WriteUInt32BE(AuxInfoType);
       file.WriteUInt32BE(AuxInfoTypeParameter);
     }
+
     file.WriteInt32BE(EntryCount);
 
     if (offsets_32 != null)
     {
       foreach (var offset in offsets_32)
+      {
         file.WriteUInt32BE(offset);
+      }
     }
     else if (offsets_64 != null)
     {
       foreach (var offset in offsets_64)
+      {
         file.WriteInt64BE(offset);
+      }
     }
   }
 }

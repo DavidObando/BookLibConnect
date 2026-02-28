@@ -4,11 +4,13 @@ namespace Oahu.Aux.Extensions
 {
   public static class ResourceManagerEx
   {
-
     public static string GetStringEx(this ResourceManager rm, string val)
     {
       if (rm is null)
+      {
         return val;
+      }
+
       string s = null;
       try
       {
@@ -17,6 +19,7 @@ namespace Oahu.Aux.Extensions
       catch (MissingManifestResourceException)
       {
       }
+
       return s ?? val;
     }
   }

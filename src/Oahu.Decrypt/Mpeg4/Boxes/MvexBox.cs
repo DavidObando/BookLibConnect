@@ -8,6 +8,7 @@ public class MvexBox : Box
   {
     LoadChildren(file);
   }
+
   protected override void Render(Stream file)
   {
     return;

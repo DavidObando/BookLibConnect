@@ -11,10 +11,8 @@ namespace Oahu.Common.Util
 
   public static class FileEx
   {
-
     private const int BUFSIZ = 10 * 1000 * 1000; // 10 MB
     private const int IVL_MS = 50;
-
 
     public static bool Copy(string sourceFileName, string destFileName, bool overwrite,
         Action<ProgressMessage> report = null, Func<bool> cancel = null) =>
@@ -24,9 +22,13 @@ namespace Oahu.Common.Util
       Action<ProgressMessage> report = null, Func<bool> cancel = null)
     {
       if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+      {
         return copyWin32(sourceFileName, destFileName, overwrite, callout, report, cancel);
+      }
       else
+      {
         return copyPortable(sourceFileName, destFileName, overwrite, callout, report, cancel);
+      }
     }
 
     private static bool copyWin32(string sourceFileName, string destFileName, bool overwrite, IFileCopyCallout callout,
@@ -51,13 +53,16 @@ namespace Oahu.Common.Util
           int read = 0;
           while (true)
           {
-
             if (cancel?.Invoke() ?? false)
+            {
               return false;
+            }
 
             read = wfioRd.ReadBlocks(BUFSIZ);
             if (read <= 0)
+            {
               break;
+            }
 
             callout?.ProcessBuffer(buf, read, count);
 
@@ -68,14 +73,18 @@ namespace Oahu.Common.Util
             long tot_ms = (int)(dt - dt0).TotalMilliseconds;
             long q = tot_ms / IVL_MS;
             if (q <= ivlcnt)
+            {
               continue;
+            }
 
             ivlcnt = q;
             threadProgress.Report((double)count / total);
           }
+
           ;
         }
       }
+
       return true;
     }
 
@@ -97,17 +106,19 @@ namespace Oahu.Common.Util
         using (var fsRd = new FileStream(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read, BUFSIZ))
         using (var fsWr = new FileStream(destFileName, mode, FileAccess.Write, FileShare.None, BUFSIZ))
         {
-
           int read = 0;
           while (true)
           {
-
             if (cancel?.Invoke() ?? false)
+            {
               return false;
+            }
 
             read = fsRd.Read(buf, 0, BUFSIZ);
             if (read <= 0)
+            {
               break;
+            }
 
             callout?.ProcessBuffer(buf, read, count);
 
@@ -118,14 +129,18 @@ namespace Oahu.Common.Util
             long tot_ms = (int)(dt - dt0).TotalMilliseconds;
             long q = tot_ms / IVL_MS;
             if (q <= ivlcnt)
+            {
               continue;
+            }
 
             ivlcnt = q;
             threadProgress.Report((double)count / total);
           }
+
           ;
         }
       }
+
       return true;
     }
   }

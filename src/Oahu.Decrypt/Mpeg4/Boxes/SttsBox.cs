@@ -12,7 +12,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class SttsBox : FullBox
 {
   public override long RenderSize => base.RenderSize + 4 + EntryCount * 2 * 4;
+
   public int EntryCount => Samples.Count;
+
   public List<SampleEntry> Samples { get; } = new List<SampleEntry>();
 
   public static SttsBox CreateBlank(IBox parent)
@@ -25,8 +27,11 @@ public class SttsBox : FullBox
     parent.Children.Add(sttsBox);
     return sttsBox;
   }
+
   private SttsBox(byte[] versionFlags, BoxHeader header, IBox? parent)
-      : base(versionFlags, header, parent) { }
+      : base(versionFlags, header, parent)
+  {
+  }
 
   public SttsBox(Stream file, BoxHeader header, IBox? parent)
       : base(file, header, parent)
@@ -78,6 +83,7 @@ public class SttsBox : FullBox
       beginDelta += entry.FrameCount * (ulong)entry.FrameDelta;
       workingIndex -= entry.FrameCount;
     }
+
     throw new IndexOutOfRangeException($"{nameof(frameIndex)} {frameIndex} is larger than the number of frames in {nameof(SttsBox)}");
   }
 
@@ -95,7 +101,10 @@ public class SttsBox : FullBox
   protected override void Dispose(bool disposing)
   {
     if (disposing && !Disposed)
+    {
       Samples.Clear();
+    }
+
     base.Dispose(disposing);
   }
 
@@ -107,7 +116,9 @@ public class SttsBox : FullBox
       FrameCount = sampleCount;
       FrameDelta = sampleDelta;
     }
+
     public uint FrameCount { get; }
+
     public uint FrameDelta { get; }
   }
 }

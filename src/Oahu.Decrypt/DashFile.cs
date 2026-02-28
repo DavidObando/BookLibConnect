@@ -13,7 +13,9 @@ namespace Oahu.Decrypt;
 public class DashFile : Mp4File
 {
   public MoofBox FirstMoof { get; }
+
   public MdatBox FirstMdat => Mdat;
+
   public SidxBox Sidx => TopLevelBoxes.OfType<SidxBox>().Single();
 
   public override TimeSpan Duration => TimeSpan.FromSeconds((double)Moov.GetChildOrThrow<MvexBox>().GetChildOrThrow<MehdBox>().FragmentDuration / TimeScale);
@@ -33,12 +35,20 @@ public class DashFile : Mp4File
   }
 
   public DashFile(string fileName, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
-      : this(File.Open(fileName, FileMode.Open, access, share)) { }
-  public DashFile(Stream file) : this(file, file.Length) { }
+      : this(File.Open(fileName, FileMode.Open, access, share))
+  {
+  }
+
+  public DashFile(Stream file) : this(file, file.Length)
+  {
+  }
+
   public DashFile(Stream file, long fileLength) : base(file, fileLength)
   {
     if (FileType != FileType.Dash)
+    {
       throw new ArgumentException($"This instance of {nameof(Mp4File)} is not a Dash file.");
+    }
 
     FirstMoof = TopLevelBoxes.OfType<MoofBox>().Single();
 
@@ -48,14 +58,19 @@ public class DashFile : Mp4File
     if (audioSampleEntry.GetChild<SinfBox>() is { } sinf)
     {
       if (sinf.SchemeType?.Type != SchmBox.SchemeType.Cenc)
+      {
         throw new NotSupportedException($"Only {nameof(SchmBox.SchemeType.Cenc)} dash files are currently supported.");
+      }
+
       Tenc = sinf.SchemeInformation?.TrackEncryption;
       audioSampleEntry.Children.Remove(sinf);
       audioSampleEntry.Header.ChangeAtomName(sinf.OriginalFormat.DataFormat);
     }
 
     foreach (var pssh in Moov.GetChildren<PsshBox>().ToArray())
+    {
       Moov.Children.Remove(pssh);
+    }
 
     if (AudioSampleEntry.Dec3 is not null || AudioSampleEntry.Dac4 is not null)
     {
@@ -80,9 +95,14 @@ public class DashFile : Mp4File
   public void SetDecryptionKey(string keyId, string decryptionKey)
   {
     if (string.IsNullOrWhiteSpace(keyId) || keyId.Length != AesCtr.AES_BLOCK_SIZE * 2)
+    {
       throw new ArgumentException($"{nameof(keyId)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
+    }
+
     if (string.IsNullOrWhiteSpace(decryptionKey) || decryptionKey.Length != AesCtr.AES_BLOCK_SIZE * 2)
+    {
       throw new ArgumentException($"{nameof(decryptionKey)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
+    }
 
     byte[] keyIdBts = Convert.FromHexString(keyId);
     byte[] decryptionKeyBts = Convert.FromHexString(decryptionKey);
@@ -103,16 +123,26 @@ public class DashFile : Mp4File
   public void SetDecryptionKey(byte[] keyId, byte[] decryptionKey)
   {
     if (Tenc is null)
+    {
       throw new InvalidOperationException($"This instance of {nameof(DashFile)} does not contain a {nameof(TencBox)}.");
+    }
+
     if (keyId is null || keyId.Length != AesCtr.AES_BLOCK_SIZE)
+    {
       throw new ArgumentException($"{nameof(keyId)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
+    }
+
     if (decryptionKey is null || decryptionKey.Length != AesCtr.AES_BLOCK_SIZE)
+    {
       throw new ArgumentException($"{nameof(decryptionKey)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
+    }
 
     var keyUUID = new Guid(keyId, bigEndian: true);
 
     if (keyUUID != Tenc.DefaultKID)
+    {
       throw new InvalidOperationException($"Supplied keyId does not match dash default keyId: {Convert.ToHexString(Tenc.DefaultKID.ToByteArray(bigEndian: true))}");
+    }
 
     Key = decryptionKey;
   }

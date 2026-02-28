@@ -47,7 +47,9 @@ namespace Oahu.Aux.Extensions
       var result = binRdr.ReadBytes(byteCount);
 
       if (result.Length != byteCount)
+      {
         throw new EndOfStreamException(string.Format("{0} bytes required from stream, but only {1} returned.", byteCount, result.Length));
+      }
 
       return result;
     }

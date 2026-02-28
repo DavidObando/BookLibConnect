@@ -9,11 +9,9 @@ using static Oahu.Aux.EnumUtil;
 
 namespace Oahu.Aux
 {
-
   public class EnumConverter<TEnum> : TypeConverter
     where TEnum : struct, Enum
   {
-
     protected IList<TEnum> Values { get; }
 
     private ResourceManager _resourceManager;
@@ -43,23 +41,29 @@ namespace Oahu.Aux
       return svc;
     }
 
-
     public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
     {
       if (destinationType != typeof(string))
+      {
         return base.CanConvertTo(context, destinationType);
+      }
       else
+      {
         return true;
+      }
     }
 
     public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
     {
       if (sourceType != typeof(string))
+      {
         return base.CanConvertFrom(context, sourceType);
+      }
       else
+      {
         return true;
+      }
     }
-
 
     public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
     {
@@ -86,11 +90,13 @@ namespace Oahu.Aux
         {
           bool succ = _reverseLookup.TryGetValue(s, out TEnum e);
           if (succ)
+          {
             return e;
+          }
         }
       }
-      return base.ConvertFrom(context, culture, value);
 
+      return base.ConvertFrom(context, culture, value);
     }
 
     private string toDisplayString(TEnum value) => ResourceManager.GetStringEx(value.ToString());
@@ -99,10 +105,9 @@ namespace Oahu.Aux
     {
       _reverseLookup = new Dictionary<string, TEnum>();
       foreach (var v in Values)
+      {
         _reverseLookup.Add(toDisplayString(v), v);
+      }
     }
-
   }
-
-
 }

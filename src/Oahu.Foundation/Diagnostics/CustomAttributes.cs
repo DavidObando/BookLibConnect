@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Oahu.Aux.Diagnostics
 {
-
   /// <summary>
   /// An attribute intended to be used as a custom format string in text serialization.
   /// </summary>
@@ -39,16 +38,23 @@ namespace Oahu.Aux.Diagnostics
         {
           bool succ = __converters.TryGetValue(type, out var converter);
           if (succ)
+          {
             Converter = converter;
+          }
           else
+          {
             try
             {
               Converter = (ToStringConverter)Activator.CreateInstance(type);
               __converters.Add(type, Converter);
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+            }
+          }
         }
       }
+
       Format = format;
     }
   }
@@ -65,6 +71,4 @@ namespace Oahu.Aux.Diagnostics
 
     public DisplayItemNameAttribute(string name) => Name = name;
   }
-
-
 }

@@ -28,13 +28,17 @@ internal class DashChunkReader : ChunkReader
       entry.ExtraData = IVs.Length > frameInChunk ? IVs[frameInChunk]
       : throw new InvalidDataException($"There are only {IVs.Length} in the chunk, but caller requesting frame at index {frameInChunk}.");
     }
+
     return entry;
   }
 
   public override void AddTrack(TrakBox track, FrameFilterBase<FrameEntry> filter)
   {
     if (TrackEntries.Count > 0)
+    {
       throw new InvalidOperationException($"The {nameof(DashChunkReader)} currently only supports a single track.");
+    }
+
     base.AddTrack(track, filter);
   }
 

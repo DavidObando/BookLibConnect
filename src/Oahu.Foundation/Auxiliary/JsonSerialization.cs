@@ -15,7 +15,8 @@ namespace Oahu.Aux
       WriteIndented = true,
       ReadCommentHandling = JsonCommentHandling.Skip,
       AllowTrailingCommas = true,
-      Converters = {
+      Converters =
+      {
         new JsonStringEnumConverter()
       },
       Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
@@ -34,6 +35,5 @@ namespace Oahu.Aux
       Task<T> task = Task.Run(async () => await JsonSerializer.DeserializeAsync<T>(fs, __jsonSerializerOptions));
       return task.Result;
     }
-
   }
 }

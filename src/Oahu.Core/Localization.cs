@@ -3,19 +3,23 @@ using Oahu.CommonTypes;
 
 namespace Oahu.Core
 {
-
   interface ILocale
   {
     ERegion CountryCode { get; }
+
     string Domain { get; }
+
     string MarketPlaceId { get; }
   }
 
-  record LocaleTemplate(ERegion CountryCode, string Domain, string MarketPlaceId) : ILocale { }
+  record LocaleTemplate(ERegion CountryCode, string Domain, string MarketPlaceId) : ILocale
+  {
+  }
 
   static class Locale
   {
-    static readonly Dictionary<ERegion, LocaleTemplate> LocaleTemplates = new() {
+    static readonly Dictionary<ERegion, LocaleTemplate> LocaleTemplates = new()
+    {
       { ERegion.de, new(ERegion.de, "de", "AN7V1F1VY261K") },
       { ERegion.us, new(ERegion.us, "com", "AF2M0KC94RCEA") },
       { ERegion.uk, new(ERegion.uk, "co.uk", "A2I9A3Q2GNFNGQ") },
@@ -33,7 +37,10 @@ namespace Oahu.Core
     {
       bool succ = LocaleTemplates.TryGetValue(countryCode, out var locale);
       if (!succ)
+      {
         return null;
+      }
+
       return locale;
     }
   }

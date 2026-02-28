@@ -3,7 +3,6 @@ using System.ComponentModel;
 
 namespace Oahu.Aux.Diagnostics
 {
-
   /// <summary>
   /// Flags to control dump output
   /// </summary>

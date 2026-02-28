@@ -30,5 +30,6 @@ public class ChunkEntry
   /// The number of samples in each frame.
   /// </summary>
   public required uint[] FrameDurations { get; init; }
+
   public object? ExtraData { get; init; }
 }

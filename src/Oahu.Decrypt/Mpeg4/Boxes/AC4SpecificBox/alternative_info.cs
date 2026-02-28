@@ -8,6 +8,7 @@ public class alternative_info
   public string presentation_name;
   public byte n_targets;
   public (byte target_md_compat, byte target_device_category)[] target_ids;
+
   public alternative_info(BitReader reader)
   {
     name_len = (ushort)reader.Read(16);
@@ -16,6 +17,7 @@ public class alternative_info
     {
       nameBts[i] = (char)reader.Read(8);
     }
+
     presentation_name = new string(nameBts);
     n_targets = (byte)reader.Read(5);
     target_ids = new (byte target_md_compat, byte target_device_category)[n_targets];

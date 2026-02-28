@@ -15,10 +15,15 @@ public enum ChapterFlags
 public class CHAPFrame : Frame
 {
   public override int Size => Encoding.ASCII.GetByteCount(ChapterID) + 1 + 4 * 4 + Children.Sum(c => c.Size + 10);
+
   public string ChapterID { get; set; }
+
   public TimeSpan StartTime { get; set; }
+
   public TimeSpan EndTime { get; set; }
+
   public uint ByteStart { get; set; }
+
   public uint ByteEnd { get; set; }
 
   public CHAPFrame(Frame parent, TimeSpan startTime, TimeSpan endTime, int chNum, string title, string? subtitle = null, string? subtitle2 = null)
@@ -31,10 +36,14 @@ public class CHAPFrame : Frame
     ByteEnd = uint.MaxValue;
 
     if (subtitle is not null)
+    {
       TEXTFrame.Create(this, "TIT2", subtitle);
+    }
 
     if (subtitle2 is not null)
+    {
       TEXTFrame.Create(this, "TIT3", subtitle2);
+    }
   }
 
   public CHAPFrame(Stream file, Header header, Frame parent) : base(header, parent)

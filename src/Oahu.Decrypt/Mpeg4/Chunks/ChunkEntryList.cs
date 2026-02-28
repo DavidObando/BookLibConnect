@@ -16,6 +16,7 @@ public class ChunkEntryList : IReadOnlyCollection<ChunkEntry>
   private readonly SttsBox Stts;
   private readonly ChunkFrames[] ChunkFrameTable;
   private readonly uint TrackId;
+
   public int Count { get; }
 
   public ChunkEntryList(TrakBox track)

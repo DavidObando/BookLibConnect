@@ -14,7 +14,9 @@ namespace Oahu.Decrypt.Chunks;
 public interface IChunkReader
 {
   Task RunAsync(CancellationTokenSource cancellationSource);
+
   Action<ConversionProgressEventArgs>? OnProgressUpdateDelegate { get; set; }
+
   void AddTrack(TrakBox track, FrameFilterBase<FrameEntry> filter);
 }
 
@@ -23,16 +25,23 @@ internal class ChunkReader : IChunkReader
   protected record TrackEntry(uint TrackId, uint Timescale, FrameFilterBase<FrameEntry> FirstFilter, TrakBox TrakBox);
 
   public Action<ConversionProgressEventArgs>? OnProgressUpdateDelegate { get; set; }
+
   protected Dictionary<uint, TrackEntry> TrackEntries { get; } = new();
+
   protected Stream InputStream { get; }
+
   protected TimeSpan StartTime { get; }
+
   protected TimeSpan EndTime { get; }
 
   public ChunkReader(Stream inputStream, TimeSpan startTime, TimeSpan endTime)
   {
     InputStream = inputStream;
     if (startTime >= endTime)
+    {
       throw new ArgumentException("Start time must be less than end time.", nameof(startTime));
+    }
+
     StartTime = startTime;
     EndTime = endTime;
   }
@@ -68,7 +77,9 @@ internal class ChunkReader : IChunkReader
   {
     // All filters share the came cancellation source.
     foreach (var filter in TrackEntries.Values.Select(e => e.FirstFilter))
+    {
       filter.SetCancellationToken(cancellationSource.Token);
+    }
 
     OnInitialProgress();
     var token = cancellationSource.Token;
@@ -82,7 +93,9 @@ internal class ChunkReader : IChunkReader
         await DispatchChunk(c, chunkData, token);
       }
     }
-    catch (OperationCanceledException) { }
+    catch (OperationCanceledException)
+    {
+    }
     catch
     {
       cancellationSource.Cancel();
@@ -121,10 +134,14 @@ internal class ChunkReader : IChunkReader
       frameDelta = chunk.FrameDurations[f];
 
       if (startSample >= sampleIndex + frameDelta)
+      {
         continue;
+      }
 
       if (endSample < sampleIndex)
+      {
         break;
+      }
 
       OnProgressReport(sampleIndex, trackEntry.Timescale);
 

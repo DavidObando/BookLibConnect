@@ -5,8 +5,11 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors;
 public class DescriptorHeader
 {
   public long FilePosition { get; internal set; }
+
   public int TotalBoxSize { get; }
+
   public byte TagID { get; private set; }
+
   public int HeaderSize { get; private set; }
 
   public DescriptorHeader(Stream file)

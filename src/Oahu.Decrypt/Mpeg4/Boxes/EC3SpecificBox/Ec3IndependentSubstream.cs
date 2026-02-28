@@ -50,7 +50,9 @@ public class Ec3IndependentSubstream
     fscod = (byte)reader.Read(2);
     bsid = (byte)reader.Read(5);
     if (bsid != 16)
+    {
       throw new InvalidDataException($"Invalid bsid value: {bsid}. Expected 16 for E-AC-3.");
+    }
 
     reader.Position += 1;
 
@@ -62,8 +64,12 @@ public class Ec3IndependentSubstream
     var num_dep_sub = reader.Read(4);
 
     if (num_dep_sub > 0)
+    {
       chan_loc = (ChannelLocation)reader.Read(9);
+    }
     else
+    {
       reader.Position++;
+    }
   }
 }

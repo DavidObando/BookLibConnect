@@ -8,7 +8,9 @@ public class SchiBox : Box
   {
     LoadChildren(file);
   }
+
   public TencBox? TrackEncryption => GetChild<TencBox>();
+
   protected override void Render(Stream file)
   {
     return;

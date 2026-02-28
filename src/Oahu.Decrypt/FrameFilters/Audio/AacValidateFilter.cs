@@ -5,6 +5,7 @@ namespace Oahu.Decrypt.FrameFilters.Audio
   internal class AacValidateFilter : FrameTransformBase<FrameEntry, FrameEntry>
   {
     protected override int InputBufferSize => 1000;
+
     public override FrameEntry PerformFiltering(FrameEntry input)
     {
       return ValidateFrame(input.FrameData.Span) ? input

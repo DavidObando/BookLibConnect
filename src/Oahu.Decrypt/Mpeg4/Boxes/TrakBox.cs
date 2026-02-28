@@ -10,7 +10,9 @@ public class TrakBox : Box
   }
 
   public TkhdBox Tkhd => GetChildOrThrow<TkhdBox>();
+
   public MdiaBox Mdia => GetChildOrThrow<MdiaBox>();
+
   protected override void Render(Stream file)
   {
     return;

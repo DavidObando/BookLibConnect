@@ -9,9 +9,12 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
   public class NameBox : FullBox
   {
     public override long RenderSize => base.RenderSize + Encoding.UTF8.GetByteCount(Name);
+
     public string Name { get; set; }
+
     [DebuggerHidden]
     private string DebuggerDisplay => $"name: {Name}";
+
     public NameBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
     {
       var stringSize = RemainingBoxLength(file);

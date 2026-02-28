@@ -26,6 +26,7 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     private readonly AudioSampleEntry AudioSampleEntry;
     private readonly ChunkOffsetList AudioChunks = new();
     private readonly ChunkOffsetList TextChunks = new();
+
     // Since we're only working with audio files, no frame will ever be larger than ushort.MaxValue.
     // Use shorts to save memory.
     private readonly List<ushort> AudioSampleSizes = new();
@@ -40,7 +41,9 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       ArgumentNullException.ThrowIfNull(ftyp, nameof(ftyp));
       ArgumentNullException.ThrowIfNull(moov, nameof(moov));
       if (!outputFile.CanWrite)
+      {
         throw new ArgumentException("The stream is not writable", nameof(outputFile));
+      }
 
       OutputFile = outputFile;
       Moov = MakeBlankMoov(moov);
@@ -68,10 +71,14 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       AudioSampleEntry.Header.ChangeAtomName("mp4a");
 
       if (AudioSampleEntry.Esds is EsdsBox esds)
+      {
         AudioSampleEntry.Children.Remove(esds);
+      }
 
       if (AudioSampleEntry.Dec3 is Dec3Box dec3)
+      {
         AudioSampleEntry.Children.Remove(dec3);
+      }
 
       esds = EsdsBox.CreateEmpty(AudioSampleEntry);
 
@@ -79,7 +86,10 @@ namespace Oahu.Decrypt.FrameFilters.Audio
 
       asc.AscBlob = ascBytes;
       if (asc.ChannelConfiguration > 2)
+      {
         throw new NotSupportedException($"Only supports maximum of 2-channel audio. (Channels={asc.ChannelConfiguration})");
+      }
+
       AudioSampleEntry.ChannelCount = (ushort)asc.ChannelConfiguration;
 
       SetTimeScale((uint)asc.SamplingFrequency);
@@ -119,11 +129,18 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     {
       lock (lockObj)
       {
-        if (Closing) return;
+        if (Closing)
+        {
+          return;
+        }
+
         Closing = true;
       }
 
-      if (Closed || !OutputFile.CanWrite) return;
+      if (Closed || !OutputFile.CanWrite)
+      {
+        return;
+      }
 
       long mdatEnd = OutputFile.Position;
 
@@ -132,15 +149,20 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       OutputFile.Position = mdatStart;
 
       if (mdatSize <= uint.MaxValue)
+      {
         OutputFile.WriteUInt32BE((uint)mdatSize);
+      }
       else
       {
         OutputFile.WriteUInt32BE(1);
       }
+
       OutputFile.WriteType("mdat");
 
       if (mdatSize > uint.MaxValue)
+      {
         OutputFile.WriteInt64BE(mdatSize);
+      }
 
       OutputFile.Position = mdatEnd;
 
@@ -175,7 +197,9 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       }
 
       if (AudioSampleEntry.GetChild<BtrtBox>() is null)
+      {
         BtrtBox.Create(0, maxBitRate, avgBitrate, AudioSampleEntry);
+      }
 
       SaveMoov();
       Closed = true;
@@ -193,7 +217,9 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       var frameDeltas = stts.EnumerateFrameDeltas().Select(d => (ushort)d).ToArray();
 
       if (stts.SampleTimeCount != stsz.SampleCount || stts.SampleTimeCount != frameDeltas.Length)
+      {
         throw new InvalidOperationException($"The number of sample deltas ({stts.SampleTimeCount}) doesn't match the number of sample sizes ({stsz.SampleCount}).");
+      }
 
       long currentWindowSampleSpan = 0;
       long windowSizeInBytes = 0;
@@ -205,7 +231,9 @@ namespace Oahu.Decrypt.FrameFilters.Audio
         {
           double bitrate = windowSizeInBytes * 8 * timeScale / currentWindowSampleSpan;
           if (bitrate > maxOneSecondBitrate)
+          {
             maxOneSecondBitrate = bitrate;
+          }
 
           windowSizeInBytes -= stsz.GetSizeAtIndex(beginIndex);
           currentWindowSampleSpan -= frameDeltas[beginIndex];
@@ -223,13 +251,20 @@ namespace Oahu.Decrypt.FrameFilters.Audio
 
     public void WriteChapter(ChapterEntry entry)
     {
-      if (Moov.TextTrack is null) return;
+      if (Moov.TextTrack is null)
+      {
+        return;
+      }
 
       if (Moov.TextTrack.Mdia.Minf.Stbl.Stsz is null)
+      {
         StszBox.CreateBlank(Moov.TextTrack.Mdia.Minf.Stbl, TextSampleSizes);
+      }
 
       if (!Moov.TextTrack.Mdia.Minf.Stbl.Stsc.Samples.Any())
+      {
         Moov.TextTrack.Mdia.Minf.Stbl.Stsc.Samples.Add(new StscBox.StscChunkEntry(1, 1, 1));
+      }
 
       chapterTitles.Add(entry.Title);
 
@@ -242,7 +277,10 @@ namespace Oahu.Decrypt.FrameFilters.Audio
 
     private void WriteChapterMetadata(IEnumerable<string> chapterTitles)
     {
-      if (Moov.TextTrack is null) return;
+      if (Moov.TextTrack is null)
+      {
+        return;
+      }
 
       AppleListBox? chapterNames =
           Moov.TextTrack
@@ -250,7 +288,10 @@ namespace Oahu.Decrypt.FrameFilters.Audio
           ?.GetChild<MetaBox>()
           ?.GetChild<AppleListBox>();
 
-      if (chapterNames is null) return;
+      if (chapterNames is null)
+      {
+        return;
+      }
 
       chapterNames.Children.Clear();
 
@@ -264,7 +305,9 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     public void RemoveTextTrack()
     {
       if (Moov.TextTrack is null || !Moov.Children.Remove(Moov.TextTrack))
+      {
         return;
+      }
 
       uint trackNum = 1;
       Dictionary<uint, uint> trackRemap = [];
@@ -290,7 +333,9 @@ namespace Oahu.Decrypt.FrameFilters.Audio
           foreach (var tid in tref.TrackIds.Order().ToArray())
           {
             if (!trackRemap.TryGetValue(tid, out var remap))
+            {
               tref.TrackIds.Remove(tid);
+            }
             else if (remap != tid)
             {
               tref.TrackIds.Remove(tid);
@@ -299,11 +344,15 @@ namespace Oahu.Decrypt.FrameFilters.Audio
           }
 
           if (tref.TrackIds.Count == 0)
+          {
             track.References.Remove(tref);
+          }
         }
 
         if (track.References.Count == 0)
+        {
           track.Parent!.Children.Remove(track);
+        }
       }
     }
 
@@ -311,7 +360,10 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     {
       lock (lockObj)
       {
-        if (Closing) return;
+        if (Closing)
+        {
+          return;
+        }
 
         if (newChunk)
         {
@@ -323,6 +375,7 @@ namespace Oahu.Decrypt.FrameFilters.Audio
 
             LastSamplesPerChunk = SamplesPerChunk;
           }
+
           SamplesPerChunk = 0;
           CurrentChunk++;
         }
@@ -364,7 +417,10 @@ namespace Oahu.Decrypt.FrameFilters.Audio
         moov.TextTrack.Mdia.Minf.Stbl.Children.Remove(t1);
         moov.TextTrack.Mdia.Minf.Stbl.Children.Remove(t2);
         if (t3 is not null)
+        {
           moov.TextTrack.Mdia.Minf.Stbl.Children.Remove(t3);
+        }
+
         moov.TextTrack.Mdia.Minf.Stbl.Children.Remove(t4);
       }
 
@@ -376,36 +432,57 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       moov.AudioTrack.Mdia.Minf.Stbl.Children.Remove(a1);
       moov.AudioTrack.Mdia.Minf.Stbl.Children.Remove(a2);
       if (a3 is not null)
+      {
         moov.AudioTrack.Mdia.Minf.Stbl.Children.Remove(a3);
+      }
+
       moov.AudioTrack.Mdia.Minf.Stbl.Children.Remove(a4);
 
       MvexBox? mvex = moov.GetChild<MvexBox>();
       if (mvex is not null)
+      {
         moov.Children.Remove(mvex);
+      }
 
       MemoryStream ms = new();
 
       moov.Save(ms);
 
       if (mvex is not null)
+      {
         moov.Children.Add(mvex);
+      }
 
       moov.AudioTrack.Mdia.Minf.Stbl.Children.Add(a1);
       moov.AudioTrack.Mdia.Minf.Stbl.Children.Add(a2);
       if (a3 is not null)
+      {
         moov.AudioTrack.Mdia.Minf.Stbl.Children.Add(a3);
+      }
+
       moov.AudioTrack.Mdia.Minf.Stbl.Children.Add(a4);
 
       if (moov.TextTrack is not null)
       {
         if (t1 is not null)
+        {
           moov.TextTrack.Mdia.Minf.Stbl.Children.Add(t1);
+        }
+
         if (t2 is not null)
+        {
           moov.TextTrack.Mdia.Minf.Stbl.Children.Add(t2);
+        }
+
         if (t3 is not null)
+        {
           moov.TextTrack.Mdia.Minf.Stbl.Children.Add(t3);
+        }
+
         if (t4 is not null)
+        {
           moov.TextTrack.Mdia.Minf.Stbl.Children.Add(t4);
+        }
       }
 
       ms.Position = 0;
@@ -432,6 +509,7 @@ namespace Oahu.Decrypt.FrameFilters.Audio
 
     #region IDisposable
     private bool disposed = false;
+
     public void Dispose()
     {
       Dispose(disposing: true);

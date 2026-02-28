@@ -9,14 +9,23 @@ namespace Oahu.Decrypt
   public class Mp4Operation
   {
     public event EventHandler<ConversionProgressEventArgs>? ConversionProgressUpdate;
+
     public bool IsCompleted => Continuation?.IsCompleted is true;
+
     public bool IsFaulted => _readerTask?.IsFaulted is true;
+
     public bool IsCanceled => _readerTask?.IsCanceled is true;
+
     public bool IsCompletedSuccessfully => _readerTask?.IsCompletedSuccessfully is true && Continuation?.IsCompletedSuccessfully is true;
+
     public TimeSpan CurrentProcessPosition => _lastArgs?.ProcessPosition ?? TimeSpan.Zero;
+
     public double ProcessSpeed => _lastArgs?.ProcessSpeed ?? 0;
+
     public TaskStatus TaskStatus => _readerTask?.Status ?? TaskStatus.Created;
+
     public Task OperationTask => Continuation;
+
     public Mp4File? Mp4File { get; }
 
     protected virtual Task Continuation => _continuation ?? Task.CompletedTask;
@@ -69,12 +78,17 @@ namespace Oahu.Decrypt
         catch (Exception ex)
         {
           if (t.Exception is null)
+          {
             throw;
+          }
 
           throw new AggregateException("Two or more errors occurred.", t.Exception.InnerExceptions.Append(ex));
         }
+
         if (t.IsFaulted && t.Exception is not null)
+        {
           throw t.Exception;
+        }
       },
       TaskContinuationOptions.ExecuteSynchronously);
     }

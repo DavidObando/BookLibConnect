@@ -3,7 +3,6 @@ using System.Threading;
 
 namespace Oahu.Aux.Extensions
 {
-
   /// <summary>
   ///   <para>Type-safe extensions for invoking methods via a synchronization context.
   ///   Will be executed in the thread of the synchronization context.</para>
@@ -29,9 +28,13 @@ namespace Oahu.Aux.Extensions
       Action delgat)
     {
       if (sync is null)
+      {
         delgat();
+      }
       else
+      {
         sendOrPost(sync.Post, delgat);
+      }
     }
 
     public static void Post<T>(
@@ -40,9 +43,13 @@ namespace Oahu.Aux.Extensions
       T p1)
     {
       if (sync is null)
+      {
         delgat(p1);
+      }
       else
+      {
         sendOrPost(sync.Post, delgat, p1);
+      }
     }
 
     public static void Post<T1, T2>(
@@ -51,9 +58,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2)
     {
       if (sync is null)
+      {
         delgat(p1, p2);
+      }
       else
+      {
         sendOrPost(sync.Post, delgat, p1, p2);
+      }
     }
 
     public static void Post<T1, T2, T3>(
@@ -62,9 +73,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3);
+      }
       else
+      {
         sendOrPost(sync.Post, delgat, p1, p2, p3);
+      }
     }
 
     public static void Post<T1, T2, T3, T4>(
@@ -73,9 +88,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3, p4);
+      }
       else
+      {
         sendOrPost(sync.Post, delgat, p1, p2, p3, p4);
+      }
     }
 
     public static void Post<T1, T2, T3, T4, T5>(
@@ -84,9 +103,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3, p4, p5);
+      }
       else
+      {
         sendOrPost(sync.Post, delgat, p1, p2, p3, p4, p5);
+      }
     }
 
     public static void Post<T1, T2, T3, T4, T5, T6>(
@@ -95,9 +118,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3, p4, p5, p6);
+      }
       else
+      {
         sendOrPost(sync.Post, delgat, p1, p2, p3, p4, p5, p6);
+      }
     }
 
     public static void Post<T1, T2, T3, T4, T5, T6, T7>(
@@ -106,9 +133,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3, p4, p5, p6, p7);
+      }
       else
+      {
         sendOrPost(sync.Post, delgat, p1, p2, p3, p4, p5, p6, p7);
+      }
     }
 
     public static void Post<T1, T2, T3, T4, T5, T6, T7, T8>(
@@ -117,9 +148,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3, p4, p5, p6, p7, p8);
+      }
       else
+      {
         sendOrPost(sync.Post, delgat, p1, p2, p3, p4, p5, p6, p7, p8);
+      }
     }
     #endregion Asynchronous Post Methods
 
@@ -129,9 +164,13 @@ namespace Oahu.Aux.Extensions
       Action delgat)
     {
       if (sync is null)
+      {
         delgat();
+      }
       else
+      {
         sendOrPost(sync.Send, delgat);
+      }
     }
 
     public static void Send<T>(
@@ -140,9 +179,13 @@ namespace Oahu.Aux.Extensions
       T p1)
     {
       if (sync is null)
+      {
         delgat(p1);
+      }
       else
+      {
         sendOrPost(sync.Send, delgat, p1);
+      }
     }
 
     public static void Send<T1, T2>(
@@ -151,9 +194,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2)
     {
       if (sync is null)
+      {
         delgat(p1, p2);
+      }
       else
+      {
         sendOrPost(sync.Send, delgat, p1, p2);
+      }
     }
 
     public static void Send<T1, T2, T3>(
@@ -162,9 +209,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3);
+      }
       else
+      {
         sendOrPost(sync.Send, delgat, p1, p2, p3);
+      }
     }
 
     public static void Send<T1, T2, T3, T4>(
@@ -173,9 +224,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3, p4);
+      }
       else
+      {
         sendOrPost(sync.Send, delgat, p1, p2, p3, p4);
+      }
     }
 
     public static void Send<T1, T2, T3, T4, T5>(
@@ -184,9 +239,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3, p4, p5);
+      }
       else
+      {
         sendOrPost(sync.Send, delgat, p1, p2, p3, p4, p5);
+      }
     }
 
     public static void Send<T1, T2, T3, T4, T5, T6>(
@@ -195,9 +254,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3, p4, p5, p6);
+      }
       else
+      {
         sendOrPost(sync.Send, delgat, p1, p2, p3, p4, p5, p6);
+      }
     }
 
     public static void Send<T1, T2, T3, T4, T5, T6, T7>(
@@ -206,9 +269,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3, p4, p5, p6, p7);
+      }
       else
+      {
         sendOrPost(sync.Send, delgat, p1, p2, p3, p4, p5, p6, p7);
+      }
     }
 
     public static void Send<T1, T2, T3, T4, T5, T6, T7, T8>(
@@ -217,9 +284,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8)
     {
       if (sync is null)
+      {
         delgat(p1, p2, p3, p4, p5, p6, p7, p8);
+      }
       else
+      {
         sendOrPost(sync.Send, delgat, p1, p2, p3, p4, p5, p6, p7, p8);
+      }
     }
     #endregion Synchronous Send Methods
 
@@ -229,9 +300,13 @@ namespace Oahu.Aux.Extensions
       Func<TResult> delgat)
     {
       if (sync is null)
+      {
         return delgat();
+      }
       else
+      {
         return sendOrPost(sync.Send, delgat);
+      }
     }
 
     public static TResult Send<T, TResult>(
@@ -240,9 +315,13 @@ namespace Oahu.Aux.Extensions
       T p1)
     {
       if (sync is null)
+      {
         return delgat(p1);
+      }
       else
+      {
         return sendOrPost(sync.Send, delgat, p1);
+      }
     }
 
     public static TResult Send<T1, T2, TResult>(
@@ -251,9 +330,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2)
     {
       if (sync is null)
+      {
         return delgat(p1, p2);
+      }
       else
+      {
         return sendOrPost(sync.Send, delgat, p1, p2);
+      }
     }
 
     public static TResult Send<T1, T2, T3, TResult>(
@@ -262,9 +345,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3)
     {
       if (sync is null)
+      {
         return delgat(p1, p2, p3);
+      }
       else
+      {
         return sendOrPost(sync.Send, delgat, p1, p2, p3);
+      }
     }
 
     public static TResult Send<T1, T2, T3, T4, TResult>(
@@ -273,9 +360,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4)
     {
       if (sync is null)
+      {
         return delgat(p1, p2, p3, p4);
+      }
       else
+      {
         return sendOrPost(sync.Send, delgat, p1, p2, p3, p4);
+      }
     }
 
     public static TResult Send<T1, T2, T3, T4, T5, TResult>(
@@ -284,9 +375,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5)
     {
       if (sync is null)
+      {
         return delgat(p1, p2, p3, p4, p5);
+      }
       else
+      {
         return sendOrPost(sync.Send, delgat, p1, p2, p3, p4, p5);
+      }
     }
 
     public static TResult Send<T1, T2, T3, T4, T5, T6, TResult>(
@@ -295,9 +390,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6)
     {
       if (sync is null)
+      {
         return delgat(p1, p2, p3, p4, p5, p6);
+      }
       else
+      {
         return sendOrPost(sync.Send, delgat, p1, p2, p3, p4, p5, p6);
+      }
     }
 
     public static TResult Send<T1, T2, T3, T4, T5, T6, T7, TResult>(
@@ -306,9 +405,13 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7)
     {
       if (sync is null)
+      {
         return delgat(p1, p2, p3, p4, p5, p6, p7);
+      }
       else
+      {
         return sendOrPost(sync.Send, delgat, p1, p2, p3, p4, p5, p6, p7);
+      }
     }
 
     public static TResult Send<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(
@@ -317,15 +420,17 @@ namespace Oahu.Aux.Extensions
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8)
     {
       if (sync is null)
+      {
         return delgat(p1, p2, p3, p4, p5, p6, p7, p8);
+      }
       else
+      {
         return sendOrPost(sync.Send, delgat, p1, p2, p3, p4, p5, p6, p7, p8);
+      }
     }
     #endregion Synchronous Send Methods With Return Value
 
     #endregion Public Methods
-
-
 
     #region Private Methods
 

@@ -2,7 +2,6 @@ using System;
 
 namespace Oahu.Core
 {
-
   public enum EInitialSorting
   {
     state_date,

@@ -33,7 +33,9 @@ namespace Oahu.Aux
         lock (__lockable)
         {
           if (__t is null)
+          {
             __t = new T();
+          }
 
           return __t;
         }
@@ -45,10 +47,12 @@ namespace Oahu.Aux
       lock (__lockable)
       {
         if (__t is IDisposable obj)
+        {
           obj.Dispose();
+        }
+
         __t = null;
       }
     }
-
   }
 }

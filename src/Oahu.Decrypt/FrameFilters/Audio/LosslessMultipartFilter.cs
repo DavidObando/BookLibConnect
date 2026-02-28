@@ -8,6 +8,7 @@ namespace Oahu.Decrypt.FrameFilters.Audio
   internal sealed class LosslessMultipartFilter : MultipartFilterBase<FrameEntry, NewSplitCallback>
   {
     public bool CurrentWriterOpen { get; private set; }
+
     protected override int InputBufferSize => 1000;
 
     private Mp4aWriter? Mp4writer;
@@ -25,7 +26,10 @@ namespace Oahu.Decrypt.FrameFilters.Audio
 
     protected override void CloseCurrentWriter()
     {
-      if (!CurrentWriterOpen) return;
+      if (!CurrentWriterOpen)
+      {
+        return;
+      }
 
       Mp4writer?.Close();
       Mp4writer?.OutputFile.Close();
@@ -41,7 +45,9 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     {
       newFileCallback(callback);
       if (callback.OutputFile is not Stream outfile)
+      {
         throw new InvalidOperationException("Output file stream null");
+      }
 
       CurrentWriterOpen = true;
 
@@ -52,14 +58,21 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       {
         var tags = new MetadataItems(Mp4writer.Moov.ILst);
         if (callback.TrackNumber.HasValue && callback.TrackCount.HasValue)
+        {
           tags.TrackNumber = (callback.TrackNumber.Value, callback.TrackCount.Value);
+        }
+
         tags.Title = callback.TrackTitle ?? tags.Title;
       }
     }
+
     protected override void Dispose(bool disposing)
     {
       if (disposing && !Disposed)
+      {
         CloseCurrentWriter();
+      }
+
       base.Dispose(disposing);
     }
   }

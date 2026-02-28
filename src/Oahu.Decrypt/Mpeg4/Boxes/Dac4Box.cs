@@ -10,11 +10,15 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class Dac4Box : Box
 {
   public override long RenderSize => base.RenderSize + Ac4Data.Length;
+
   private readonly byte[] Ac4Data;
 
   public ac4_dsi_v1? Ac4DsiV1;
+
   public uint? AverageBitrate { get; }
+
   public int? SampleRate { get; }
+
   public int? NumberOfChannels { get; }
 
   public Dac4Box(Stream file, BoxHeader header, IBox? parent) : base(header, parent)

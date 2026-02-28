@@ -3,10 +3,8 @@ using System.Runtime.CompilerServices;
 
 namespace Oahu.Aux
 {
-
   public class LogGuard : IDisposable
   {
-
     const string IN = ">>> ";
     const string OUT = "<<< ";
     readonly uint _level;
@@ -77,24 +75,36 @@ namespace Oahu.Aux
         if (_func is null)
         {
           if (_msg is null)
+          {
             Logging.Log(_level, _caller, () => OUT, _method);
+          }
           else
+          {
             Logging.Log(_level, _caller, getMsg(), _method);
+          }
         }
         else
+        {
           Logging.Log(_level, _caller, getFuncMsg, _method);
+        }
       }
       else if (_type is not null)
       {
         if (_func is null)
         {
           if (_msg is null)
+          {
             Logging.Log(_level, _type, () => OUT, _method);
+          }
           else
+          {
             Logging.Log(_level, _type, getMsg(), _method);
+          }
         }
         else
+        {
           Logging.Log(_level, _type, getFuncMsg, _method);
+        }
       }
     }
 

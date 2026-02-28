@@ -6,9 +6,15 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 public class TEXTFrame : Frame
 {
   public override int Size => 1 + (Text is null ? 0 : IsUnicode(Text) ? UnicodeLength(Text) : Text.Length);
+
   public byte EncodingFlag { get; set; }
+
   public string? Text { get; set; }
-  private TEXTFrame(Header header, Frame parent) : base(header, parent) { }
+
+  private TEXTFrame(Header header, Frame parent) : base(header, parent)
+  {
+  }
+
   public TEXTFrame(Stream file, Header header, Frame parent) : base(header, parent)
   {
     EncodingFlag = (byte)file.ReadByte();

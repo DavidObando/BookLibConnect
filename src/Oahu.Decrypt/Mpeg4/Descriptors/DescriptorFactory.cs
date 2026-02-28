@@ -6,7 +6,6 @@ public static class DescriptorFactory
 {
   public static BaseDescriptor CreateDescriptor(Stream file)
   {
-
     var header = new DescriptorHeader(file);
 
     return header.TagID switch

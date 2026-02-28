@@ -10,16 +10,15 @@ namespace Oahu.Aux
   /// </summary>
   public static class SettingsManager
   {
-
     class UserConfig
     {
       public object Settings { get; set; }
+
       public string File { get; set; }
     }
 
     private static Dictionary<Type, UserConfig> __userSettingsDict = new();
     private static object __appSettings;
-
 
     private const string JSON = ".json";
 
@@ -45,7 +44,6 @@ namespace Oahu.Aux
     /// </summary>
     public static string UserSettingsDirectory => ApplEnv.SettingsDirectory;
 
-
     /// <summary>
     /// Gets the type-safe application settings.
     /// </summary>
@@ -62,7 +60,10 @@ namespace Oahu.Aux
         string path = Path.Combine(AppSettingsDirectory, APP_SETTINGS_FILE);
         bool exists = File.Exists(path);
         if (!optional && !exists)
+        {
           throw new InvalidOperationException($"{path} not found.");
+        }
+
         settings = deserializeJsonFile<T>(path, !optional);
         if (settings is null)
         {
@@ -72,15 +73,16 @@ namespace Oahu.Aux
           settings = new T();
 
           if (settings is IInitSettings init)
+          {
             init.Init();
-
+          }
         }
+
         __appSettings = settings;
       }
 
       return settings;
     }
-
 
     /// <summary>
     /// Gets the type-safe user settings for one type. Tries for a preset in the application directory,
@@ -98,7 +100,6 @@ namespace Oahu.Aux
     where T : class, IUserSettings, new() =>
       GetUserSettings<T>(settingsFile, renew);
 
-
     /// <summary>
     /// Gets the type-safe user settings for one type. Tries for a preset in the application directory,
     /// if settings can not be found at the designated user settings directory.
@@ -114,7 +115,6 @@ namespace Oahu.Aux
     public static T GetUserSettings<T>(string settingsFile, bool renew = false)
       where T : class, IUserSettings, new()
     {
-
       T settings = null;
 
       if (!renew)
@@ -123,7 +123,9 @@ namespace Oahu.Aux
         {
           bool succ = __userSettingsDict.TryGetValue(typeof(T), out var userConfig);
           if (succ)
+          {
             settings = userConfig.Settings as T;
+          }
         }
       }
 
@@ -141,13 +143,17 @@ namespace Oahu.Aux
         }
 
         if (settings is null)
+        {
           settings = new T();
+        }
 
         lock (__userSettingsDict)
         {
           bool succ = __userSettingsDict.TryGetValue(typeof(T), out var userConfig);
           if (succ && userConfig.Settings != settings)
+          {
             userConfig.Settings = settings;
+          }
           else
           {
             userConfig = new UserConfig
@@ -160,13 +166,13 @@ namespace Oahu.Aux
         }
 
         if (settings is IInitSettings init)
+        {
           init.Init();
+        }
       }
 
       return settings;
-
     }
-
 
     /// <summary>
     /// Saves the specified user settings to the designated user settings directory.
@@ -177,7 +183,6 @@ namespace Oahu.Aux
     public static bool Save<T>(this T settings)
       where T : IUserSettings
     {
-
       string settingsFile;
 
       // use actual arg type, not the generic type which may be an interface.
@@ -187,9 +192,15 @@ namespace Oahu.Aux
       {
         bool succ = __userSettingsDict.TryGetValue(type, out var userConfig);
         if (!succ)
+        {
           return false;
+        }
+
         if (!ReferenceEquals(userConfig.Settings, settings))
+        {
           userConfig.Settings = settings;
+        }
+
         settingsFile = userConfig.File;
       }
 
@@ -207,23 +218,29 @@ namespace Oahu.Aux
       }
     }
 
-
-
     private static (string dir, string path) getUserSettingsPath(string settingsFile)
     {
       if (string.IsNullOrWhiteSpace(settingsFile))
+      {
         return (UserSettingsDirectory, USER_SETTINGS_FILE);
+      }
+
       string dir = Path.GetDirectoryName(settingsFile);
       if (string.IsNullOrWhiteSpace(dir))
+      {
         dir = UserSettingsDirectory;
+      }
 
       string file = Path.GetFileName(settingsFile);
       if (!string.IsNullOrWhiteSpace(file))
       {
         string ext = Path.GetExtension(file).ToLower();
         if (ext != JSON)
+        {
           file += JSON;
+        }
       }
+
       return (dir, file);
     }
 
@@ -236,10 +253,12 @@ namespace Oahu.Aux
       catch (Exception exc)
       {
         if (doThrow)
+        {
           throw new InvalidOperationException(path, exc);
+        }
+
         return null;
       }
     }
-
   }
 }

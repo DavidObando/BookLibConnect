@@ -7,13 +7,11 @@ namespace Oahu.Aux.Diagnostics
   /// </summary>
   public interface IPrimitiveTypes
   {
-
     /// <summary>
     /// Determines whether the specified generic type is regarded as a custom primitive type.
     /// </summary>
     /// <typeparam name="T">generic type</typeparam>
     bool IsPrimitiveType<T>();
-
 
     /// <summary>
     /// Determines whether the specified type is regarded as a custom primitive type.

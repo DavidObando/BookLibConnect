@@ -2,13 +2,17 @@ using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 namespace Oahu.Decrypt.Mpeg4.Boxes
 {
   public class FtypBox : Box
   {
     public override long RenderSize => base.RenderSize + 8 + CompatibleBrands.Count * 4;
+
     public string MajorBrand { get; set; }
+
     public int MajorVersion { get; set; }
+
     public List<string> CompatibleBrands { get; } = new List<string>();
 
     public static FtypBox Create(string majorBrand, int majorVersion)
@@ -33,7 +37,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
       MajorVersion = file.ReadInt32BE();
 
       while (file.Position < endPos)
+      {
         CompatibleBrands.Add(file.ReadType());
+      }
     }
 
     protected override void Render(Stream file)
@@ -41,13 +47,18 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
       file.WriteType(MajorBrand);
       file.WriteInt32BE(MajorVersion);
       foreach (string brand in CompatibleBrands)
+      {
         file.WriteType(brand);
+      }
     }
 
     protected override void Dispose(bool disposing)
     {
       if (disposing && !Disposed)
+      {
         CompatibleBrands.Clear();
+      }
+
       base.Dispose(disposing);
     }
   }

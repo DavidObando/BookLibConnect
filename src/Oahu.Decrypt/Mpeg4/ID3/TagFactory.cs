@@ -15,9 +15,10 @@ internal class TagFactory
 
   private static Frame CreateTagInternal(FrameHeader frameHeader, Stream file, Frame parent)
   {
-
     if (parent.Version >= 0x300 && frameHeader.Identifier.StartsWith('T') && frameHeader.Identifier is not "TXXX")
+    {
       return new TEXTFrame(file, frameHeader, parent);
+    }
 
     return frameHeader.Identifier switch
     {

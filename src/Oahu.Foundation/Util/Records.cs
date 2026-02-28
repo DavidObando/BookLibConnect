@@ -2,7 +2,6 @@
 
 namespace Oahu.Common.Util
 {
-
   public record ProgressMessage(
     int? ItemCount,
     int? IncItem,
@@ -12,9 +11,13 @@ namespace Oahu.Common.Util
   public interface IPackageInfo
   {
     string AppName { get; }
+
     Version Version { get; }
+
     bool Preview { get; }
+
     bool DefaultApp { get; }
+
     string Desc { get; }
   }
 
@@ -23,20 +26,30 @@ namespace Oahu.Common.Util
   public record PackageInfo
   {
     public string Url { get; init; }
+
     public string AppName { get; init; }
+
     public string Version { get; init; }
+
     public bool Preview { get; init; }
+
     public string Desc { get; init; }
+
     public string Md5 { get; init; }
   }
 
   public record PackageInfoLocal : PackageInfo, IPackageInfo
   {
     public new Version Version { get; init; }
+
     public string SetupFile { get; init; }
+
     public bool DefaultApp { get; init; }
 
-    public PackageInfoLocal() { }
+    public PackageInfoLocal()
+    {
+    }
+
     public PackageInfoLocal(PackageInfo pi)
     {
       Url = pi.Url;
@@ -53,6 +66,4 @@ namespace Oahu.Common.Util
       }
     }
   }
-
-
 }

@@ -8,6 +8,7 @@ namespace Oahu.Decrypt.FrameFilters
   public abstract class FrameFilterBase<TInput> : IDisposable
   {
     private record BufferEntry(int NumEntries, TInput[] Entries);
+
     protected abstract int InputBufferSize { get; }
 
     private CancellationToken CancellationToken;
@@ -23,7 +24,9 @@ namespace Oahu.Decrypt.FrameFilters
     }
 
     public virtual void SetCancellationToken(CancellationToken cancellationToken) => CancellationToken = cancellationToken;
+
     protected abstract Task FlushAsync();
+
     protected abstract Task HandleInputDataAsync(TInput input);
 
     public virtual async Task AddInputAsync(TInput input)
@@ -31,7 +34,9 @@ namespace Oahu.Decrypt.FrameFilters
       filterLoop ??= Task.Run(Encoder, CancellationToken);
 
       if (CancellationToken.IsCancellationRequested)
+      {
         return;
+      }
 
       buffer[bufferPosition++] = input;
 
@@ -55,9 +60,12 @@ namespace Oahu.Decrypt.FrameFilters
           await foreach (var messages in filterChannel.Reader.ReadAllAsync(CancellationToken))
           {
             for (int i = 0; i < messages.NumEntries; i++)
+            {
               await HandleInputDataAsync(messages.Entries[i]);
+            }
           }
         }
+
         await FlushAsync();
       }
       catch (Exception ex)
@@ -74,16 +82,21 @@ namespace Oahu.Decrypt.FrameFilters
         await filterChannel.Writer.WriteAsync(new BufferEntry(bufferPosition, buffer), CancellationToken);
         filterChannel.Writer.Complete();
       }
-      catch (OperationCanceledException) { }
+      catch (OperationCanceledException)
+      {
+      }
 
       if (filterLoop is not null)
+      {
         await filterLoop;
+      }
     }
 
     public Task CompleteAsync() => CompleteInternalAsync();
 
     #region IDisposable
     protected bool Disposed { get; private set; }
+
     public void Dispose()
     {
       Dispose(disposing: true);
@@ -100,8 +113,11 @@ namespace Oahu.Decrypt.FrameFilters
       if (disposing && !Disposed)
       {
         if (filterLoop?.IsCompleted is false)
+        {
           filterChannel.Writer.TryComplete();
+        }
       }
+
       Disposed = true;
     }
     #endregion

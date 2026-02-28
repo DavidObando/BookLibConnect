@@ -10,7 +10,9 @@ public abstract class SampleEntry : Box
   public override long RenderSize => base.RenderSize + 8;
 
   private readonly byte[] Reserved;
+
   public ushort DataReferenceIndex { get; }
+
   public SampleEntry(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
   {
     Reserved = file.ReadBlock(6);

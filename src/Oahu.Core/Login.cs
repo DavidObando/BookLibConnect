@@ -12,14 +12,18 @@ namespace Oahu.Core
 {
   class AudibleLogin
   {
-
     public const string DEVICE_TYPE = "A2CZJZGLK2JJVM";
 
     public ERegion Region { get; private set; }
+
     public bool WithPreAmazonUsername { get; private set; }
+
     public string CodeVerifierB64 { get; private set; }
+
     public string CodeChallengeB64 { get; private set; }
+
     public string Serial { get; private set; }
+
     public string ClientId { get; private set; }
 
     public Uri BuildAuthUri(
@@ -33,7 +37,9 @@ namespace Oahu.Core
       WithPreAmazonUsername = withPreAmazonUsername;
 
       if (withPreAmazonUsername && !(new[] { ERegion.de, ERegion.uk, ERegion.us }.Contains(locale.CountryCode)))
+      {
         throw new ArgumentException("Login with username is only supported for DE, US and UK marketplaces!");
+      }
 
       Serial = buildDeviceSerial();
       ClientId = buildClientId(Serial);
@@ -57,7 +63,8 @@ namespace Oahu.Core
         page_id = "amzn_audible_ios";
       }
 
-      var oauthParams = new List<KeyValuePair<string, string>>() {
+      var oauthParams = new List<KeyValuePair<string, string>>()
+      {
         new("openid.oa2.response_type", "code"),
         new("openid.oa2.code_challenge_method", "S256"),
         new("openid.oa2.code_challenge", CodeChallengeB64),
@@ -85,13 +92,14 @@ namespace Oahu.Core
     {
       var authorization = Authorization.Create(uri);
       if (authorization is null)
+      {
         return null;
+      }
 
       authorization.CodeVerifier = CodeVerifierB64;
 
       return new Profile(Region, authorization, Serial, WithPreAmazonUsername);
     }
-
 
     // internal instead of private for testing only
     internal static string buildDeviceSerial()
@@ -111,7 +119,6 @@ namespace Oahu.Core
       return clientIdHex;
     }
 
-
     // internal instead of private for testing only
     internal static string createCodeVerifier()
     {
@@ -130,8 +137,5 @@ namespace Oahu.Core
       var hash = sha256.ComputeHash(tokenBytes);
       return hash.ToUrlBase64String();
     }
-
-
-
   }
 }

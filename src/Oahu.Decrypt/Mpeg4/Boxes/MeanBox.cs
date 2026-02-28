@@ -9,8 +9,11 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class MeanBox : FullBox
 {
   public override long RenderSize => base.RenderSize + Encoding.UTF8.GetByteCount(ReverseDnsDomain);
+
   public string ReverseDnsDomain { get; set; }
+
   private string DebuggerDisplay => $"domain: {ReverseDnsDomain}";
+
   public MeanBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     var stringSize = RemainingBoxLength(file);

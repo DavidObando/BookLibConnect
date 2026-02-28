@@ -23,6 +23,7 @@ namespace Oahu.Core.UI.Avalonia.Converters
           return null;
         }
       }
+
       return null;
     }
 

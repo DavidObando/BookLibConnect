@@ -18,16 +18,23 @@ namespace Oahu.Decrypt.Mpeg4
     }
 
     public override bool CanRead => false;
+
     public override bool CanSeek => BaseStream.CanSeek;
+
     public override long Length => WritePosition;
+
     public override bool CanWrite => BaseStream.CanWrite;
+
     public override long Position
     {
       get => CanSeek ? BaseStream.Position : WritePosition;
       set
       {
         if (!CanSeek)
+        {
           throw new NotSupportedException();
+        }
+
         BaseStream.Position = value;
       }
     }
@@ -56,7 +63,9 @@ namespace Oahu.Decrypt.Mpeg4
     protected override void Dispose(bool disposing)
     {
       if (disposing)
+      {
         BaseStream.Dispose();
+      }
 
       base.Dispose(disposing);
     }

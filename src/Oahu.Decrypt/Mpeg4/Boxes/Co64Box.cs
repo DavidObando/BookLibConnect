@@ -7,7 +7,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 internal class Co64Box : FullBox, IChunkOffsets
 {
   public override long RenderSize => base.RenderSize + 4 + ChunkOffsets.Count * 8;
+
   public uint EntryCount => (uint)ChunkOffsets.Count;
+
   public ChunkOffsetList ChunkOffsets { get; }
 
   internal static Co64Box CreateBlank(IBox parent, ChunkOffsetList chunkOffsets)
@@ -30,9 +32,13 @@ internal class Co64Box : FullBox, IChunkOffsets
   {
     uint entryCount = file.ReadUInt32BE();
     if (entryCount > int.MaxValue)
+    {
       throw new NotSupportedException($"Oahu.Decrypt.Mpeg4 does not support MPEG-4 files with more than {int.MaxValue} chunk offsets");
+    }
+
     ChunkOffsets = ChunkOffsetList.Read64(file, entryCount);
   }
+
   protected override void Render(Stream file)
   {
     base.Render(file);
@@ -43,7 +49,10 @@ internal class Co64Box : FullBox, IChunkOffsets
   protected override void Dispose(bool disposing)
   {
     if (disposing && !Disposed)
+    {
       ChunkOffsets.Clear();
+    }
+
     base.Dispose(disposing);
   }
 }

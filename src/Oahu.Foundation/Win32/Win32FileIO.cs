@@ -102,6 +102,7 @@ namespace Oahu.Aux.Win32
     {
       // This method should be called to clean everything up.
       Dispose(true);
+
       // Tell the GC not to finalize since clean up has already been done.
       GC.SuppressFinalize(this);
     }
@@ -123,6 +124,7 @@ namespace Oahu.Aux.Win32
       UnpinBuffer();
       gchBuf = GCHandle.Alloc(Buffer, GCHandleType.Pinned);
       IntPtr pAddr = Marshal.UnsafeAddrOfPinnedArrayElement(Buffer, 0);
+
       // pBuffer is the pointer used for all of the I/O functions in this class.
       pBuffer = (void*)pAddr.ToPointer();
     }
@@ -133,7 +135,9 @@ namespace Oahu.Aux.Win32
       // when disposing of this object.  It does not need to be called directly since the code in Dispose
       // or PinBuffer will automatically call this function.
       if (gchBuf.IsAllocated)
+      {
         gchBuf.Free();
+      }
     }
 
     public void OpenForReading(string FileName)
@@ -179,6 +183,7 @@ namespace Oahu.Aux.Win32
           WE.Message);
         throw AE;
       }
+
       return BytesRead;
     }
 
@@ -190,6 +195,7 @@ namespace Oahu.Aux.Win32
       // use the ReadBlocks function below.
       int BytesReadInBlock = 0, BytesRead = 0;
       byte* pBuf = (byte*)pBuffer;
+
       // Do until there are no more bytes to read or the buffer is full.
       for (;;)
       {
@@ -202,11 +208,16 @@ namespace Oahu.Aux.Win32
             + WE.Message);
           throw AE;
         }
+
         if (BytesReadInBlock == 0)
+        {
           break;
+        }
+
         BytesRead += BytesReadInBlock;
         pBuf += BytesReadInBlock;
       }
+
       return BytesRead;
     }
 
@@ -215,6 +226,7 @@ namespace Oahu.Aux.Win32
       // This function reads a total of BytesToRead at a time.  There is a limit of 2gb per call.
       int BytesReadInBlock = 0, BytesRead = 0, BlockByteSize;
       byte* pBuf = (byte*)pBuffer;
+
       // Do until there are no more bytes to read or the buffer is full.
       do
       {
@@ -226,11 +238,16 @@ namespace Oahu.Aux.Win32
             + WE.Message);
           throw AE;
         }
+
         if (BytesReadInBlock == 0)
+        {
           break;
+        }
+
         BytesRead += BytesReadInBlock;
         pBuf += BytesReadInBlock;
-      } while (BytesRead < BytesToRead);
+      }
+      while (BytesRead < BytesToRead);
       return BytesRead;
     }
 
@@ -245,6 +262,7 @@ namespace Oahu.Aux.Win32
           WE.Message);
         throw AE;
       }
+
       return NumberOfBytesWritten;
     }
 
@@ -255,6 +273,7 @@ namespace Oahu.Aux.Win32
       int BytesWritten = 0, BytesToWrite, RemainingBytes, BytesOutput = 0;
       byte* pBuf = (byte*)pBuffer;
       RemainingBytes = NumBytesToWrite;
+
       // Do until there are no more bytes to write.
       do
       {
@@ -268,10 +287,12 @@ namespace Oahu.Aux.Win32
             + WE.Message);
           throw AE;
         }
+
         pBuf += BytesToWrite;
         BytesOutput += BytesToWrite;
         RemainingBytes -= BytesToWrite;
-      } while (RemainingBytes > 0);
+      }
+      while (RemainingBytes > 0);
       return BytesOutput;
     }
 
@@ -283,6 +304,7 @@ namespace Oahu.Aux.Win32
         handle.Close();
         return true;
       }
+
       return false;
     }
   }

@@ -22,7 +22,9 @@ namespace Oahu.Core.UI.Avalonia.Views
       base.OnLoaded(e);
 
       if (booksGrid is null)
+      {
         return;
+      }
 
       if (!_sortingSubscribed)
       {
@@ -57,16 +59,25 @@ namespace Oahu.Core.UI.Avalonia.Views
     private void OnBooksGridSorting(object sender, DataGridColumnEventArgs args)
     {
       if (_restoringSortState)
+      {
         return;
+      }
+
       if (DataContext is not BookLibraryViewModel vm || args.Column is null)
+      {
         return;
+      }
 
       int colIdx = booksGrid.Columns.IndexOf(args.Column);
       ListSortDirection next;
       if (vm.SortColumnIndex == colIdx && vm.SortDirection == ListSortDirection.Ascending)
+      {
         next = ListSortDirection.Descending;
+      }
       else
+      {
         next = ListSortDirection.Ascending;
+      }
 
       vm.SortColumnIndex = colIdx;
       vm.SortDirection = next;
@@ -75,18 +86,28 @@ namespace Oahu.Core.UI.Avalonia.Views
     private void restoreSortState()
     {
       if (DataContext is not BookLibraryViewModel vm)
+      {
         return;
+      }
+
       if (vm.SortColumnIndex is null || vm.SortDirection is null)
+      {
         return;
+      }
+
       int idx = vm.SortColumnIndex.Value;
       if (idx < 0 || idx >= booksGrid.Columns.Count)
+      {
         return;
+      }
 
       var col = booksGrid.Columns[idx];
 
       // Clear any existing sort indicators
       foreach (var c in booksGrid.Columns)
+      {
         c.ClearSort();
+      }
 
       _restoringSortState = true;
       try
@@ -102,13 +123,18 @@ namespace Oahu.Core.UI.Avalonia.Views
     private void restoreSelectedBook()
     {
       if (DataContext is not BookLibraryViewModel vm)
+      {
         return;
+      }
+
       var selected = !string.IsNullOrWhiteSpace(vm.SelectedBookAsin)
         ? vm.Books.FirstOrDefault(b => b.Asin == vm.SelectedBookAsin)
         : vm.SelectedBook;
 
       if (selected is null)
+      {
         return;
+      }
 
       vm.SelectedBook = selected;
       booksGrid.SelectedItem = selected;

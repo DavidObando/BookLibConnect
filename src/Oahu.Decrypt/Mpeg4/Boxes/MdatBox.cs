@@ -8,7 +8,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
 {
   public class MdatBox : Box
   {
-    public MdatBox(BoxHeader header) : base(header, null) { }
+    public MdatBox(BoxHeader header) : base(header, null)
+    {
+    }
 
     /// <summary>
     /// Shifts the position of the mdat atom in the stream. When Completed, <see cref="Stream.Position"/> is at the end of the mdat atom.

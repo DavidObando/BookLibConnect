@@ -13,10 +13,15 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
     }
 
     public MvhdBox Mvhd => GetChildOrThrow<MvhdBox>();
+
     public TrakBox AudioTrack => Tracks.Where(t => t.GetChild<MdiaBox>()?.GetChild<HdlrBox>()?.HandlerType == "soun").First();
+
     public TrakBox? VideoTrack => Tracks.Where(t => t.GetChild<MdiaBox>()?.GetChild<HdlrBox>()?.HandlerType == "vide").FirstOrDefault();
+
     public TrakBox? TextTrack => Tracks.Where(t => t.GetChild<MdiaBox>()?.GetChild<HdlrBox>()?.HandlerType == "text").FirstOrDefault();
+
     public AppleListBox? ILst => GetChild<UdtaBox>()?.GetChild<MetaBox>()?.GetChild<AppleListBox>();
+
     public IEnumerable<TrakBox> Tracks => GetChildren<TrakBox>();
 
     /// <summary>
@@ -111,12 +116,18 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
         if (AudioTrack.GetChild<TrefBox>() is TrefBox tref)
         {
           if (tref.References.FirstOrDefault(r => r.Header.Type == "chap") is ITrackReferenceTypeBox referenceType)
+          {
             referenceType.TrackIds = references;
+          }
           else
+          {
             tref.AddReference("chap", references);
+          }
         }
         else
+        {
           TrefBox.CreatEmpty(AudioTrack).AddReference("chap", references);
+        }
 
         textTrack.Tkhd.CreationTime = textTrack.Tkhd.ModificationTime = textTrack.Mdia.Mdhd.CreationTime = textTrack.Mdia.Mdhd.ModificationTime = DateTimeOffset.UtcNow;
         textTrack.Mdia.Mdhd.Timescale = AudioTrack.Mdia.Mdhd.Timescale;

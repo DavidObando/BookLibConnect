@@ -7,10 +7,8 @@ namespace Oahu.Aux
 {
   // https://tomrucki.com/posts/aes-encryption-in-csharp/
   // possibly way over the top for some applications.
-
   public static class SymmetricEncryptor
   {
-
     private const int AES_BLOCK_BYTE_SIZE = 128 / 8;
 
     private const int PASSWORD_SALT_BYTE_SIZE = 128 / 8;

@@ -8,9 +8,13 @@ public class MdiaBox : Box
   {
     LoadChildren(file);
   }
+
   public MdhdBox Mdhd => GetChildOrThrow<MdhdBox>();
+
   public HdlrBox Hdlr => GetChildOrThrow<HdlrBox>();
+
   public MinfBox Minf => GetChildOrThrow<MinfBox>();
+
   protected override void Render(Stream file)
   {
     return;

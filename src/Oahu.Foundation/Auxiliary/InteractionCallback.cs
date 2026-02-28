@@ -4,8 +4,6 @@ using System.Threading;
 
 namespace Oahu.Aux
 {
-
-
   /// <summary>
   /// Provides an IInteractCallback{T, TResult} that invokes callbacks for interaction on the captured SynchronizationContext.
   /// </summary>
@@ -21,10 +19,12 @@ namespace Oahu.Aux
       _synchronizationContext = SynchronizationContext.Current ?? DefaultContext;
       Contract.Assert(_synchronizationContext != null);
       if (handler is null)
+      {
         throw new ArgumentNullException(nameof(handler));
+      }
+
       _handler = handler;
     }
-
 
     protected virtual TResult onInteract(T value)
     {
@@ -39,12 +39,11 @@ namespace Oahu.Aux
           retval = _handler(value);
         }),
         null);
-
       }
+
       return retval;
     }
 
     TResult IInteractionCallback<T, TResult>.Interact(T value) => onInteract(value);
-
   }
 }

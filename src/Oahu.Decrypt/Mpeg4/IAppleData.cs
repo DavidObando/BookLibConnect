@@ -6,7 +6,9 @@ namespace Oahu.Decrypt.Mpeg4;
 public interface IAppleData<TData> where TData : IAppleData<TData>
 {
   public static abstract int SizeInBytes { get; }
+
   public static abstract TData Create(ReadOnlySpan<byte> source);
+
   public void Write(Span<byte> destination);
 }
 
@@ -40,6 +42,7 @@ public record TrackNumber(ushort Track, ushort TotalTracks) : IAppleData<TrackNu
 public record DiskNumber(ushort Disk, ushort TotalDisks) : IAppleData<DiskNumber>
 {
   public static int SizeInBytes => 6;
+
   public static DiskNumber Create(ReadOnlySpan<byte> source)
   {
     ArgumentOutOfRangeException.ThrowIfLessThan(source.Length, SizeInBytes, nameof(source));

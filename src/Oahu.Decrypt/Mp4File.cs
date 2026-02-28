@@ -55,10 +55,14 @@ namespace Oahu.Decrypt
           };
     }
 
-    public Mp4File(Stream file) : this(file, file.Length) { }
+    public Mp4File(Stream file) : this(file, file.Length)
+    {
+    }
 
     public Mp4File(string fileName, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
-        : this(File.Open(fileName, FileMode.Open, access, share)) { }
+        : this(File.Open(fileName, FileMode.Open, access, share))
+    {
+    }
 
     public virtual FrameTransformBase<FrameEntry, FrameEntry> GetAudioFrameFilter()
         => new AacValidateFilter();
@@ -96,7 +100,10 @@ namespace Oahu.Decrypt
       if (userChapters is not null)
       {
         if (Moov.TextTrack is null)
+        {
           Moov.CreateEmptyTextTrack();
+        }
+
         chapterQueue.AddRange(userChapters);
       }
 
@@ -150,7 +157,9 @@ namespace Oahu.Decrypt
     public Mp4Operation<ChapterInfo?> GetChapterInfoAsync()
     {
       if (Moov.TextTrack is not TrakBox textTrack)
+      {
         return Mp4Operation<ChapterInfo?>.FromCompleted(this, null);
+      }
 
       ChapterFilter chapterFilter = new();
 
@@ -162,7 +171,9 @@ namespace Oahu.Decrypt
         ChapterInfo chapters = new();
 
         while (chapterQueue.TryGetNextChapter(out var ch))
+        {
           chapters.AddChapter(ch.Title, TimeSpan.FromSeconds(ch.SamplesInFrame / (double)SampleRate));
+        }
 
         chapterFilter.Dispose();
 
@@ -177,6 +188,7 @@ namespace Oahu.Decrypt
         => new ChunkReader(inputStream, startTime, endTime);
 
     private static TimeSpan Min(TimeSpan t1, TimeSpan t2) => t1 > t2 ? t2 : t1;
+
     public virtual Mp4Operation ProcessAudio(TimeSpan startTime, TimeSpan endTime, Action<Task> continuation, params (TrakBox track, FrameFilterBase<FrameEntry> filter)[] filters)
     {
       IChunkReader reader = CreateChunkReader(InputStream, startTime, Min(Duration, endTime));

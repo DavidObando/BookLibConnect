@@ -12,14 +12,19 @@ namespace Oahu.Core
   public record Callbacks
   {
     public Func<byte[], string> CaptchaCallback { get; init; }
+
     public Action ApprovalCallback { get; init; }
+
     public Func<string> MfaCallback { get; init; }
+
     public Func<string> CvfCallback { get; init; }
 
     public Func<Uri, Uri> ExternalLoginCallback { get; init; }
+
     public Func<IProfileKeyEx, bool> DeregisterDeviceConfirmCallback { get; init; }
+
     public Func<AccountAliasContext, bool> GetAccountAliasFunc { get; init; }
-  };
+  }
 
   public record Credentials(string Username, string Password);
 
@@ -36,6 +41,7 @@ namespace Oahu.Core
     public override string ToString() =>
       $"{GetType().Name} {nameof(Id)}={Id}, {nameof(Region)}={Region}, {nameof(AccountId)}=#<{AccountId.Checksum32()}>";
   }
+
   public record ProfileKeyEx(uint Id, ERegion Region, string AccountName, string AccountId, string DeviceName) :
     ProfileKey(Id, Region, AccountId), IProfileKeyEx
   {
@@ -73,5 +79,4 @@ namespace Oahu.Core
     List<Codec> Codecs);
 
   record ConfigurationTokenResult(string Token, bool Weak);
-
 }

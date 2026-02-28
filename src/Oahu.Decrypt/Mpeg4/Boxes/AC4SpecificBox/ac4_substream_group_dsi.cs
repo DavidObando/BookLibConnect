@@ -18,6 +18,7 @@ public class ac4_substream_group_dsi
   public bool? b_language_indicator;
   public int? n_language_tag_bytes;
   public byte[]? language_tag_bytes;
+
   public ac4_substream_group_dsi(BitReader reader)
   {
     b_substreams_present = reader.ReadBool();
@@ -29,6 +30,7 @@ public class ac4_substream_group_dsi
     {
       substreams[i] = new ac4_substream(this, reader);
     }
+
     b_content_type = reader.ReadBool();
     if (b_content_type)
     {
@@ -39,7 +41,9 @@ public class ac4_substream_group_dsi
         n_language_tag_bytes = (byte)reader.Read(6);
         language_tag_bytes = new byte[n_language_tag_bytes.Value];
         for (int i = 0; i < language_tag_bytes.Length; i++)
+        {
           language_tag_bytes[i] = (byte)reader.Read(8);
+        }
       }
     }
   }

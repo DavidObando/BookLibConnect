@@ -7,15 +7,21 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public abstract class HeaderBox : FullBox
 {
   public override long RenderSize => base.RenderSize + 3 * (RequireVersionOne ? 8 : 4);
+
   public DateTimeOffset CreationTime { get; set; }
+
   public DateTimeOffset ModificationTime { get; set; }
+
   public ulong Duration { get; set; }
+
   private bool RequireVersionOne => Version == 1 || Duration > uint.MaxValue;
 
   private static readonly DateTimeOffset Datum = new DateTimeOffset(1904, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
   protected abstract void ReadBeforeDuration(Stream file);
+
   protected abstract void WriteBeforeDuration(Stream file);
+
   public HeaderBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     if (Version == 0)
@@ -33,6 +39,7 @@ public abstract class HeaderBox : FullBox
       Duration = file.ReadUInt64BE();
     }
   }
+
   protected override void Render(Stream file)
   {
     if (RequireVersionOne)

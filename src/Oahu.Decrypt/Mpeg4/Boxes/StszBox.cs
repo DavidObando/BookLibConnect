@@ -15,12 +15,19 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class StszBox : FullBox, IStszBox
 {
   public override long RenderSize => base.RenderSize + 8 + SampleCount * sizeof(int);
+
   public int SampleSize { get; }
+
   private readonly int origSampleCount;
+
   public int SampleCount => sampleSizes_32?.Count ?? sampleSizes_16?.Count ?? origSampleCount;
+
   public int MaxSize => sampleSizes_32?.Max() ?? sampleSizes_16?.Max() ?? SampleSize;
+
   public long TotalSize => sampleSizes_32?.Sum(s => (long)s) ?? sampleSizes_16?.Sum(s => (long)s) ?? SampleSize * origSampleCount;
+
   public int GetSizeAtIndex(int index) => sampleSizes_32?[index] ?? sampleSizes_16?[index] ?? SampleSize;
+
   public long SumFirstNSizes(int firstN) => sampleSizes_32?.Take(firstN).Sum(s => (long)s) ?? sampleSizes_16?.Take(firstN).Sum(s => (long)s) ?? (long)SampleSize * firstN;
 
   private readonly List<int>? sampleSizes_32;
@@ -35,11 +42,15 @@ public class StszBox : FullBox, IStszBox
     // Technically we're losing half the capacity by using a List<T> with int.MaxValue capacity, but at
     // 1024 sample per frame and 44100 Hz, this still allows for > 577 days of audio.
     if (sampleCountU > int.MaxValue)
+    {
       throw new NotSupportedException($"Oahu.Decrypt.Mpeg4 does not support MPEG-4 files with more than {int.MaxValue} samples");
+    }
 
     origSampleCount = (int)sampleCountU;
     if (SampleSize > 0)
+    {
       return;
+    }
 
     sampleSizes_32 = new(origSampleCount);
     CollectionsMarshal.SetCount(sampleSizes_32, origSampleCount);
@@ -61,6 +72,7 @@ public class StszBox : FullBox, IStszBox
       {
         shortListSpan[i] = (ushort)intListSpan[i];
       }
+
       CollectionsMarshal.SetCount(sampleSizes_32, 0);
       sampleSizes_32 = null;
     }
@@ -113,6 +125,7 @@ public class StszBox : FullBox, IStszBox
       {
         BinaryPrimitives.ReverseEndianness(intSpan, intSpan);
       }
+
       file.Write(MemoryMarshal.AsBytes(intSpan));
     }
     else if (sampleSizes_16 is not null)

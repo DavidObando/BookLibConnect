@@ -30,8 +30,6 @@ namespace Oahu.Aux
       where TEnum : struct, Enum
       where TPunct : class, IChainPunctuation, new()
     {
-
-
       var punct = Singleton<TPunct>.Instance;
 
       string sval = value.ToString();
@@ -49,11 +47,17 @@ namespace Oahu.Aux
       if (noSubstitutes)
       {
         for (int i = 0; i < parts.Length; i++)
+        {
           parts[i] = punct.Prefix + rm.GetStringEx(parts[i]) + punct.Suffix;
+        }
+
         foreach (string s in parts)
         {
           if (sb.Length > 0)
+          {
             sb.Append(punct.Infix?[0]);
+          }
+
           sb.Append(s);
         }
       }
@@ -62,7 +66,9 @@ namespace Oahu.Aux
         for (int i = 0; i < parts.Length; i++)
         {
           if (parts[i].Length > 1)
+          {
             parts[i] = punct.Prefix + rm.GetStringEx(parts[i]) + punct.Suffix;
+          }
           else
           {
             byte x = Convert.ToByte(parts[i][0]);
@@ -76,11 +82,14 @@ namespace Oahu.Aux
             }
           }
         }
+
         foreach (string s in parts)
+        {
           sb.Append(s);
+        }
       }
+
       return sb.ToString();
     }
-
   }
 }

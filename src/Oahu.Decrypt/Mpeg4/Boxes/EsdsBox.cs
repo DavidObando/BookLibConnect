@@ -8,6 +8,7 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class EsdsBox : FullBox
 {
   public override long RenderSize => base.RenderSize + ES_Descriptor.RenderSize;
+
   public ES_Descriptor ES_Descriptor { get; }
 
   public EsdsBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)

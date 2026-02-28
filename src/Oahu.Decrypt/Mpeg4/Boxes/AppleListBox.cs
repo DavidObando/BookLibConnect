@@ -21,13 +21,17 @@ public class AppleListBox : Box
           : new AppleTagBox(file, tagBoxHeader, this);
 
       if (appleTag.Header.TotalBoxSize == 0)
+      {
         break;
+      }
 
       Children.Add(appleTag);
     }
   }
 
-  private AppleListBox(IBox parent) : base(new BoxHeader(8, "ilst"), parent) { }
+  private AppleListBox(IBox parent) : base(new BoxHeader(8, "ilst"), parent)
+  {
+  }
 
   public static AppleListBox CreateEmpty(IBox parent)
   {
@@ -37,11 +41,16 @@ public class AppleListBox : Box
   }
 
   public IEnumerable<string> TagNames => Tags.Select(t => t.Header.Type);
+
   public IEnumerable<string> FreeformTagNames => FreeformTags.Select(t => t.TagName);
+
   public IEnumerable<AppleTagBox> Tags => GetChildren<AppleTagBox>();
+
   public IEnumerable<FreeformTagBox> FreeformTags => GetChildren<FreeformTagBox>();
 
-  protected override void Render(Stream file) { }
+  protected override void Render(Stream file)
+  {
+  }
 
   public void AddTag(string name, string data)
   {
@@ -79,6 +88,7 @@ public class AppleListBox : Box
       t.Dispose();
       return true;
     }
+
     return false;
   }
 

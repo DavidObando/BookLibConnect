@@ -27,17 +27,26 @@ namespace Oahu.Core.ex
     {
       Uri uri = request.RequestUri;
       if (!uri.IsAbsoluteUri && (baseUri?.IsAbsoluteUri ?? false))
+      {
         uri = new Uri(baseUri, request.RequestUri);
+      }
 
       Log(level, caller, () => $"{BEFORE}{request.Method}, {uri}", method);
 
       if (!requestHeaders.IsNullOrEmpty())
+      {
         Log(level, caller, () => $"{BEFORE}default {requestHeaders.HeadersToString()}", method);
+      }
+
       if (!request.Headers.IsNullOrEmpty())
+      {
         Log(level, caller, () => $"{BEFORE}{request.HeadersToString()}", method);
+      }
 
       if (cookieContainer is not null && cookieContainer.Count > 0 && baseUri is not null)
+      {
         Log(level, caller, () => $"{BEFORE}{cookieContainer?.CookiesToString(baseUri)}", method);
+      }
 
       if (Logging.Level >= level && request.Content is FormUrlEncodedContent)
       {
@@ -105,8 +114,9 @@ namespace Oahu.Core.ex
     {
       Uri uri = response?.RequestMessage?.RequestUri;
       if (uri is not null && !uri.IsAbsoluteUri && (baseUri?.IsAbsoluteUri ?? false))
+      {
         uri = new Uri(baseUri, uri);
-
+      }
 
       Log(level, caller, () => $"{AFTER}{response.RequestMessage.Method}, status={response.StatusCode},"
         + $" requestUri={uri}", method);
@@ -114,7 +124,9 @@ namespace Oahu.Core.ex
       Log(level, caller, () => $"{AFTER}{response.HeadersToString()}", method);
 
       if (cookieContainer is not null && cookieContainer.Count > 0 && baseUri is not null)
+      {
         Log(level, caller, () => $"{AFTER}{cookieContainer?.CookiesToString(baseUri)}", method);
+      }
 
       // if (Logging.Level >= level && response.IsSuccessStatusCode) {
       // anyway
@@ -126,10 +138,14 @@ namespace Oahu.Core.ex
           string result = await content.ReadAsStringAsync();
           string file = WriteHtml(result, credentials);
           if (file is not null)
+          {
             Log(level, caller, () =>
               $"{AFTER}response content written to \"{Path.GetFileName(file)}\"", method);
+          }
         }
-        catch (Exception) { }
+        catch (Exception)
+        {
+        }
       }
     }
 
@@ -182,6 +198,5 @@ namespace Oahu.Core.ex
       CookieContainer cookieContainer,
       CredentialsUrl credentials,
       [CallerMemberName] string method = null) => await response.LogAsync(level, caller.GetType(), cookieContainer, new Uri(credentials.BaseUriString), credentials, method);
-
   }
 }

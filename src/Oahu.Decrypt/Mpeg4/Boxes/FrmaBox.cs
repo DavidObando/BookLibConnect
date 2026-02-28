@@ -6,7 +6,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class FrmaBox : Box
 {
   public override long RenderSize => base.RenderSize + 4;
+
   public string DataFormat { get; }
+
   public FrmaBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
   {
     DataFormat = file.ReadType();

@@ -27,7 +27,10 @@ public static class ExpandableClass
   {
     int r = 0;
     while ((sizeOfInstance >>= 1) != 0)
+    {
       r++;
+    }
+
     return Math.Max(minimumBytes, r / 7 + 1);
   }
 
@@ -38,7 +41,8 @@ public static class ExpandableClass
     {
       b = file.ReadByte();
       sizeOfInstance = (sizeOfInstance << 7) | (b & 0x7f);
-    } while ((b & 0x80) != 0);
+    }
+    while ((b & 0x80) != 0);
 
     return sizeOfInstance;
   }

@@ -15,7 +15,6 @@ namespace Oahu.Aux
         CreateNoWindow = true,
         FileName = url,
       });
-
     }
   }
 }

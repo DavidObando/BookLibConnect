@@ -13,25 +13,39 @@ namespace Oahu.Decrypt.Mpeg4;
 public class Mpeg4File : IDisposable
 {
   public ChapterInfo? Chapters { get; set; }
+
   public Stream InputStream { get; }
+
   public FtypBox Ftyp { get; set; }
+
   public MoovBox Moov { get; }
+
   public MdatBox Mdat { get; }
+
   public MetadataItems MetadataItems => lazyMetadataItems.Value;
 
   private readonly Lazy<MetadataItems> lazyMetadataItems;
+
   public virtual TimeSpan Duration => TimeSpan.FromSeconds((double)Moov.AudioTrack.Mdia.Mdhd.Duration / TimeScale);
+
   public int MaxBitrate => (int)(AudioSampleEntry.Esds?.ES_Descriptor.DecoderConfig.MaxBitrate ?? 0);
+
   public AudioSampleEntry AudioSampleEntry { get; }
+
   public List<IBox> TopLevelBoxes { get; }
 
   private int m_Disposed;
+
   protected bool Disposed => m_Disposed != 0;
 
-  public Mpeg4File(Stream file) : this(file, file.Length) { }
+  public Mpeg4File(Stream file) : this(file, file.Length)
+  {
+  }
 
   public Mpeg4File(string fileName, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
-      : this(File.Open(fileName, FileMode.Open, access, share)) { }
+      : this(File.Open(fileName, FileMode.Open, access, share))
+  {
+  }
 
   public Mpeg4File(Stream file, long fileSize)
   {
@@ -78,11 +92,15 @@ public class Mpeg4File : IDisposable
   public async Task SaveAsync(bool keepMoovInFront = true, ProgressTracker? progressTracker = null, CancellationToken cancellationToken = default)
   {
     if (!InputStream.CanRead || !InputStream.CanWrite || !InputStream.CanSeek)
+    {
       throw new InvalidOperationException($"{nameof(InputStream)} must be readable, writable and seekable to save");
+    }
 
     // Remove Free boxes and work with net size change
     foreach (var box in Moov.GetFreeBoxes())
+    {
       box.Parent?.Children.Remove(box);
+    }
 
     InputStream.Position = 0;
     bool moovInFront = Moov.Header.FilePosition < Mdat.Header.FilePosition;
@@ -195,7 +213,9 @@ public class Mpeg4File : IDisposable
     List<IBox> boxes;
 
     using (FileStream fileStream = File.OpenRead(mp4FilePath))
+    {
       boxes = Mpeg4Util.LoadTopLevelBoxes(fileStream);
+    }
 
     try
     {
@@ -228,7 +248,9 @@ public class Mpeg4File : IDisposable
     finally
     {
       foreach (IBox box in boxes)
+      {
         box.Dispose();
+      }
     }
   }
 
@@ -248,15 +270,24 @@ public class Mpeg4File : IDisposable
         ?.Select(b => b.Data.ReadAsString())
         ?.ToList();
 
-    if (chapterNames is null) return null;
+    if (chapterNames is null)
+    {
+      return null;
+    }
 
     List<SttsBox.SampleEntry> sampleTimes = textTrak!.Mdia.Minf.Stbl.Stts.Samples;
 
-    if (sampleTimes.Count != chapterNames.Count) return null;
+    if (sampleTimes.Count != chapterNames.Count)
+    {
+      return null;
+    }
 
     var cEntryList = new ChunkEntryList(textTrak).OrderBy(s => s.ChunkOffset).ToList();
 
-    if (cEntryList.Count != chapterNames.Count) return null;
+    if (cEntryList.Count != chapterNames.Count)
+    {
+      return null;
+    }
 
     ChapterInfo chapterInfo = new();
 
@@ -293,7 +324,9 @@ public class Mpeg4File : IDisposable
     {
       InputStream.Dispose();
       foreach (var box in TopLevelBoxes)
+      {
         box.Dispose();
+      }
     }
   }
 }

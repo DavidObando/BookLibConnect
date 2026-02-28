@@ -8,11 +8,15 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors
   public class ES_Descriptor : BaseDescriptor
   {
     public ushort ES_ID { get; }
+
     private readonly byte EsFlags;
 
     private int StreamDependenceFlag => EsFlags >> 7;
+
     private int URL_Flag => (EsFlags >> 6) & 1;
+
     private int OCRstreamFlag => (EsFlags >> 5) & 1;
+
     public int StreamPriority => EsFlags & 31;
 
     private readonly ushort DependsOn_ES_ID;
@@ -33,15 +37,18 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors
       {
         DependsOn_ES_ID = file.ReadUInt16BE();
       }
+
       if (URL_Flag == 1)
       {
         URLlength = (byte)file.ReadByte();
         URLstring = file.ReadBlock(URLlength);
       }
+
       if (OCRstreamFlag == 1)
       {
         OCR_ES_Id = file.ReadUInt16BE();
       }
+
       // Currently only supported child is DecoderConfigDescriptor.
       // Any additional children will be loaded as UnknownDescriptor
       LoadChildren(file);
@@ -67,13 +74,19 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors
     {
       int length = 3;
       if (StreamDependenceFlag == 1)
+      {
         length += 2;
+      }
+
       if (URL_Flag == 1)
       {
         length += 1 + URLlength;
       }
+
       if (OCRstreamFlag == 1)
+      {
         length += 2;
+      }
 
       return length;
     }
@@ -86,11 +99,13 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors
       {
         file.WriteUInt16BE(DependsOn_ES_ID);
       }
+
       if (URL_Flag == 1)
       {
         file.WriteByte(URLlength);
         file.Write(URLstring);
       }
+
       if (OCRstreamFlag == 1)
       {
         file.WriteUInt16BE(OCR_ES_Id);

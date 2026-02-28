@@ -11,13 +11,16 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public readonly record struct ChunkFrames
 {
   public uint FirstFrameIndex { get; internal init; }
+
   public uint NumberOfFrames { get; internal init; }
 }
 
 public class StscBox : FullBox
 {
   public override long RenderSize => base.RenderSize + 4 + EntryCount * 3 * 4;
+
   public int EntryCount => Samples.Count;
+
   public List<StscChunkEntry> Samples { get; }
 
   public static StscBox CreateBlank(IBox parent)
@@ -75,7 +78,9 @@ public class StscBox : FullBox
     for (uint chunk = 1; chunk <= numChunks; chunk++)
     {
       if (lastStscIndex + 1 < Samples.Count && chunk == Samples[lastStscIndex + 1].FirstChunk)
+      {
         lastStscIndex++;
+      }
 
       table[chunk - 1] = new() { FirstFrameIndex = firstFrameIndex, NumberOfFrames = Samples[lastStscIndex].SamplesPerChunk };
       firstFrameIndex += Samples[lastStscIndex].SamplesPerChunk;
@@ -99,7 +104,10 @@ public class StscBox : FullBox
   protected override void Dispose(bool disposing)
   {
     if (disposing && !Disposed)
+    {
       Samples.Clear();
+    }
+
     base.Dispose(disposing);
   }
 
@@ -112,8 +120,11 @@ public class StscBox : FullBox
       SamplesPerChunk = samplesPerChunk;
       SampleDescriptionIndex = sampleDesIndex;
     }
+
     public uint FirstChunk { get; }
+
     public uint SamplesPerChunk { get; }
+
     public uint SampleDescriptionIndex { get; }
   }
 }

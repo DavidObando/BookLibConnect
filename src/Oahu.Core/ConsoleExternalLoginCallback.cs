@@ -7,7 +7,6 @@ namespace Oahu.Core
   {
     public static Uri Callback(Uri uri)
     {
-
       ShellExecute.Url(uri);
 
       Console.WriteLine("Paste final URL from browser:");
@@ -20,19 +19,20 @@ namespace Oahu.Core
           Console.WriteLine("Invalid URL. Try again:");
           continue;
         }
+
         Authorization auth = Authorization.Create(finalUri);
         if (auth is null)
         {
           Console.WriteLine("URL does not contain authorization. Try again:");
           continue;
         }
+
         // TokenBearer token = TokenBearer.Create (finalUri);
         // if (token is null) {
         //  Console.WriteLine ("URL does not contain token. Try again:");
         //  continue;
         // }
         return finalUri;
-
       }
     }
   }

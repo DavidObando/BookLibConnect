@@ -34,7 +34,9 @@ namespace Oahu.Aux
     public Crc32(UInt32 polynomial, UInt32 seed)
     {
       if (!BitConverter.IsLittleEndian)
+      {
         throw new PlatformNotSupportedException("Not supported on Big Endian processors");
+      }
 
       table = InitializeTable(polynomial);
       this.seed = hash = seed;
@@ -57,7 +59,10 @@ namespace Oahu.Aux
       return hashBuffer;
     }
 
-    public override int HashSize { get { return 32; } }
+    public override int HashSize
+    {
+      get { return 32; }
+    }
 
     public static UInt32 Compute(byte[] buffer)
     {
@@ -77,22 +82,33 @@ namespace Oahu.Aux
     static UInt32[] InitializeTable(UInt32 polynomial)
     {
       if (polynomial == DefaultPolynomial && defaultTable != null)
+      {
         return defaultTable;
+      }
 
       var createTable = new UInt32[256];
       for (var i = 0; i < 256; i++)
       {
         var entry = (UInt32)i;
         for (var j = 0; j < 8; j++)
+        {
           if ((entry & 1) == 1)
+          {
             entry = (entry >> 1) ^ polynomial;
+          }
           else
+          {
             entry >>= 1;
+          }
+        }
+
         createTable[i] = entry;
       }
 
       if (polynomial == DefaultPolynomial)
+      {
         defaultTable = createTable;
+      }
 
       return createTable;
     }
@@ -101,7 +117,10 @@ namespace Oahu.Aux
     {
       var hash = seed;
       for (var i = start; i < start + size; i++)
+      {
         hash = (hash >> 8) ^ table[buffer[i] ^ hash & 0xff];
+      }
+
       return hash;
     }
 
@@ -110,7 +129,9 @@ namespace Oahu.Aux
       var result = BitConverter.GetBytes(uint32);
 
       if (BitConverter.IsLittleEndian)
+      {
         Array.Reverse(result);
+      }
 
       return result;
     }
@@ -140,7 +161,9 @@ namespace Oahu.Aux
     public Crc64(UInt64 polynomial, UInt64 seed)
     {
       if (!BitConverter.IsLittleEndian)
+      {
         throw new PlatformNotSupportedException("Not supported on Big Endian processors");
+      }
 
       table = InitializeTable(polynomial);
       this.seed = hash = seed;
@@ -163,16 +186,22 @@ namespace Oahu.Aux
       return hashBuffer;
     }
 
-    public override int HashSize { get { return 64; } }
+    public override int HashSize
+    {
+      get { return 64; }
+    }
 
     protected static UInt64 CalculateHash(UInt64 seed, UInt64[] table, IList<byte> buffer, int start, int size)
     {
       var hash = seed;
       for (var i = start; i < start + size; i++)
+      {
         unchecked
         {
           hash = (hash >> 8) ^ table[(buffer[i] ^ hash) & 0xff];
         }
+      }
+
       return hash;
     }
 
@@ -181,7 +210,9 @@ namespace Oahu.Aux
       var result = BitConverter.GetBytes(value);
 
       if (BitConverter.IsLittleEndian)
+      {
         Array.Reverse(result);
+      }
 
       return result;
     }
@@ -189,12 +220,16 @@ namespace Oahu.Aux
     static UInt64[] InitializeTable(UInt64 polynomial)
     {
       if (polynomial == Crc64Iso.Iso3309Polynomial && Crc64Iso.Table != null)
+      {
         return Crc64Iso.Table;
+      }
 
       var createTable = CreateTable(polynomial);
 
       if (polynomial == Crc64Iso.Iso3309Polynomial)
+      {
         Crc64Iso.Table = createTable;
+      }
 
       return createTable;
     }
@@ -206,12 +241,20 @@ namespace Oahu.Aux
       {
         var entry = (UInt64)i;
         for (var j = 0; j < 8; ++j)
+        {
           if ((entry & 1) == 1)
+          {
             entry = (entry >> 1) ^ polynomial;
+          }
           else
+          {
             entry >>= 1;
+          }
+        }
+
         createTable[i] = entry;
       }
+
       return createTable;
     }
   }
@@ -240,7 +283,9 @@ namespace Oahu.Aux
     public static UInt64 Compute(UInt64 seed, byte[] buffer)
     {
       if (Table == null)
+      {
         Table = CreateTable(Iso3309Polynomial);
+      }
 
       return CalculateHash(seed, Table, buffer, 0, buffer.Length);
     }
@@ -258,6 +303,5 @@ namespace Oahu.Aux
       public static uint Checksum32(this string text) =>
         text.GetBytes().Checksum32();
     }
-
   }
 }

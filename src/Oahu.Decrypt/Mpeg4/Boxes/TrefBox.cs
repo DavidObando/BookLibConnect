@@ -14,12 +14,16 @@ public interface ITrackReferenceTypeBox : IBox
 public class TrefBox : Box
 {
   public override long RenderSize => base.RenderSize + References.Sum(r => r.RenderSize);
+
   public List<ITrackReferenceTypeBox> References { get; }
+
   public TrefBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
   {
     References = new();
     while (RemainingBoxLength(file) > 0)
+    {
       References.Add(new TrackReferenceTypeBox(file, this));
+    }
   }
 
   private TrefBox(IBox parent) : base(new BoxHeader(8, "tref"), parent)
@@ -43,13 +47,16 @@ public class TrefBox : Box
   protected override void Render(Stream file)
   {
     foreach (var box in References)
+    {
       box.Save(file);
+    }
   }
 
   [DebuggerDisplay("{Header.Type,nq}, {TrackIds}")]
   private class TrackReferenceTypeBox : Box, ITrackReferenceTypeBox
   {
     public override long RenderSize => base.RenderSize + sizeof(int) * TrackIds.Count;
+
     public HashSet<uint> TrackIds { get; set; }
 
     public TrackReferenceTypeBox(Stream file, IBox? parent)
@@ -58,7 +65,9 @@ public class TrefBox : Box
       var numTraks = (int)RemainingBoxLength(file) / sizeof(int);
       TrackIds = new(numTraks);
       for (int i = 0; i < numTraks; i++)
+      {
         TrackIds.Add(file.ReadUInt32BE());
+      }
     }
 
     public TrackReferenceTypeBox(string type, HashSet<uint> trackIds, IBox parent)
@@ -70,7 +79,9 @@ public class TrefBox : Box
     protected override void Render(Stream file)
     {
       foreach (var id in TrackIds)
+      {
         file.WriteUInt32BE(id);
+      }
     }
   }
 }

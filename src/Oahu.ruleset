@@ -58,22 +58,6 @@
     <Rule Id="SA1413" Action="None" /> <!-- Use trailing comma in multi-line initializers -->
     <Rule Id="SA1414" Action="None" /> <!-- Tuple types in signatures should have element names -->
 
-    <!-- Layout Rules -->
-    <Rule Id="SA1500" Action="None" /> <!-- Braces for multi-line statements should not share line -->
-    <Rule Id="SA1501" Action="None" /> <!-- Statement should not be on a single line -->
-    <Rule Id="SA1502" Action="None" /> <!-- Element should not be on a single line -->
-    <Rule Id="SA1503" Action="None" /> <!-- Braces should not be omitted -->
-    <Rule Id="SA1505" Action="None" /> <!-- Opening brace should not be followed by a blank line -->
-    <Rule Id="SA1507" Action="None" /> <!-- Code should not contain multiple blank lines in a row -->
-    <Rule Id="SA1508" Action="None" /> <!-- Closing brace should not be preceded by a blank line -->
-    <Rule Id="SA1510" Action="None" /> <!-- Chained statement blocks should not be preceded by blank line -->
-    <Rule Id="SA1512" Action="None" /> <!-- Single-line comments should not be followed by blank line -->
-    <Rule Id="SA1513" Action="None" /> <!-- Closing brace should be followed by blank line -->
-    <Rule Id="SA1515" Action="None" /> <!-- Single-line comment should be preceded by blank line -->
-    <Rule Id="SA1516" Action="None" /> <!-- Elements should be separated by blank line -->
-    <Rule Id="SA1519" Action="None" /> <!-- Braces should not be omitted from multi-line child statement -->
-    <Rule Id="SA1520" Action="None" /> <!-- Use braces consistently -->
-
     <!-- Documentation Rules -->
     <Rule Id="SA1633" Action="None" /> <!-- File should have header -->
     <Rule Id="SA1649" Action="None" /> <!-- File name should match first type name -->

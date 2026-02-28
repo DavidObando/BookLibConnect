@@ -9,9 +9,13 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 public abstract class Frame
 {
   public Header Header { get; }
+
   protected Frame Parent { get; }
+
   public virtual int Size => Children.Sum(b => b.Size);
+
   public List<Frame> Children { get; } = new();
+
   public virtual ushort Version => Parent.Version;
 
   public Frame(Header header, Frame parent)
@@ -27,7 +31,9 @@ public abstract class Frame
     Render(file);
 
     foreach (var child in Children)
+    {
       child.Save(file, version);
+    }
   }
 
   public override string ToString() => Header.ToString();
@@ -43,6 +49,7 @@ public abstract class Frame
       origPosition += lengthRead;
       Children.Add(child);
     }
+
     Header.SeekForwardToPosition(file, endPosition);
   }
 
@@ -66,6 +73,7 @@ public abstract class Frame
         lst.AddRange(blob);
         file.ReadExactly(blob);
       }
+
       return Encoding.Unicode.GetString(lst.ToArray());
     }
     else
@@ -76,6 +84,7 @@ public abstract class Frame
         lst.Add(b);
         b = (byte)file.ReadByte();
       }
+
       return Encoding.ASCII.GetString(lst.ToArray());
     }
   }
@@ -89,13 +98,18 @@ public abstract class Frame
   /// </summary>
   public static int UnicodeLength(string str)
   {
-    if (str.Length == 0) return 4;
+    if (str.Length == 0)
+    {
+      return 4;
+    }
 
     int strLen = Encoding.Unicode.GetByteCount(str);
     var c0 = str[0];
 
     if (c0 != '\ufffe' && c0 != '\ufeff')
+    {
       strLen += 2;
+    }
 
     return strLen;
   }
@@ -106,7 +120,11 @@ public abstract class Frame
   public static byte[] UnicodeBytes(string str)
   {
     int strLen = str.Length;
-    if (strLen == 0) return Encoding.Unicode.GetPreamble();
+    if (strLen == 0)
+    {
+      return Encoding.Unicode.GetPreamble();
+    }
+
     var c0 = str[0];
 
     if (c0 == '\ufffe' || c0 == '\ufeff')

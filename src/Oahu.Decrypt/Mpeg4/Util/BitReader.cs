@@ -6,10 +6,12 @@ namespace Oahu.Decrypt.Mpeg4.Util;
 public class BitReader
 {
   private readonly byte[] bytes;
+
   public BitReader(byte[] data)
   {
     bytes = data;
   }
+
   private int byteIndex = 0;
   private int bitIndex = 0;
 
@@ -25,14 +27,18 @@ public class BitReader
       bitIndex = value % 8;
     }
   }
+
   public int Length => bytes.Length * 8;
 
   public bool ReadBool() => Read(1) != 0;
+
   public void ByteAlign()
   {
     var bitPad = Position % 8;
     if (bitPad != 0)
+    {
       Position += 8 - bitPad;
+    }
   }
 
   public uint Read(int numBits)
@@ -44,7 +50,9 @@ public class BitReader
     while (numBits > 0)
     {
       if (byteIndex >= bytes.Length)
+      {
         throw new InvalidOperationException("Not enough data to read the requested number of bits.");
+      }
 
       int bitsToRead = Math.Min(numBits, 8 - bitIndex);
       uint mask = (1u << bitsToRead) - 1;
@@ -58,6 +66,7 @@ public class BitReader
         bitIndex = 0;
       }
     }
+
     return value;
   }
 
@@ -69,6 +78,7 @@ public class BitReader
       var value = Read(toRead);
       writer.Write(value, toRead);
     }
+
     while (byteIndex < bytes.Length)
     {
       writer.Write(bytes[byteIndex++], 8);
@@ -80,7 +90,9 @@ public class BitWriter
 {
   private int byteIndex = 0;
   private int bitIndex = 0;
+
   public int Position => byteIndex * 8 + bitIndex;
+
   private byte[] bytes = [];
 
   public byte[] ToByteArray() => bytes.ToArray();
@@ -93,7 +105,9 @@ public class BitWriter
     while (numBits > 0)
     {
       if (bitIndex == 0)
+      {
         Array.Resize(ref bytes, byteIndex + 1);
+      }
 
       int bitsToWrite = Math.Min(numBits, 8 - bitIndex);
       value &= numBits == 32 ? uint.MaxValue : (1u << numBits) - 1;

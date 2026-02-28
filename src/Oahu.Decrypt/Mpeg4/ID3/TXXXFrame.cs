@@ -11,7 +11,9 @@ public class TXXXFrame : Frame
       : 1 + FieldName.Length + 1 + FieldValue.Length;
 
   public string FieldName { get; }
+
   public string FieldValue { get; }
+
   public TXXXFrame(Stream file, Header header, Frame parent) : base(header, parent)
   {
     var startPos = file.Position;

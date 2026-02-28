@@ -25,7 +25,9 @@ namespace Oahu.Core
     private readonly Semaphore _throttlingSemaphore = new(MaxDecrypts, MaxDecrypts);
 
     private IAudibleApi AudibleApi { get; }
+
     private IDownloadSettings Settings { get; }
+
     private Action<Conversion> OnNewStateCallback { get; }
 
     public DownloadDecryptJob(
@@ -55,13 +57,15 @@ namespace Oahu.Core
         _booksForConversion.Clear();
       });
 
-
       progress.Report(new(selectedConversions.Count(), null, null, null));
       var convs = selectedConversions.ToList();
       foreach (var conv in convs)
       {
         if (context.CancellationToken.IsCancellationRequested)
+        {
           return;
+        }
+
         progress.Report(new(null, 1, null, null));
         await getLicenseAndDownloadAsync(conv, progress, context, convertAction);
       }
@@ -70,7 +74,6 @@ namespace Oahu.Core
       {
         await Task.WhenAll(_runningTasks.ToArray());
       }
-
     }
 
     private async Task getLicenseAndDownloadAsync(
@@ -89,8 +92,10 @@ namespace Oahu.Core
 
       // Do we need to download?
       var savedState = AudibleApi.GetPersistentState(conversion);
+
       // the locked file may already exist
       bool hasLockedFile = File.Exists((conversion.DownloadFileName + R.EncryptedFileExt).AsUncIfLong());
+
       // the unlocked file may already exist
       bool hasUnlockedFile = File.Exists((conversion.DownloadFileName + R.DecryptedFileExt).AsUncIfLong());
 
@@ -102,13 +107,15 @@ namespace Oahu.Core
       var quality = Settings.DownloadQuality;
       bool higherQual = quality > previousQuality;
       if (higherQual)
+      {
         Log(3, this, () => $"{conversion}; desired higher quality: {quality}");
+      }
+
       doDownload |= higherQual;
       doDecrypt |= higherQual;
 
       if (doDownload && doDecrypt)
       {
-
         conversion.DownloadFileName = Settings.DownloadDirectory;
 
         // Ensure the download directory exists before writing files
@@ -131,7 +138,9 @@ namespace Oahu.Core
         OnNewStateCallback(conversion);
 
         if (!succ)
+        {
           return;
+        }
       }
       else
       {
@@ -146,7 +155,6 @@ namespace Oahu.Core
         _runningTasks.Add(decryptTask);
       }
 
-
       void onProgressSize(Conversion conversion, long progPos)
       {
         if (_threadProgress.TryGetValue((conversion, TP_KEY), out var tp))
@@ -156,7 +164,6 @@ namespace Oahu.Core
           tp.Report(val);
         }
       }
-
     }
 
     private async Task decryptAsync(
@@ -175,8 +182,10 @@ namespace Oahu.Core
 
       // Do we need to decrypt?
       var savedState = AudibleApi.GetPersistentState(conversion);
+
       // the unlocked file may already exist
       bool hasUnlockedFile = File.Exists(conversion.DownloadFileName + R.DecryptedFileExt);
+
       // decrypt if file does not exist or state too low
       bool doDecrypt = savedState < EConversionState.local_unlocked || !hasUnlockedFile;
 
@@ -198,7 +207,9 @@ namespace Oahu.Core
         try
         {
           if (succ && !Settings.KeepEncryptedFiles)
+          {
             File.Delete(conversion.DownloadFileName + R.EncryptedFileExt);
+          }
         }
         catch (Exception)
         {
@@ -223,9 +234,12 @@ namespace Oahu.Core
               hasUnlockedFile = File.Exists((comp.Conversion.DownloadFileName + R.DecryptedFileExt).AsUncIfLong());
               filesExist &= hasUnlockedFile;
               if (!filesExist)
+              {
                 break;
+              }
             }
           }
+
           if (filesExist && !_booksForConversion.Contains(book))
           {
             _booksForConversion.Add(book);
@@ -245,8 +259,6 @@ namespace Oahu.Core
           tp.Report(val);
         }
       }
-
     }
-
   }
 }

@@ -5,6 +5,7 @@ namespace Oahu.Aux
   public interface IProcessList
   {
     bool Add(Process process);
+
     bool Remove(Process process);
   }
 

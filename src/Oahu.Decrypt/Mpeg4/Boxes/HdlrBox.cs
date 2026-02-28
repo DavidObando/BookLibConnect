@@ -8,11 +8,17 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class HdlrBox : FullBox
 {
   public int NullTerminatorCount { get; set; }
+
   public override long RenderSize => base.RenderSize + 20 + Encoding.UTF8.GetByteCount(HandlerName) + NullTerminatorCount;
+
   public uint PreDefined { get; }
+
   public string HandlerType { get; }
+
   private readonly byte[] Reserved;
+
   public string HandlerName { get; set; }
+
   public HdlrBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     long endPos = Header.FilePosition + Header.TotalBoxSize;
@@ -24,7 +30,9 @@ public class HdlrBox : FullBox
     var readToEnd = file.ReadBlock((int)(endPos - file.Position));
 
     for (int i = readToEnd.Length - 1; i >= 0 && readToEnd[i] == 0; i--)
+    {
       NullTerminatorCount++;
+    }
 
     HandlerName = Encoding.UTF8.GetString(readToEnd, 0, readToEnd.Length - NullTerminatorCount);
   }
@@ -34,7 +42,9 @@ public class HdlrBox : FullBox
   {
     ArgumentException.ThrowIfNullOrEmpty(type, nameof(type));
     if (Encoding.UTF8.GetByteCount(type) != 4)
+    {
       throw new ArgumentException($"Type '{type}' must be exactly 4 UTF-8 characters long.", nameof(type));
+    }
 
     HandlerType = type;
     Reserved = new byte[12];

@@ -9,6 +9,7 @@ namespace Oahu.Aux
   public interface IResource
   {
     void Acquire();
+
     void Release();
   }
 
@@ -77,5 +78,4 @@ namespace Oahu.Aux
       _resource?.Release();
     }
   }
-
 }

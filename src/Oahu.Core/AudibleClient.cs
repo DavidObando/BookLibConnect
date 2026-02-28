@@ -13,20 +13,25 @@ namespace Oahu.Core
 {
   public class AudibleClient
   {
-
     private IAudibleApi _audibleApi;
     private IHardwareIdProvider _hardwareIdProvider;
+
     private AudibleLogin AudibleLogin { get; }
+
     private Authorize Authorize { get; }
+
     private BookLibrary BookLibrary { get; }
 
     private ProfileBundle Profile { get; set; }
+
     private IAuthorizeSettings AuthorizeSettings { get; }
 
     public IProfileKey ProfileKey => Profile?.Key;
+
     public IProfileAliasKey ProfileAliasKey => Profile?.AliasKey;
 
     public ConfigSettings ConfigSettings { get; }
+
     public IBookLibrary BookLibraryExcerpt => BookLibrary;
 
     public Action WeakConfigEncryptionCallback { set => Authorize.WeakConfigEncryptionCallback = value; }
@@ -38,7 +43,9 @@ namespace Oahu.Core
         if (_audibleApi is null)
         {
           if (Profile is null)
+          {
             return null;
+          }
 
           _audibleApi = new AudibleApi(
             Profile.Profile,
@@ -47,6 +54,7 @@ namespace Oahu.Core
             BookLibrary,
             Authorize.RefreshTokenAsync);
         }
+
         return _audibleApi;
       }
     }
@@ -60,13 +68,15 @@ namespace Oahu.Core
       _hardwareIdProvider = hardwareIdProvider;
       ConfigSettings = configSettings;
       if (ConfigSettings is not null)
+      {
         ConfigSettings.ChangedSettings += settings_ChangedSettings;
+      }
+
       AuthorizeSettings = authSettings;
       BookLibrary = new BookLibrary(dbDir);
       Authorize = new Authorize(getConfigurationToken, authSettings);
       AudibleLogin = new AudibleLogin();
     }
-
 
     public async Task<RegisterResult> ConfigFromExternalLoginAsync(
       ERegion region,
@@ -77,7 +87,9 @@ namespace Oahu.Core
       Uri uri = ConfigBuildNewLoginUri(region, withPreAmazonUsername);
 
       if (callbacks.ExternalLoginCallback is null)
+      {
         return null;
+      }
 
       Uri responseUri = callbacks.ExternalLoginCallback(uri);
 
@@ -112,12 +124,16 @@ namespace Oahu.Core
 
       var (succ, prevProfile) = await Authorize.RegisterAsync(profile);
       if (!succ)
+      {
         return new RegisterResult(EAuthorizeResult.registrationFailed, null, null);
+      }
 
       EAuthorizeResult result = EAuthorizeResult.succ;
 
       if (profile.Matches(prevProfile))
+      {
         Profile = null;
+      }
 
       // TODO modify/test
       // bool deregister = prevProfile is not null &&
@@ -130,7 +146,9 @@ namespace Oahu.Core
       // }
       bool deregister = prevProfile is not null;
       if (deregister)
+      {
         result = EAuthorizeResult.deregistrationFailed;
+      }
 
       return new(result, profile.CreateKeyEx(), prevProfile?.DeviceInfo?.Name);
     }
@@ -151,17 +169,21 @@ namespace Oahu.Core
     public void SetAccountAlias(IProfileKey key, string alias) =>
       BookLibrary.SetAccountAlias(key, alias);
 
-
     public async Task<string> GetProfileAliasAsync(
       IProfileKey key, Func<AccountAliasContext, bool> getAccountAliasFunc, bool newAlias)
     {
       var profiles = await Authorize.GetRegisteredProfilesAsync();
       if (profiles is null)
+      {
         return null;
+      }
 
       var profile = profiles.FirstOrDefault(p => p.Region == key.Region && string.Equals(p.CustomerInfo.AccountId, key.AccountId));
       if (profile is null)
+      {
         return null;
+      }
+
       string alias = profile.GetAccountAlias(BookLibrary, getAccountAliasFunc, newAlias);
       return alias;
     }
@@ -171,7 +193,9 @@ namespace Oahu.Core
       Log(3, this);
       var profiles = await Authorize.GetRegisteredProfilesAsync();
       if (profiles is null)
+      {
         return null;
+      }
 
       var profileKeys = profiles
         .Select(p => p.CreateKeyEx())
@@ -188,32 +212,42 @@ namespace Oahu.Core
         BookLibrary.RemoveAccountId(key);
         setProfile(null, null);
       }
+
       return result;
     }
 
     public async Task<bool?> ChangeProfileAsync(IProfileKey key, bool aliasChanged)
     {
       Log(3, this, () => key.ToString());
+
       // Key may be the same but profile could still be different, check Id instead
       bool profileChanged = !Profile.MatchesId(key);
       if (!profileChanged && !aliasChanged)
+      {
         return false;
+      }
 
       Log(3, this, () => Authorize?.GetProfile(key)?.CreateAliasKey(BookLibrary, null)?.ToString());
       disposeProfileAndApi();
 
       var profiles = await Authorize.GetRegisteredProfilesAsync();
       if (profiles is null)
+      {
         return null;
+      }
 
       var profile = profiles.FirstOrDefault(p => p.Matches(key));
       if (profile is null)
+      {
         return null;
+      }
 
       setProfile(profile, null);
 
       if (profileChanged)
+      {
         await Authorize.RefreshTokenAsync(profile, true);
+      }
 
       return true;
     }
@@ -245,7 +279,10 @@ namespace Oahu.Core
     private ConfigurationTokenResult getConfigurationToken(bool enforce)
     {
       if (!(ConfigSettings?.EncryptConfiguration ?? false) && !enforce)
+      {
         return default;
+      }
+
       bool weak = false;
       var sb = new StringBuilder();
 
@@ -254,17 +291,28 @@ namespace Oahu.Core
 
       string cid = _hardwareIdProvider?.GetCpuId();
       if (cid.IsNullOrWhiteSpace())
+      {
         weak = true;
+      }
       else
+      {
         sb.Append(cid);
+      }
 
       string mbId = _hardwareIdProvider?.GetMotherboardId();
       if (mbId.IsNullOrWhiteSpace())
+      {
         mbId = _hardwareIdProvider?.GetMotherboardPnpDeviceId();
+      }
+
       if (mbId.IsNullOrWhiteSpace())
+      {
         weak = true;
+      }
       else
+      {
         sb.Append(mbId);
+      }
 
       return new(sb.ToString(), weak);
     }
@@ -276,7 +324,9 @@ namespace Oahu.Core
       var accountAlisases = GetAccountAliases();
       var profiles = await Authorize.GetRegisteredProfilesAsync();
       if (profiles is null)
+      {
         return null;
+      }
 
       if (aliasKey is not null)
       {
@@ -285,12 +335,16 @@ namespace Oahu.Core
         {
           string accountId = accountAlisases.FirstOrDefault(aa => aa.Alias == aliasKey.AccountAlias)?.AccountId;
           if (accountId is not null)
+          {
             profiles = profiles.Where(p => string.Equals(p.CustomerInfo.AccountId, accountId));
+          }
         }
       }
 
       if (!profiles.Any())
+      {
         return null;
+      }
 
       var profile = profiles.First();
 
@@ -299,7 +353,5 @@ namespace Oahu.Core
       var resultKey = setProfile(profile, getAccountAliasFunc);
       return resultKey;
     }
-
-
   }
 }

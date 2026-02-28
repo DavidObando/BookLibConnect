@@ -16,8 +16,8 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 {
   public partial class ProfileWizardViewModel : ObservableObject
   {
-
     public static StepVisibilityConverter StepConverter { get; } = new();
+
     public static OneBasedConverter OneBasedConverter { get; } = new();
 
     private AudibleClient _client;
@@ -165,9 +165,14 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
         CurrentStep++;
         UpdateStepState();
         if (CurrentStep == 1)
+        {
           buildLoginUrl();
+        }
+
         if (CurrentStep == 5)
+        {
           applyAllSettings();
+        }
       }
     }
 
@@ -223,7 +228,9 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       {
         string path = await BrowseDownloadDirectoryRequested.Invoke();
         if (!path.IsNullOrWhiteSpace())
+        {
           DownloadDirectory = path;
+        }
       }
     }
 
@@ -234,7 +241,9 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       {
         string path = await BrowseExportDirectoryRequested.Invoke();
         if (!path.IsNullOrWhiteSpace())
+        {
           ExportDirectory = path;
+        }
       }
     }
 
@@ -242,7 +251,9 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     private async Task SubmitResponseUrl()
     {
       if (PastedResponseUrl.IsNullOrWhiteSpace())
+      {
         return;
+      }
 
       bool succ = Uri.TryCreate(PastedResponseUrl, UriKind.Absolute, out Uri uri);
       if (!succ)
@@ -275,11 +286,15 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
             CustomerName = key?.AccountName;
             AccountAlias = key?.AccountName;
             RegistrationSucceeded = true;
+
             // Advance to account alias step
             CurrentStep = 2;
             UpdateStepState();
             if (result.Result == EAuthorizeResult.deregistrationFailed)
+            {
               LoginErrorMessage = $"Note: A previous device \"{result.PrevDeviceName}\" could not be deregistered.";
+            }
+
             break;
 
           case EAuthorizeResult.authorizationFailed:
@@ -309,7 +324,10 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     private void buildLoginUrl()
     {
       if (_client is null)
+      {
         return;
+      }
+
       try
       {
         Uri uri = _client.ConfigBuildNewLoginUri(SelectedRegion, UsePreAmazonAccount);
@@ -331,19 +349,28 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       {
         case 2: // Account alias
           if (_client is not null && ProfileKey is not null && !AccountAlias.IsNullOrWhiteSpace())
+          {
             _client.SetAccountAlias(ProfileKey, AccountAlias);
+          }
+
           break;
         case 3: // Download directory
           if (_downloadSettings is not null && !DownloadDirectory.IsNullOrWhiteSpace())
+          {
             _downloadSettings.DownloadDirectory = DownloadDirectory;
+          }
+
           break;
         case 4: // Export settings
           if (_exportSettings is not null)
           {
             _exportSettings.ExportToAax = ExportToAax;
             if (ExportToAax && !ExportDirectory.IsNullOrWhiteSpace())
+            {
               _exportSettings.ExportDirectory = ExportDirectory;
+            }
           }
+
           break;
       }
     }
@@ -352,18 +379,24 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     {
       // Apply account alias
       if (_client is not null && ProfileKey is not null && !AccountAlias.IsNullOrWhiteSpace())
+      {
         _client.SetAccountAlias(ProfileKey, AccountAlias);
+      }
 
       // Apply download directory
       if (_downloadSettings is not null && !DownloadDirectory.IsNullOrWhiteSpace())
+      {
         _downloadSettings.DownloadDirectory = DownloadDirectory;
+      }
 
       // Apply export settings
       if (_exportSettings is not null)
       {
         _exportSettings.ExportToAax = ExportToAax;
         if (ExportToAax && !ExportDirectory.IsNullOrWhiteSpace())
+        {
           _exportSettings.ExportDirectory = ExportDirectory;
+        }
       }
 
       // Build completion message
@@ -414,7 +447,10 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     {
       // Pre-populate from context; the user will edit on step 2
       if (ctxt.Alias.IsNullOrWhiteSpace())
+      {
         ctxt.Alias = ctxt.CustomerName;
+      }
+
       CustomerName = ctxt.CustomerName;
       AccountAlias = ctxt.Alias;
       return true;

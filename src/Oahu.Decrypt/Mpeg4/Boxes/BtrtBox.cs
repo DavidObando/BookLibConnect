@@ -6,8 +6,11 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class BtrtBox : Box
 {
   public override long RenderSize => base.RenderSize + 12;
+
   public uint BufferSizeDB { get; }
+
   public uint MaxBitrate { get; set; }
+
   public uint AvgBitrate { get; set; }
 
   public BtrtBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)

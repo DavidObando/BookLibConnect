@@ -25,9 +25,13 @@ namespace Oahu.Common.Util
     public override string ToString(object o, string format = null)
     {
       if (o is string s)
+      {
         return s.SubstitUser();
+      }
       else
+      {
         return null;
+      }
     }
   }
 }

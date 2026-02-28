@@ -5,7 +5,6 @@ using System.Text;
 
 namespace Oahu.Aux
 {
-
   public class ArgParser
   {
     readonly string[] _args;
@@ -25,19 +24,27 @@ namespace Oahu.Aux
     public void Log()
     {
       foreach (string arg in _args)
+      {
         Logging.Log(1, arg);
+      }
     }
 
     public virtual bool Exists(string tag)
     {
       if (_args == null)
+      {
         return false;
+      }
+
       string key = "-" + tag;
       foreach (string arg in _args)
       {
         if (arg.StartsWith(key, _ignoreCase, CultureInfo.InvariantCulture))
+        {
           return true;
+        }
       }
+
       return false;
     }
 
@@ -45,7 +52,9 @@ namespace Oahu.Aux
     {
       string erg = null;
       if (_args == null)
+      {
         return erg;
+      }
 
       string key = "-" + tag + "=";
       foreach (string arg in _args)
@@ -59,13 +68,16 @@ namespace Oahu.Aux
           }
         }
       }
+
       return erg;
     }
 
     public virtual bool HasArg(string tag)
     {
       if (_args == null)
+      {
         return false;
+      }
 
       string key = "-" + tag;
       return _args.Where(x => x.StartsWith(key, StringComparison.InvariantCultureIgnoreCase)).Any();
@@ -75,18 +87,22 @@ namespace Oahu.Aux
     {
       string arg = FindArg(tag);
       if (arg == null || arg.Length == 0)
+      {
         return defaultArgVal;
+      }
       else
+      {
         return arg;
+      }
     }
-
-
 
     public bool? FindBooleanArg(string tag)
     {
       string arg = FindArg(tag);
       if (arg == null || arg.Length == 0)
+      {
         return null;
+      }
 
       bool value = string.Equals(arg, "true", StringComparison.InvariantCultureIgnoreCase) || arg == "1";
       return value;
@@ -96,19 +112,27 @@ namespace Oahu.Aux
     {
       bool? arg = FindBooleanArg(tag);
       if (arg == null)
+      {
         return defaultArgVal;
+      }
       else
+      {
         return arg.Value;
+      }
     }
 
     public int? FindIntArg(string tag)
     {
       string arg = FindArg(tag);
       if (arg == null || arg.Length == 0)
+      {
         return null;
+      }
 
       if (!int.TryParse(arg, out int result))
+      {
         return null;
+      }
 
       return result;
     }
@@ -117,19 +141,27 @@ namespace Oahu.Aux
     {
       int? arg = FindIntArg(tag);
       if (arg == null)
+      {
         return defaultArgVal;
+      }
       else
+      {
         return arg.Value;
+      }
     }
 
     public uint? FindUIntArg(string tag)
     {
       string arg = FindArg(tag);
       if (arg == null || arg.Length == 0)
+      {
         return null;
+      }
 
       if (!uint.TryParse(arg, out uint result))
+      {
         return null;
+      }
 
       return result;
     }
@@ -138,19 +170,27 @@ namespace Oahu.Aux
     {
       uint? arg = FindUIntArg(tag);
       if (arg == null)
+      {
         return defaultArgVal;
+      }
       else
+      {
         return arg.Value;
+      }
     }
 
     public double? FindFloatArg(string tag)
     {
       string arg = FindArg(tag);
       if (arg == null || arg.Length == 0)
+      {
         return null;
+      }
 
       if (!double.TryParse(arg, out double result))
+      {
         return null;
+      }
 
       return result;
     }
@@ -159,31 +199,42 @@ namespace Oahu.Aux
     {
       double? arg = FindFloatArg(tag);
       if (arg == null)
+      {
         return defaultArgVal;
+      }
       else
+      {
         return arg.Value;
+      }
     }
 
     public E? FindEnumArg<E>(string tag) where E : struct, Enum
     {
       string arg = FindArg(tag);
       if (arg == null || arg.Length == 0)
+      {
         return null;
+      }
 
       if (!Enum.TryParse<E>(arg, out E result))
+      {
         return null;
+      }
 
       return result;
-
     }
 
     public E FindEnumArg<E>(string tag, E defaultArgVal) where E : struct, Enum
     {
       E? arg = FindEnumArg<E>(tag);
       if (arg == null)
+      {
         return defaultArgVal;
+      }
       else
+      {
         return arg.Value;
+      }
     }
   }
 }

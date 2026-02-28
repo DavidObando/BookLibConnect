@@ -18,6 +18,7 @@ namespace Oahu.Core
         _ => EDownloadQuality.Normal
       };
     }
+
     public static EDownloadQualityReducedChoices ToReducedChoices(this EDownloadQuality value)
     {
       return value switch
@@ -27,6 +28,5 @@ namespace Oahu.Core
         _ => EDownloadQualityReducedChoices.Normal
       };
     }
-
   }
 }

@@ -12,22 +12,33 @@ public static class Ac4Extensions
   public static uint? AverageBitrate(this ac4_dsi_v1? ac4_Dsi_V1)
   {
     if (ac4_Dsi_V1 is null)
+    {
       return null;
+    }
+
     if (ac4_Dsi_V1.ac4_Bitrate_Dsi.bit_rate != 0)
+    {
       return ac4_Dsi_V1.ac4_Bitrate_Dsi.bit_rate;
+    }
 
     foreach (var presentation in ac4_Dsi_V1.presentations.OfType<ac4_presentation_v1_dsi>().Where(p => p.b_presentation_bitrate_info))
     {
       if (presentation.ac4_Bitrate_Dsi is ac4_bitrate_dsi btrt && btrt.bit_rate != 0)
+      {
         return btrt.bit_rate;
+      }
     }
+
     return null;
   }
 
   public static ChannelGroups? Channels(this ac4_dsi_v1? ac4_Dsi_V1)
   {
     if (ac4_Dsi_V1 is null)
+    {
       return null;
+    }
+
     foreach (var presentation in ac4_Dsi_V1
             .presentations
             .OfType<ac4_presentation_v1_dsi>()
@@ -42,6 +53,7 @@ public static class Ac4Extensions
         return presentation.substream.substreams[0].dsi_substream_channel_mask;
       }
     }
+
     return null;
   }
 
@@ -52,8 +64,11 @@ public static class Ac4Extensions
     {
       var group = (ChannelGroups)(1 << g);
       if (channels.HasFlag(group))
+      {
         channelCount += num_channels_per_group[g];
+      }
     }
+
     return channelCount;
   }
 

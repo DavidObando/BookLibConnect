@@ -10,7 +10,6 @@ using static Oahu.Aux.Logging;
 
 namespace Oahu.BooksDatabase
 {
-
   // PM> Add-Migration InitialCreate -Project BooksDatabase.core -Context BookDbContext
   // PM> Add-Migration -Name <mig name> -Project BooksDatabase.core -Context BookDbContext
   public class BookDbContext : DbContext
@@ -20,30 +19,49 @@ namespace Oahu.BooksDatabase
     private static readonly string DEFAULT_DIR = Path.Combine(ApplEnv.LocalApplDirectory, SUBDIR);
 
     public DbSet<Book> Books { get; set; }
-    public DbSet<Author> Authors { get; set; }
-    public DbSet<Narrator> Narrators { get; set; }
-    public DbSet<Component> Components { get; set; }
-    public DbSet<Series> Series { get; set; }
-    public DbSet<SeriesBook> SeriesBooks { get; set; }
-    public DbSet<Conversion> Conversions { get; set; }
-    public DbSet<Genre> Genres { get; set; }
-    public DbSet<Ladder> Ladders { get; set; }
-    public DbSet<Rung> Rungs { get; set; }
-    public DbSet<Codec> Codecs { get; set; }
-    public DbSet<Chapter> Chapters { get; set; }
-    public DbSet<ChapterInfo> ChapterInfos { get; set; }
-    public DbSet<Account> Accounts { get; set; }
-    internal DbSet<PseudoAsin> PseudoAsins { get; set; }
 
+    public DbSet<Author> Authors { get; set; }
+
+    public DbSet<Narrator> Narrators { get; set; }
+
+    public DbSet<Component> Components { get; set; }
+
+    public DbSet<Series> Series { get; set; }
+
+    public DbSet<SeriesBook> SeriesBooks { get; set; }
+
+    public DbSet<Conversion> Conversions { get; set; }
+
+    public DbSet<Genre> Genres { get; set; }
+
+    public DbSet<Ladder> Ladders { get; set; }
+
+    public DbSet<Rung> Rungs { get; set; }
+
+    public DbSet<Codec> Codecs { get; set; }
+
+    public DbSet<Chapter> Chapters { get; set; }
+
+    public DbSet<ChapterInfo> ChapterInfos { get; set; }
+
+    public DbSet<Account> Accounts { get; set; }
+
+    internal DbSet<PseudoAsin> PseudoAsins { get; set; }
 
     public string DbPath { get; }
 
     public BookDbContext(string dirpath = null, string filename = null)
     {
       if (dirpath is null)
+      {
         dirpath = DEFAULT_DIR;
+      }
+
       if (filename is null)
+      {
         filename = DBFILE;
+      }
+
       DbPath = Path.Combine(dirpath, filename);
     }
 
@@ -59,7 +77,9 @@ namespace Oahu.BooksDatabase
         Log(2, typeof(BookDbContext), () => $"with migrations: {pendingMigrations.Combine()}");
 
         if (!File.Exists(dbContext.DbPath))
+        {
           Directory.CreateDirectory(Path.GetDirectoryName(dbContext.DbPath));
+        }
 
         await backupPreviousVersionAsync(dbContext);
 
@@ -67,13 +87,16 @@ namespace Oahu.BooksDatabase
 
         await compactAsync(dbContext);
       }
+
       return dbContext.Database.CanConnect();
     }
 
     private static async Task backupPreviousVersionAsync(BookDbContext dbContext)
     {
       if (!File.Exists(dbContext.DbPath))
+      {
         return;
+      }
 
       await Task.Run(() =>
       {
@@ -85,7 +108,9 @@ namespace Oahu.BooksDatabase
 
           string mig = dbContext.Database.GetAppliedMigrations().LastOrDefault();
           if (mig.IsNullOrEmpty())
+          {
             mig = "(no mig)";
+          }
 
           string dest = Path.Combine(dir, $"{filestub} {mig}{ext}");
           Log(2, typeof(BookDbContext), () => $"create backup: \"{dest.SubstitUser()}\"");
@@ -113,13 +138,15 @@ namespace Oahu.BooksDatabase
         Log(1, typeof(BookDbContext), exc.Summary());
         return;
       }
+
       fi.Refresh();
       size = fi.Length / 1024;
       Log(2, typeof(BookDbContext), () => $"after:  {size} kB");
     }
 
     private static readonly Dictionary<Type, EPseudoAsinId> _pseudoAsins
-      = new Dictionary<Type, EPseudoAsinId> {
+      = new Dictionary<Type, EPseudoAsinId>
+      {
         { typeof(Author), EPseudoAsinId.author },
         { typeof(Narrator), EPseudoAsinId.narrator }
       };
@@ -130,13 +157,17 @@ namespace Oahu.BooksDatabase
     {
       bool succ = _pseudoAsins.TryGetValue(t, out var pseudoAsinId);
       if (!succ)
+      {
         return null;
+      }
+
       PseudoAsin ent = PseudoAsins.Find(pseudoAsinId);
       if (ent is null)
       {
         ent = new PseudoAsin { Id = pseudoAsinId };
         PseudoAsins.Add(ent);
       }
+
       ent.LatestId++;
       return ent.LatestId.ToString("D7");
     }
@@ -167,7 +198,6 @@ namespace Oahu.BooksDatabase
       modelBuilder.Entity<Chapter>().HasKey(e => e.Id);
       modelBuilder.Entity<ChapterInfo>().HasKey(e => e.Id);
       modelBuilder.Entity<Account>().HasKey(e => e.Id);
-
 
       modelBuilder.Entity<Book>()
         .HasOne(e => e.Conversion)
@@ -241,15 +271,14 @@ namespace Oahu.BooksDatabase
         .HasForeignKey(e => e.ParentChapterId)
         .IsRequired(false)
         .OnDelete(DeleteBehavior.Cascade);
-
     }
   }
 
   public class BookDbContextLazyLoad : BookDbContext
   {
-
     public BookDbContextLazyLoad(string dirpath = null, string filename = null) : base(dirpath, filename)
-    { }
+    {
+    }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {

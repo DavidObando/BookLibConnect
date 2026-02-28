@@ -63,6 +63,7 @@ public class ac4_presentation_v1_dsi
       {
         presentation_id = (byte)reader.Read(5);
       }
+
       dsi_frame_rate_multiply_info = (byte)reader.Read(2);
       dsi_frame_rate_fraction_info = (byte)reader.Read(2);
       presentation_emdf_version = (byte)reader.Read(5);
@@ -77,8 +78,10 @@ public class ac4_presentation_v1_dsi
           pres_b_4_back_channels_present = (byte)reader.Read(1);
           pres_top_channel_pairs = (byte)reader.Read(2);
         }
+
         presentation_channel_mask_v1 = (ChannelGroups)reader.Read(24);
       }
+
       b_presentation_core_differs = reader.ReadBool();
       if (b_presentation_core_differs.Value)
       {
@@ -88,6 +91,7 @@ public class ac4_presentation_v1_dsi
           dsi_presentation_channel_mode_core = (byte)reader.Read(2);
         }
       }
+
       b_presentation_filter = reader.ReadBool();
       if (b_presentation_filter.Value)
       {
@@ -95,8 +99,11 @@ public class ac4_presentation_v1_dsi
         n_filter_bytes = (byte)reader.Read(8);
         filter_data = new byte[n_filter_bytes.Value];
         for (int i = 0; i < n_filter_bytes.Value; i++)
+        {
           filter_data[i] = (byte)reader.Read(8);
+        }
       }
+
       if (presentation_config_v1 == 0x1f)
       {
         substream = new ac4_substream_group_dsi(reader);
@@ -105,19 +112,27 @@ public class ac4_presentation_v1_dsi
       {
         throw new NotSupportedException();
       }
+
       b_pre_virtualized = reader.ReadBool();
       b_add_emdf_substreams = reader.ReadBool();
     }
+
     if (b_add_emdf_substreams)
     {
       n_add_emdf_substreams = (byte)reader.Read(7);
       substreams_emdfs = new (byte substream_emdf_version, ushort substream_key_id)[n_add_emdf_substreams.Value];
       for (int j = 0; j < n_add_emdf_substreams; j++)
+      {
         substreams_emdfs[j] = ((byte)reader.Read(5), (ushort)reader.Read(10));
+      }
     }
+
     b_presentation_bitrate_info = reader.ReadBool();
     if (b_presentation_bitrate_info)
+    {
       ac4_Bitrate_Dsi = new ac4_bitrate_dsi(reader);
+    }
+
     b_alternative = reader.ReadBool();
     if (b_alternative)
     {
@@ -131,14 +146,19 @@ public class ac4_presentation_v1_dsi
     if (read <= (pres_bytes - 1) * 8)
     {
       de_indicator = (byte)reader.Read(1);
+
       // Extension to AC-4 DSI
       dolby_atmos_indicator = reader.ReadBool();
       _ = reader.Read(4);
       b_extended_presentation_id = reader.ReadBool();
       if (b_extended_presentation_id.Value)
+      {
         extended_presentation_id = (ushort)reader.Read(9);
+      }
       else
+      {
         _ = reader.Read(1);
+      }
     }
   }
 }

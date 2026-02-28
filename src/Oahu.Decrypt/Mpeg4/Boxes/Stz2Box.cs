@@ -11,12 +11,19 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class Stz2Box : FullBox, IStszBox
 {
   public override long RenderSize => base.RenderSize + 8 + SampleCount * FieldSize / 8 + (FieldSize == 4 && SampleCount % 2 == 1 ? 1 : 0);
+
   public int SampleCount => SampleSizes.Count;
+
   public List<ushort> SampleSizes { get; protected init; }
+
   public int MaxSize => SampleSizes.Max();
+
   public long TotalSize => SampleSizes.Sum(s => (long)s);
+
   public int GetSizeAtIndex(int index) => SampleSizes[index];
+
   public long SumFirstNSizes(int firstN) => SampleSizes.Take(firstN).Sum(s => (long)s);
+
   public int FieldSize { get; }
 
   public Stz2Box(Stream file, BoxHeader header, IBox? parent)
@@ -28,9 +35,14 @@ public class Stz2Box : FullBox, IStszBox
     var sampleCount = file.ReadUInt32BE();
 
     if (FieldSize is not (8 or 16))
+    {
       throw new InvalidDataException($"Stsz field size ({FieldSize}). Valid values are 4, 8, or 16.");
+    }
+
     if (sampleCount > int.MaxValue)
+    {
       throw new NotSupportedException($"Oahu.Decrypt.Mpeg4 does not support MPEG-4 files with more than {int.MaxValue} samples");
+    }
 
     SampleSizes = new List<ushort>((int)sampleCount);
     CollectionsMarshal.SetCount(SampleSizes, (int)sampleCount);
@@ -58,7 +70,9 @@ public class Stz2Box : FullBox, IStszBox
       : base(versionFlags, header, parent)
   {
     if (fieldSize != 16 && fieldSize != 8 && fieldSize != 4)
+    {
       throw new InvalidDataException($"Stsz field size ({fieldSize}). Valid values are 4, 8, or 16.");
+    }
 
     FieldSize = fieldSize;
     SampleSizes = sampleSizes;
@@ -90,6 +104,7 @@ public class Stz2Box : FullBox, IStszBox
       {
         BinaryPrimitives.ReverseEndianness(shortSpan, shortSpan);
       }
+
       file.Write(MemoryMarshal.AsBytes(shortSpan));
     }
     else

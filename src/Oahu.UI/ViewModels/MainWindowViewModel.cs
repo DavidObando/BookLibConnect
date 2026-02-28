@@ -6,7 +6,6 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 {
   public partial class MainWindowViewModel : ObservableObject
   {
-
     [ObservableProperty]
     private string _title = "Oahu";
 
@@ -26,10 +25,13 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     private SettingsViewModel _settings;
 
     public BookLibraryViewModel BookLibrary { get; }
+
     public ConversionViewModel Conversion { get; }
 
     public AudibleClient AudibleClient { get; set; }
+
     public IProfileAliasKey CurrentProfile { get; set; }
+
     public IAudibleApi Api { get; set; }
 
     public MainWindowViewModel()
@@ -42,7 +44,9 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     {
       IsBusy = busy;
       if (message is not null)
+      {
         StatusMessage = message;
+      }
     }
 
     public void InitSettings(DownloadSettings downloadSettings, ExportSettings exportSettings, ConfigSettings configSettings)

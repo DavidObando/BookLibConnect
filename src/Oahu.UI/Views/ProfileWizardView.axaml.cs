@@ -26,7 +26,9 @@ namespace Oahu.Core.UI.Avalonia.Views
           {
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel?.Clipboard is not null && !string.IsNullOrEmpty(vm.LoginUrl))
+            {
               await topLevel.Clipboard.SetTextAsync(vm.LoginUrl);
+            }
           };
         }
 
@@ -42,7 +44,9 @@ namespace Oahu.Core.UI.Avalonia.Views
     {
       var topLevel = TopLevel.GetTopLevel(this);
       if (topLevel is null)
+      {
         return null;
+      }
 
       var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(
         new FolderPickerOpenOptions
@@ -52,7 +56,9 @@ namespace Oahu.Core.UI.Avalonia.Views
         });
 
       if (folders.Count > 0)
+      {
         return folders[0].Path.LocalPath;
+      }
 
       return null;
     }

@@ -16,7 +16,9 @@ public unsafe class AesCtr : IDisposable
   {
     ArgumentNullException.ThrowIfNull(key, nameof(key));
     if (key.Length != AES_BLOCK_SIZE)
+    {
       throw new ArgumentException($"{nameof(key)} must be exactly {AES_BLOCK_SIZE} bytes long.");
+    }
 
     Aes = Aes.Create();
     Aes.Padding = PaddingMode.None;
@@ -30,7 +32,9 @@ public unsafe class AesCtr : IDisposable
     ArgumentOutOfRangeException.ThrowIfNotEqual(iv.Length, AES_BLOCK_SIZE, nameof(iv));
 
     if (destination.Length < source.Length)
+    {
       throw new ArithmeticException($"Destination array is not long enough. (Parameter '{nameof(destination)}')");
+    }
 
     const int AES_NUM_DWORDS = AES_BLOCK_SIZE / sizeof(uint);
 
@@ -52,7 +56,9 @@ public unsafe class AesCtr : IDisposable
             IncrementBE(iv);
 
             for (int i = 0; i < AES_NUM_DWORDS; i++)
+            {
               *pD32++ = pEc32[i] ^ *pS32++;
+            }
 
             data_pos += AES_BLOCK_SIZE;
             count -= AES_BLOCK_SIZE;
@@ -63,7 +69,9 @@ public unsafe class AesCtr : IDisposable
             Encryptor.TransformBlock(iv, 0, AES_BLOCK_SIZE, encrypted_counter, 0);
 
             for (int i = 0; i < count; i++, data_pos++)
+            {
               pD[data_pos] = (byte)(pEc[i] ^ pS[data_pos]);
+            }
           }
         }
       }
@@ -76,7 +84,8 @@ public unsafe class AesCtr : IDisposable
     do
     {
       data[i]++;
-    } while (data[i] == 0 && i-- > 0);
+    }
+    while (data[i] == 0 && i-- > 0);
   }
 
   public void Dispose()
@@ -86,6 +95,7 @@ public unsafe class AesCtr : IDisposable
   }
 
   private bool isDisposed;
+
   private void Dispose(bool disposing)
   {
     if (disposing & !isDisposed)

@@ -10,8 +10,11 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
   public abstract class Box : IBox
   {
     public IBox? Parent { get; }
+
     public BoxHeader Header { get; }
+
     public List<IBox> Children { get; } = new List<IBox>();
+
     public virtual long RenderSize => 8 + Children.Sum(b => b.RenderSize);
 
     protected long RemainingBoxLength(Stream file) => Header.FilePosition + Header.TotalBoxSize - file.Position;
@@ -21,7 +24,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
       Header = header;
       Parent = parent;
     }
+
     protected abstract void Render(Stream file);
+
     public T? GetChild<T>() where T : IBox
     {
       IEnumerable<T> children = GetChildren<T>();
@@ -51,10 +56,15 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
         IBox child = BoxFactory.CreateBox(file, this);
 
         if (child.Header.TotalBoxSize == 0)
+        {
           break;
+        }
+
         Children.Add(child);
         if (child.Header.FilePosition + child.Header.TotalBoxSize != file.Position)
+        {
           break;
+        }
       }
     }
 
@@ -63,7 +73,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
       List<FreeBox> freeBoxes = GetChildren<FreeBox>().ToList();
 
       foreach (var child in Children)
+      {
         freeBoxes.AddRange(child.GetFreeBoxes());
+      }
 
       return freeBoxes;
     }
@@ -84,7 +96,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
 
     #region IDisposable
     private int m_Disposed = 0;
+
     protected bool Disposed => m_Disposed != 0;
+
     public void Dispose()
     {
       Dispose(disposing: true);
@@ -101,7 +115,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
       if (disposing && Interlocked.CompareExchange(ref m_Disposed, 1, 0) == 0)
       {
         foreach (IBox child in Children)
+        {
           child?.Dispose();
+        }
 
         Children.Clear();
       }

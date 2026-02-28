@@ -8,10 +8,15 @@ namespace Oahu.Decrypt.Mpeg4;
 public record Chapter
 {
   public string Title { get; }
+
   public TimeSpan StartOffset { get; }
+
   public TimeSpan Duration { get; }
+
   public TimeSpan EndOffset { get; }
+
   public int RenderSize => 2 + Encoding.UTF8.GetByteCount(Title) + encd.Length;
+
   public Chapter(string title, TimeSpan start, TimeSpan duration)
   {
     ArgumentNullException.ThrowIfNull(title, nameof(title));
@@ -29,6 +34,7 @@ public record Chapter
     output.Write(title);
     output.Write(encd);
   }
+
   public override string ToString()
   {
     return $"{Title} {{{StartOffset} - {EndOffset}}}";

@@ -9,24 +9,27 @@ using static Oahu.Aux.ApplEnv;
 
 namespace Oahu.Aux
 {
-
   public class Logging
   {
-
     #region Nested Classes
 
     class LogMessage
     {
       public DateTime DateTime { get; private set; }
+
       public int ThreadId { get; private set; }
+
       public string Context { get; private set; }
+
       public string Message { get; private set; }
 
       public LogMessage(string message) : this(null, message)
-      { }
+      {
+      }
 
       public LogMessage(string context, string message) : this(DateTime.Now, Thread.CurrentThread.ManagedThreadId, context, message)
-      { }
+      {
+      }
 
       public LogMessage(DateTime timestamp, int threadId, string context, string message)
       {
@@ -37,7 +40,6 @@ namespace Oahu.Aux
       }
     }
 
-
     #endregion Nested Classes
     #region singleton
     private static Logging Instance { get; } = new Logging();
@@ -46,7 +48,6 @@ namespace Oahu.Aux
     #region Private Fields
     const string EXT = ".log";
     public const long DefaultFileSize = 20 * 1024 * 1024;
-
 
     private readonly object _lockable = new object();
     private bool _instantFlush;
@@ -62,7 +63,6 @@ namespace Oahu.Aux
     private System.Threading.Timer _flushTimer;
     private uint _linecount;
     private bool _logfileLocationOutputDone;
-
 
     #endregion Private Fields
     #region Public Properties
@@ -98,7 +98,6 @@ namespace Oahu.Aux
 
     private TextWriter Writer => _logStreamWriter;
 
-
     #endregion Private Properties
     #region ctor
 
@@ -107,7 +106,6 @@ namespace Oahu.Aux
 
     #endregion ctor
     #region Public Methods
-
 
     public static void Log(uint level, object caller, [CallerMemberName] string method = null) => Instance.log0(level, caller, method);
 
@@ -124,7 +122,6 @@ namespace Oahu.Aux
     // public static void Log (uint level, string msg) => Log (level, null, msg);
 
     // public static void Log (uint level, string context, string msg) => Instance.log (level, context, msg);
-
     #endregion Public Methods
 
     #region Private Methods
@@ -143,54 +140,66 @@ namespace Oahu.Aux
     private void log0(uint level, object caller, [CallerMemberName] string method = null)
     {
       if (level <= _level)
+      {
         log(level, context(caller, method), null);
+      }
     }
 
     private void log0(uint level, Type caller, [CallerMemberName] string method = null)
     {
       if (level <= _level)
+      {
         log(level, context(caller, method), null);
+      }
     }
 
     private void log(uint level, object caller, string what, [CallerMemberName] string method = null)
     {
       if (level <= _level)
+      {
         log(level, context(caller, method), what);
+      }
     }
 
     private void log(uint level, Type caller, string what, [CallerMemberName] string method = null)
     {
       if (level <= _level)
+      {
         log(level, context(caller, method), what);
+      }
     }
 
     private void log(uint level, object caller, Func<string> getWhat, [CallerMemberName] string method = null)
     {
       if (level <= _level && !(getWhat is null))
+      {
         log(level, context(caller, method), getWhat());
+      }
     }
 
     private void log(uint level, Type caller, Func<string> getWhat, [CallerMemberName] string method = null)
     {
       if (level <= _level && !(getWhat is null))
+      {
         log(level, context(caller, method), getWhat());
+      }
     }
 
     private void log(uint level, string context, string msg)
     {
       if (level <= _level)
+      {
         log(context, msg);
+      }
     }
 
     private void log(string msg) => log(null, msg);
 
     private void log(string context, string msg) => handleWrite(new LogMessage(context, msg));
 
-
     private static string context(object caller, string method) => context(caller.GetType(), method);
 
     // private static string context (string method) => $"???.{method}";
-
     private static string context(Type caller, string method)
     {
       string typename = caller.PrettyName((int)PrettyTypeNameLevel, FullClassNames);
@@ -241,7 +250,10 @@ namespace Oahu.Aux
     private void closeFlushTimer()
     {
       if (_flushTimer != null)
+      {
         _flushTimer.Dispose();
+      }
+
       _flushTimer = null;
     }
 
@@ -251,6 +263,7 @@ namespace Oahu.Aux
       {
         _logStreamWriter.Dispose();
       }
+
       _logStreamWriter = null;
     }
 
@@ -282,15 +295,19 @@ namespace Oahu.Aux
         if (exists && !_ignoreExisting)
         {
           if (_filecount < 1000)
+          {
             continue;
+          }
+
           _ignoreExisting = true;
           _filecount = 1;
         }
 
-
         bool succ = openWriter(filename);
         if (succ)
+        {
           break;
+        }
       }
 
       if (!_logfileLocationOutputDone)
@@ -305,7 +322,9 @@ namespace Oahu.Aux
       string folder = Path.GetDirectoryName(stub);
 
       if (!Directory.Exists(folder))
+      {
         return null;
+      }
 
       string filestub = Path.GetFileNameWithoutExtension(stub);
 
@@ -322,7 +341,10 @@ namespace Oahu.Aux
       string folder = Path.GetDirectoryName(filename);
       filename = Path.GetFileName(filename);
       if (string.IsNullOrEmpty(folder))
+      {
         folder = LogDirectory;
+      }
+
       filename = Path.Combine(folder, filename);
 
       Directory.CreateDirectory(folder);
@@ -332,7 +354,10 @@ namespace Oahu.Aux
       _currentfilename = filename;
 
       if (!InstantFlush)
+      {
         openFlushTimer();
+      }
+
       return true;
     }
 
@@ -348,9 +373,13 @@ namespace Oahu.Aux
       {
         Writer.WriteLine(s);
         if (InstantFlush)
+        {
           Writer.Flush();
+        }
         else
+        {
           _linecount++;
+        }
       }
     }
 
@@ -359,7 +388,10 @@ namespace Oahu.Aux
       lock (_lockable)
       {
         if (_linecount > 0)
+        {
           Writer.Flush();
+        }
+
         _linecount = 0;
       }
     }

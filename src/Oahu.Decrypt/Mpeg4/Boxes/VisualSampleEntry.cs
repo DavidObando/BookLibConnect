@@ -19,15 +19,25 @@ public class VisualSampleEntry : SampleEntry
   private readonly byte[] pre_defined1;
   private readonly byte[] reserved;
   private readonly byte[] pre_defined2;
+
   public ushort Width { get; }
+
   public ushort Height { get; }
+
   public uint HorizontalResolution { get; }
+
   public uint VerticalResolution { get; }
+
   private readonly byte[] reserved2;
+
   public ushort FrameCount { get; }
+
   public string CompressorName { get; }
+
   public ushort Depth { get; }
+
   private readonly byte[] pre_defined3;
+
   public VisualSampleEntry(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     pre_defined1 = file.ReadBlock(2);
@@ -42,12 +52,16 @@ public class VisualSampleEntry : SampleEntry
     var compressorNameBytes = file.ReadBlock(32);
     var displaySize = compressorNameBytes[0];
     if (displaySize > 31)
+    {
       throw new InvalidOperationException("Compressor name must be 31 characters or fewer.");
+    }
+
     CompressorName = System.Text.Encoding.UTF8.GetString(compressorNameBytes, 1, displaySize);
 
     Depth = file.ReadUInt16BE();
     pre_defined3 = file.ReadBlock(2);
   }
+
   protected override void Render(Stream file)
   {
     base.Render(file);
@@ -62,7 +76,9 @@ public class VisualSampleEntry : SampleEntry
     file.WriteUInt16BE(FrameCount);
     var compressorNameBytes = new byte[32];
     if (CompressorName.Length > 31)
+    {
       throw new InvalidOperationException("Compressor name must be 31 characters or fewer.");
+    }
 
     compressorNameBytes[0] = (byte)CompressorName.Length;
     System.Text.Encoding.UTF8.GetBytes(CompressorName, 0, CompressorName.Length, compressorNameBytes, 1);

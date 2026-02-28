@@ -9,7 +9,6 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 {
   public partial class SettingsViewModel : ObservableObject
   {
-
     private readonly DownloadSettings _downloadSettings;
     private readonly ExportSettings _exportSettings;
     private readonly ConfigSettings _configSettings;
@@ -114,7 +113,9 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       {
         string path = await BrowseFolderRequested.Invoke("Select Download Folder");
         if (!path.IsNullOrWhiteSpace())
+        {
           DownloadDirectory = path;
+        }
       }
     }
 
@@ -125,7 +126,9 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       {
         string path = await BrowseFolderRequested.Invoke("Select Export Folder");
         if (!path.IsNullOrWhiteSpace())
+        {
           ExportDirectory = path;
+        }
       }
     }
   }

@@ -9,7 +9,9 @@ namespace Oahu.Aux
     private static double dateTimeToDouble(DateTime dt)
     {
       if (dt == default)
+      {
         return 0;
+      }
 
       TimeSpan ts = dt.Subtract(EPOCH);
       return ts.TotalSeconds;
@@ -22,7 +24,9 @@ namespace Oahu.Aux
     public static long DateTimeToUnix64Msec(DateTime dt)
     {
       if (dt == default)
+      {
         return 0;
+      }
 
       TimeSpan ts = dt.Subtract(EPOCH);
       return (long)ts.TotalMilliseconds;
@@ -31,7 +35,9 @@ namespace Oahu.Aux
     public static DateTime UnixToDateTime(long timestamp)
     {
       if (timestamp == 0)
+      {
         return default;
+      }
 
       DateTime dt = EPOCH.AddSeconds(timestamp);
       return dt;
@@ -40,11 +46,12 @@ namespace Oahu.Aux
     public static DateTime UnixMsecToDateTime(long timestampMsec)
     {
       if (timestampMsec == 0)
+      {
         return default;
+      }
 
       DateTime dt = EPOCH.AddMilliseconds(timestampMsec);
       return dt;
     }
-
   }
 }

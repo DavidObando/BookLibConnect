@@ -13,7 +13,6 @@ using static Oahu.Aux.Logging;
 
 namespace Oahu.Core
 {
-
   class Authorize
   {
     const string HTTP_AUTHORITY_AMZN = @"https://api.amazon.";
@@ -30,12 +29,12 @@ namespace Oahu.Core
     private IAuthorizeSettings Settings { get; }
 
     // private Uri BaseUri => HttpClientAmazon?.BaseAddress;
-
     private Configuration Configuration { get; set; }
 
     private ConfigTokenDelegate GetTokenFunc { get; }
 
     public HttpClientEx HttpClientAmazon { get; private set; }
+
     public HttpClientEx HttpClientAudible { get; private set; }
 
     public Action WeakConfigEncryptionCallback { private get; set; }
@@ -83,7 +82,9 @@ namespace Oahu.Core
     {
       bool succ = updateProfile(profile, content);
       if (!succ)
+      {
         return (false, null);
+      }
 
       await readConfigurationAsync();
 
@@ -128,7 +129,10 @@ namespace Oahu.Core
 
       IProfile profile = Configuration.Remove(key);
       if (profile is null)
+      {
         return EAuthorizeResult.removeProfileFailed;
+      }
+
       await WriteConfigurationAsync();
 
       // TODO modify/test
@@ -143,15 +147,19 @@ namespace Oahu.Core
       Log(3, this);
 
       if (Configuration is null)
+      {
         return;
+      }
+
       var result = GetTokenFunc?.Invoke();
 
       bool existed = Configuration.Existed;
       await Configuration.WriteAsync(result?.Token);
 
       if (!existed && (result?.Weak ?? false))
+      {
         WeakConfigEncryptionCallback?.Invoke();
-
+      }
     }
 
     private HttpClientEx httpClient(IProfile profile) => profile.PreAmazon ? HttpClientAudible : HttpClientAmazon;
@@ -165,21 +173,22 @@ namespace Oahu.Core
 
       HttpClientEx ensureHttpClient(string authority, HttpClientEx httpClient)
       {
-
         Uri baseUri = new Uri(authority + domain);
 
         if (httpClient is not null)
         {
           if (httpClient.BaseAddress == baseUri)
+          {
             return httpClient;
+          }
           else
+          {
             httpClient.Dispose();
+          }
         }
 
         return HttpClientEx.Create(baseUri);
-
       }
-
     }
 
     public async Task RefreshTokenAsync(IProfile profile) =>
@@ -195,13 +204,18 @@ namespace Oahu.Core
       if (onAutoRefreshOnly && (Settings?.AutoRefresh ?? false))
       {
         if (profile is Profile prof1 && (Configuration.Profiles?.Contains(prof1) ?? false))
+        {
           await refreshTokenAsync(prof1);
+        }
         else
         {
           Profile prof2 = Configuration.Profiles?.FirstOrDefault(d => d.Matches(profile));
           if (prof2 is not null)
+          {
             await refreshTokenAsync(prof2);
+          }
         }
+
         await WriteConfigurationAsync();
       }
     }
@@ -209,14 +223,18 @@ namespace Oahu.Core
     private async Task refreshTokenAsync(IProfile profile)
     {
       if (profile is null)
+      {
         return;
+      }
 
       using var _ = new LogGuard(3, this);
 
       try
       {
         if (DateTime.UtcNow < profile.Token.Expiration - TimeSpan.FromMinutes(5))
+        {
           return;
+        }
 
         Log(3, this, () => "from server");
 
@@ -242,7 +260,6 @@ namespace Oahu.Core
 
     private HttpRequestMessage buildRefreshRequest(IProfile profile)
     {
-
       var content = new Dictionary<string, string>
       {
         ["app_name"] = APP_NAME,
@@ -283,19 +300,20 @@ namespace Oahu.Core
           DateTime.UtcNow.AddSeconds(expires));
 
         profile.Refresh(bearer);
-
       }
       catch (Exception exc)
       {
         Log(1, this, () => exc.Summary());
       }
-
     }
 
     public async Task<IEnumerable<IProfile>> GetRegisteredProfilesAsync()
     {
       if (Configuration is null)
+      {
         await readConfigurationAsync();
+      }
+
       return Configuration.GetSorted();
     }
 
@@ -304,11 +322,16 @@ namespace Oahu.Core
       using var _ = new LogGuard(3, this);
 
       if (Configuration is not null)
+      {
         return;
+      }
+
       Configuration = new Configuration();
       await readConfigAsync(false);
       if (Configuration.IsEncrypted)
+      {
         await readConfigAsync(true);
+      }
 
       async Task readConfigAsync(bool enforce)
       {
@@ -396,11 +419,12 @@ namespace Oahu.Core
       json = json.CompactJson();
 
       if (!json.ValidateJson())
+      {
         throw new InvalidOperationException("invalid json");
+      }
 
       return json;
     }
-
 
     // internal instead of private for testing only
     internal bool updateProfile(Profile profile, string json)
@@ -411,14 +435,22 @@ namespace Oahu.Core
         {
           const string REGISTRATION = "RegistrationResponse";
           if (Logging.Level >= 4)
+          {
             json.WriteTempJsonFile(REGISTRATION);
+          }
+
           string jsonCleaned = json.ExtractJsonStructure();
           if (jsonCleaned is not null)
+          {
             jsonCleaned.WriteTempJsonFile(REGISTRATION + "(cleared)");
+          }
         }
+
         var root = Oahu.Audible.Json.RegistrationResponse.Deserialize(json);
         if (root is null)
+        {
           return false;
+        }
 
         var response = root.response;
         var success = response.success;
@@ -445,12 +477,14 @@ namespace Oahu.Core
 
         var cookies = new List<KeyValuePair<string, string>>();
         if (website_cookies is not null)
+        {
           foreach (var cookie in website_cookies)
           {
             cookies.Add(new KeyValuePair<string, string>(
               cookie.Name,
               cookie.Value.Replace("\"", "")));
           }
+        }
 
         var store_authentication_cookie = tokens.store_authentication_cookie;
         string storeAuthentCookie = store_authentication_cookie.cookie;
@@ -475,7 +509,6 @@ namespace Oahu.Core
           devicePrivateKey,
           adpToken,
           storeAuthentCookie);
-
       }
       catch (Exception exc)
       {
@@ -483,8 +516,8 @@ namespace Oahu.Core
         Log(1, this, () => exc.ToString());
         return false;
       }
+
       return true;
     }
-
   }
 }

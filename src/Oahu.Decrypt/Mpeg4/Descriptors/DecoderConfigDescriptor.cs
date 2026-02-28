@@ -6,10 +6,15 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors;
 public class DecoderConfigDescriptor : BaseDescriptor
 {
   public byte ObjectTypeIndication { get; }
+
   private readonly byte[] Blob;
+
   public uint MaxBitrate { get; set; }
+
   public uint AverageBitrate { get; set; }
+
   public AudioSpecificConfig AudioSpecificConfig => GetChildOrThrow<AudioSpecificConfig>();
+
   public override int InternalSize => base.InternalSize + 13;
 
   public DecoderConfigDescriptor(Stream file, DescriptorHeader header) : base(file, header)

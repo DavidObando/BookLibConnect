@@ -25,7 +25,6 @@ namespace Oahu.App.Avalonia
     {
       if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
       {
-
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
         Log(1, this, () =>
@@ -60,11 +59,20 @@ namespace Oahu.App.Avalonia
     private static IHardwareIdProvider getHardwareIdProvider()
     {
       if (OperatingSystem.IsWindows())
+      {
         return new WinHardwareIdProvider();
+      }
+
       if (OperatingSystem.IsMacOS())
+      {
         return new MacHardwareIdProvider();
+      }
+
       if (OperatingSystem.IsLinux())
+      {
         return new LinuxHardwareIdProvider();
+      }
+
       throw new PlatformNotSupportedException();
     }
   }

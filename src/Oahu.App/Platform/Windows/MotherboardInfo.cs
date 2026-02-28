@@ -19,6 +19,7 @@ static public class MotherboardInfo
         {
           return GetAvailability(int.Parse(queryObj["Availability"]?.ToString()));
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -37,10 +38,15 @@ static public class MotherboardInfo
         foreach (ManagementObject queryObj in baseboardSearcher.Get())
         {
           if (queryObj["HostingBoard"]?.ToString() == "True")
+          {
             return true;
+          }
           else
+          {
             return false;
+          }
         }
+
         return false;
       }
       catch (Exception)
@@ -60,6 +66,7 @@ static public class MotherboardInfo
         {
           return convertToDateTime(queryObj["InstallDate"]?.ToString());
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -79,6 +86,7 @@ static public class MotherboardInfo
         {
           return queryObj["Manufacturer"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -98,6 +106,7 @@ static public class MotherboardInfo
         {
           return queryObj["Model"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -117,6 +126,7 @@ static public class MotherboardInfo
         {
           return queryObj["PartNumber"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -136,6 +146,7 @@ static public class MotherboardInfo
         {
           return queryObj["PNPDeviceID"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -155,6 +166,7 @@ static public class MotherboardInfo
         {
           return queryObj["PrimaryBusType"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -174,6 +186,7 @@ static public class MotherboardInfo
         {
           return queryObj["Product"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -192,10 +205,15 @@ static public class MotherboardInfo
         foreach (ManagementObject queryObj in baseboardSearcher.Get())
         {
           if (queryObj["Removable"]?.ToString() == "True")
+          {
             return true;
+          }
           else
+          {
             return false;
+          }
         }
+
         return false;
       }
       catch (Exception)
@@ -214,10 +232,15 @@ static public class MotherboardInfo
         foreach (ManagementObject queryObj in baseboardSearcher.Get())
         {
           if (queryObj["Replaceable"]?.ToString() == "True")
+          {
             return true;
+          }
           else
+          {
             return false;
+          }
         }
+
         return false;
       }
       catch (Exception)
@@ -237,6 +260,7 @@ static public class MotherboardInfo
         {
           return queryObj["RevisionNumber"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -256,6 +280,7 @@ static public class MotherboardInfo
         {
           return queryObj["SecondaryBusType"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -275,6 +300,7 @@ static public class MotherboardInfo
         {
           return queryObj["SerialNumber"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -294,6 +320,7 @@ static public class MotherboardInfo
         {
           return querObj["Status"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -313,6 +340,7 @@ static public class MotherboardInfo
         {
           return queryObj["SystemName"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -332,6 +360,7 @@ static public class MotherboardInfo
         {
           return queryObj["Version"]?.ToString();
         }
+
         return string.Empty;
       }
       catch (Exception)
@@ -387,7 +416,10 @@ static public class MotherboardInfo
   private static string convertToDateTime(string unconvertedTime)
   {
     if (unconvertedTime is null)
+    {
       return null;
+    }
+
     string convertedTime = string.Empty;
     int year = int.Parse(unconvertedTime.Substring(0, 4));
     int month = int.Parse(unconvertedTime.Substring(4, 2));
@@ -401,6 +433,7 @@ static public class MotherboardInfo
       hours -= 12;
       meridian = "PM";
     }
+
     convertedTime = date.ToString() + "/" + month.ToString() + "/" + year.ToString() + " " +
     hours.ToString() + ":" + minutes.ToString() + ":" + seconds.ToString() + " " + meridian;
     return convertedTime;

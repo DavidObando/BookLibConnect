@@ -7,11 +7,14 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors;
 public interface IASC
 {
   int AudioObjectType { get; set; }
+
   int SamplingFrequency { get; set; }
+
   int ChannelConfiguration { get; set; }
 
   // GASpecificConfig in ISO/IEC 14496-3 Subpart 4 4.4.1 (pp 487)
   bool FrameLengthFlag { get; set; }
+
   bool DependsOnCoreCoder { get; set; }
 }
 
@@ -29,6 +32,7 @@ public class AudioSpecificConfig : BaseDescriptor, IASC
   private const byte AOT_ESCAPE = 31;
 
   private int ascBlobLength = 0;
+
   public override int InternalSize => base.InternalSize + ascBlobLength;
 
   public byte[] AscBlob
@@ -42,6 +46,7 @@ public class AudioSpecificConfig : BaseDescriptor, IASC
   }
 
   private BitReader bitReader;
+
   public AudioSpecificConfig(Stream file, DescriptorHeader header) : base(file, header)
   {
     var ascBlob = file.ReadBlock(Header.TotalBoxSize - Header.HeaderSize);
@@ -73,10 +78,14 @@ public class AudioSpecificConfig : BaseDescriptor, IASC
     var bitReader = new BitReader(ascBlob);
     asc.AudioObjectType = (int)bitReader.Read(5);
     if (asc.AudioObjectType == AOT_ESCAPE)
+    {
       asc.AudioObjectType = (int)bitReader.Read(6) + 32;
+    }
 
     if (Array.IndexOf(SupportedObjectTypes, (byte)asc.AudioObjectType) < 0)
+    {
       throw new NotSupportedException($"{nameof(AudioObjectType)} of {asc.AudioObjectType} is unsupported");
+    }
 
     var samplingFrequencyIndex = bitReader.Read(4);
     asc.SamplingFrequency = samplingFrequencyIndex <= 12
@@ -101,14 +110,18 @@ public class AudioSpecificConfig : BaseDescriptor, IASC
 
     var sampleIndex = Array.IndexOf(ASC_SampleRates, SamplingFrequency);
     if (sampleIndex < 0)
+    {
       throw new ArgumentException($"Unsupported SamplingFrequency of {SamplingFrequency}. Supported values are [{string.Join(", ", SamplingFrequency)}]", nameof(SamplingFrequency));
+    }
 
     ArgumentOutOfRangeException.ThrowIfLessThan(ChannelConfiguration, 1, nameof(ChannelConfiguration));
     ArgumentOutOfRangeException.ThrowIfGreaterThan(ChannelConfiguration, 7, nameof(ChannelConfiguration));
 
     var writer = new BitWriter();
     if (AudioObjectType < AOT_ESCAPE)
+    {
       writer.Write((uint)AudioObjectType, 5);
+    }
     else
     {
       writer.Write(AOT_ESCAPE, 5);
@@ -128,19 +141,26 @@ public class AudioSpecificConfig : BaseDescriptor, IASC
   }
 
   public int AudioObjectType { get; set; }
+
   public int SamplingFrequency { get; set; }
+
   public int ChannelConfiguration { get; set; }
 
   // GASpecificConfig in ISO/IEC 14496-3 Subpart 4 4.4.1 (pp 487)
   public bool FrameLengthFlag { get; set; }
+
   public bool DependsOnCoreCoder { get; set; }
 
   private class InternalAudioSpecificConfig : IASC
   {
     public int AudioObjectType { get; set; }
+
     public int SamplingFrequency { get; set; }
+
     public int ChannelConfiguration { get; set; }
+
     public bool FrameLengthFlag { get; set; }
+
     public bool DependsOnCoreCoder { get; set; }
   }
 }

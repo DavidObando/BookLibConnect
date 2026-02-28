@@ -9,7 +9,6 @@ namespace Oahu.Aux
 {
   public class BooleanYesNoConverter : BooleanConverter
   {
-
     const string TRUE = "Yes";
     const string FALSE = "No";
 
@@ -30,11 +29,14 @@ namespace Oahu.Aux
     public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
     {
       if (destinationType != typeof(string))
+      {
         return base.CanConvertTo(context, destinationType);
+      }
       else
+      {
         return true;
+      }
     }
-
 
     public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
     {
@@ -61,11 +63,13 @@ namespace Oahu.Aux
         {
           bool succ = _reverseLookup.TryGetValue(s, out bool b);
           if (succ)
+          {
             return b;
+          }
         }
       }
-      return base.ConvertFrom(context, culture, value);
 
+      return base.ConvertFrom(context, culture, value);
     }
 
     private string toDisplayString(bool value)
@@ -82,8 +86,5 @@ namespace Oahu.Aux
     }
 
     private void initReverseLookup(bool value) => _reverseLookup.Add(toDisplayString(value), value);
-
   }
-
-
 }

@@ -18,9 +18,13 @@ public class Dec3Box : Box
   /// ETSI TS 102 366 F.6.2.2 data_rate * 1024
   /// </summary>
   public uint AverageBitrate { get; }
+
   public int SampleRate { get; }
+
   public int NumberOfChannels { get; }
+
   public Ec3IndependentSubstream[] IndependentSubstream { get; }
+
   public bool IsAtmos => flag_ec3_extension_type_a.HasValue;
   /// <summary>
   /// Signaling Dolby Digital Plus bitstreams with Dolby Atmos content in an ISO base media format file
@@ -56,7 +60,9 @@ public class Dec3Box : Box
     NumberOfChannels = indSample.ChannelCount();
 
     if (reader.Length - reader.Position < 8)
+    {
       return;
+    }
 
     // Dolby Atmos content carried by a Dolby Digital Plus stream.
     reader.Position += 7;
@@ -67,6 +73,7 @@ public class Dec3Box : Box
       complexity_index_type_a = (byte)reader.Read(8);
     }
   }
+
   protected override void Render(Stream file)
   {
     file.Write(Ec3Data);

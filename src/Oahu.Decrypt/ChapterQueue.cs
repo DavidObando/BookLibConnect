@@ -11,8 +11,11 @@ namespace Oahu.Decrypt
   public class ChapterEntry
   {
     public Memory<byte> FrameData { get; init; }
+
     public uint SamplesInFrame { get; init; }
+
     public string Title { get; }
+
     public ChapterEntry(string title)
     {
       ArgumentNullException.ThrowIfNull(title, nameof(title));
@@ -55,7 +58,9 @@ namespace Oahu.Decrypt
     public void AddRange(IEnumerable<Chapter> chapters)
     {
       foreach (var ch in chapters)
+      {
         Add(ch);
+      }
     }
 
     /// <summary>

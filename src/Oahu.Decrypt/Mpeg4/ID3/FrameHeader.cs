@@ -7,8 +7,11 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 public class FrameHeader : Header
 {
   public override string Identifier { get; }
+
   public Flags Flags { get; }
+
   public override int HeaderSize => Version is 0x200 ? 6 : 10;
+
   public ushort Version { get; }
 
   public static FrameHeader Create(Stream file, ushort version)

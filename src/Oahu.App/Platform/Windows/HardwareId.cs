@@ -20,6 +20,7 @@ namespace Oahu.SystemManagement
         {
           id = mo["ProcessorID"].ToString();
         }
+
         return id;
       }
       catch (Exception)
@@ -47,6 +48,5 @@ namespace Oahu.SystemManagement
     {
       return MotherboardInfo.SerialNumber;
     }
-
   }
 }

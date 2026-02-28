@@ -18,7 +18,6 @@ namespace Oahu.App.Avalonia
 {
   public partial class MainWindow : Window
   {
-
     private readonly MainWindowViewModel _viewModel;
     private readonly UserSettings _userSettings;
     private bool _initDone;
@@ -41,7 +40,9 @@ namespace Oahu.App.Avalonia
     {
       base.OnOpened(e);
       if (_initDone || _viewModel is null)
+      {
         return;
+      }
 
       _initDone = true;
       await initAsync();
@@ -102,7 +103,9 @@ namespace Oahu.App.Avalonia
             // Load books into the library view
             var books = _viewModel.Api.GetBooks();
             if (books is not null)
+            {
               _viewModel.BookLibrary.LoadBooks(books);
+            }
 
             // Wire download button to move selected books to Downloads tab
             _viewModel.BookLibrary.DownloadRequested += onDownloadRequested;
@@ -159,7 +162,9 @@ namespace Oahu.App.Avalonia
       Log(3, this, () => $"download requested for {books.Count} book(s)");
 
       foreach (var bookVm in books)
+      {
         _viewModel.Conversion.AddConversion(bookVm.Book);
+      }
 
       _viewModel.StatusMessage = $"{_viewModel.Conversion.QueuedCount} book(s) queued for download.";
     }
@@ -204,7 +209,9 @@ namespace Oahu.App.Avalonia
         Dispatcher.UIThread.Post(() =>
         {
           if (msg.IncItem.HasValue)
+          {
             completedItems += msg.IncItem.Value;
+          }
 
           double pct = totalItems > 0 ? (double)completedItems / totalItems : 0;
           _viewModel.Conversion.UpdateOverallProgress(pct,
@@ -217,9 +224,14 @@ namespace Oahu.App.Avalonia
         Dispatcher.UIThread.Post(() =>
         {
           if (conv?.Book?.Asin is null)
+          {
             return;
+          }
+
           if (!lookup.TryGetValue(conv.Book.Asin, out var itemVm))
+          {
             return;
+          }
 
           itemVm.UpdateState(conv.State);
 
@@ -284,7 +296,6 @@ namespace Oahu.App.Avalonia
         _viewModel.StatusMessage = _cts.IsCancellationRequested
           ? "Download cancelled."
           : "Download complete.";
-
       }
       catch (OperationCanceledException)
       {
@@ -305,7 +316,9 @@ namespace Oahu.App.Avalonia
         {
           var item = items.FirstOrDefault(i => i.Asin == kvp.Key);
           if (item?.Conversion is not null)
+          {
             item.UpdateState(item.Conversion.State);
+          }
         }
 
         _viewModel.Conversion.UpdateOverallProgress(1.0, "Finished");
@@ -317,7 +330,10 @@ namespace Oahu.App.Avalonia
     {
       // Auto-accept the alias with customer name for now
       if (ctxt.Alias.IsNullOrWhiteSpace())
+      {
         ctxt.Alias = ctxt.CustomerName;
+      }
+
       return true;
     }
   }

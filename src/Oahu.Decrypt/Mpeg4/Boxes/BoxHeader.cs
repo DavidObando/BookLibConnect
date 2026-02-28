@@ -8,9 +8,13 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class BoxHeader
 {
   public long FilePosition { get; internal set; }
+
   public long TotalBoxSize { get; }
+
   public string Type { get; private set; }
+
   public uint HeaderSize { get; private set; }
+
   public int Version { get; private set; }
 
   public BoxHeader(Stream file)
@@ -31,17 +35,24 @@ public class BoxHeader
   public void ChangeAtomName(string newAtomName)
   {
     if (string.IsNullOrEmpty(newAtomName) || Encoding.UTF8.GetByteCount(newAtomName) != 4)
+    {
       throw new ArgumentException($"{nameof(newAtomName)} must be exactly 4 UTF-8 bytes long");
+    }
+
     Type = newAtomName;
   }
 
   public BoxHeader(long boxSize, string boxType)
   {
     if (boxSize < 8)
+    {
       throw new ArgumentException($"{nameof(boxSize)} must be at least 8 bytes.");
+    }
 
     if (string.IsNullOrEmpty(boxType) || Encoding.ASCII.GetByteCount(boxType) != 4)
+    {
       throw new ArgumentException($"{nameof(boxType)} must be a 4-byte long ASCII string.");
+    }
 
     FilePosition = 0;
 

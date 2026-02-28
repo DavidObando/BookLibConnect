@@ -11,14 +11,16 @@ namespace Oahu.Common.Util
   public class LogTmpFileMaintenance
   {
     record DirectoryStatistics(int NumFiles, long TotalSize, DateTime Timestamp);
-    // record DirectoryFilesAndStatistics (List<FileInfo> Files, DirectoryStatistics Statistics);
 
+    // record DirectoryFilesAndStatistics (List<FileInfo> Files, DirectoryStatistics Statistics);
     const int MAX_NUM_FILES_PER_DIR = 500;
     const long MAX_SIZE_PER_DIR = 100_000_000; // 100 MB
     const int MAX_AGE_DAYS_PER_DIR = 365;
 
     private bool _inProgress;
+
     private DateTime Today { get; set; }
+
     private DateTime Timestamp { get; set; }
 
     private static LogTmpFileMaintenance __instance;
@@ -28,19 +30,26 @@ namespace Oahu.Common.Util
       get
       {
         if (__instance is null)
+        {
           __instance = new LogTmpFileMaintenance();
+        }
+
         return __instance;
       }
     }
 
-    private LogTmpFileMaintenance() { }
+    private LogTmpFileMaintenance()
+    {
+    }
 
     public async Task CleanupAsync() => await Task.Run(() => Cleanup());
 
     public void Cleanup()
     {
       if (_inProgress)
+      {
         return;
+      }
 
       using var rg = new ResourceGuard(x => _inProgress = x);
 
@@ -75,18 +84,26 @@ namespace Oahu.Common.Util
     private DirectoryStatistics cleanup(List<FileInfo> fileInfos, DirectoryStatistics stats, DateTime? enforceByDate)
     {
       if (fileInfos is null)
+      {
         return null;
+      }
 
       bool exceeds = enforceByDate.HasValue || exceedsThresholds(stats);
 
       if (!exceeds)
+      {
         return default;
+      }
 
       if (enforceByDate.HasValue && enforceByDate.Value < fileInfos.Last().LastWriteTime)
+      {
         return default;
+      }
 
       if (!enforceByDate.HasValue && stats is null)
+      {
         return default;
+      }
 
       FileInfo[] files = fileInfos.ToArray();
 
@@ -99,7 +116,9 @@ namespace Oahu.Common.Util
         var fi = files[i];
 
         if (fi.LastWriteTime.Date == Today)
+        {
           break;
+        }
 
         try
         {
@@ -113,11 +132,18 @@ namespace Oahu.Common.Util
 
           bool done;
           if (enforceByDate.HasValue)
+          {
             done = oldest > enforceByDate.Value;
+          }
           else
+          {
             done = !exceedsThresholds(new DirectoryStatistics(stats.NumFiles - numFiles, stats.TotalSize - totalSize, oldest));
+          }
+
           if (done)
+          {
             break;
+          }
         }
         catch (Exception exc)
         {
@@ -131,7 +157,9 @@ namespace Oahu.Common.Util
     private (List<FileInfo> files, DirectoryStatistics stats) gather(string dir)
     {
       if (!Directory.Exists(dir))
+      {
         return default;
+      }
 
       var di = new DirectoryInfo(dir);
       var fis = di.GetFiles().OrderByDescending(fi => fi.LastWriteTime).ToList();
@@ -143,7 +171,9 @@ namespace Oahu.Common.Util
       {
         totalSize += fi.Length;
         if (oldest == default || oldest > fi.LastWriteTime)
+        {
           oldest = fi.LastWriteTime;
+        }
       });
 
       return (fis, new DirectoryStatistics(fis.Count, totalSize, oldest));
@@ -152,7 +182,9 @@ namespace Oahu.Common.Util
     bool exceedsThresholds(DirectoryStatistics stats)
     {
       if (stats is null)
+      {
         return false;
+      }
 
       bool exceed = stats.NumFiles > MAX_NUM_FILES_PER_DIR ||
         stats.TotalSize > MAX_SIZE_PER_DIR ||

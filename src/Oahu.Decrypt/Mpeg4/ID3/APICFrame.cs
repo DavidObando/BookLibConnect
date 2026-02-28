@@ -12,14 +12,22 @@ public class APICFrame : Frame
       var fixedSize = 1 + ImageFormat.Length + 1 + 1 + Image.Length;
 
       if (IsUnicode(Description))
+      {
         return UnicodeLength(Description) + 2 + fixedSize;
+      }
       else
+      {
         return Description.Length + 1 + fixedSize;
+      }
     }
   }
+
   public string ImageFormat { get; set; }
+
   public string Description { get; set; }
+
   public byte Type { get; set; }
+
   public byte[] Image { get; set; }
 
   public APICFrame(Stream file, Header header, Frame parent) : base(header, parent)
@@ -53,6 +61,7 @@ public class APICFrame : Frame
       file.Write(UnicodeBytes(Description));
       file.Write(stackalloc byte[2]);
     }
+
     file.Write(Image);
   }
 }

@@ -63,5 +63,4 @@
     High,
     Extreme
   }
-
 }

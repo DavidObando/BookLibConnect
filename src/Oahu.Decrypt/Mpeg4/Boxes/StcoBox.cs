@@ -7,7 +7,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 internal class StcoBox : FullBox, IChunkOffsets
 {
   public override long RenderSize => base.RenderSize + 4 + ChunkOffsets.Count * 4;
+
   public uint EntryCount => (uint)ChunkOffsets.Count;
+
   public ChunkOffsetList ChunkOffsets { get; }
 
   internal static StcoBox CreateBlank(IBox parent, ChunkOffsetList chunkOffsets)
@@ -19,6 +21,7 @@ internal class StcoBox : FullBox, IChunkOffsets
     parent.Children.Add(stcoBox);
     return stcoBox;
   }
+
   private StcoBox(ChunkOffsetList chunkOffsets, byte[] versionFlags, BoxHeader header, IBox parent)
       : base(versionFlags, header, parent)
   {
@@ -28,7 +31,9 @@ internal class StcoBox : FullBox, IChunkOffsets
   public StcoBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     uint entryCount = file.ReadUInt32BE(); if (entryCount > int.MaxValue)
+    {
       throw new NotSupportedException($"Oahu.Decrypt.Mpeg4 does not support MPEG-4 files with more than {int.MaxValue} chunk offsets");
+    }
 
     ChunkOffsets = ChunkOffsetList.Read32(file, entryCount);
   }
@@ -43,7 +48,10 @@ internal class StcoBox : FullBox, IChunkOffsets
   protected override void Dispose(bool disposing)
   {
     if (disposing & !Disposed)
+    {
       ChunkOffsets.Clear();
+    }
+
     base.Dispose(disposing);
   }
 }

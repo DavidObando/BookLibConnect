@@ -23,6 +23,7 @@ namespace Oahu.Decrypt.Mpeg4.Util
       {
         sha.TransformBlock(blocks[i].bytes, blocks[i].start, blocks[i].length, null, 0);
       }
+
       sha.TransformFinalBlock(blocks[i].bytes, blocks[i].start, blocks[i].length);
       return sha.Hash!;
     }

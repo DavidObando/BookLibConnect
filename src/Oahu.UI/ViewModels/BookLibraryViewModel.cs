@@ -13,7 +13,6 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 {
   public partial class BookLibraryViewModel : ObservableObject
   {
-
     [ObservableProperty]
     private ObservableCollection<BookItemViewModel> _books = new();
 
@@ -43,6 +42,7 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 
     // Sort state remembered within the session
     public int? SortColumnIndex { get; set; }
+
     public ListSortDirection? SortDirection { get; set; }
 
     public event EventHandler<IEnumerable<BookItemViewModel>> DownloadRequested;
@@ -56,10 +56,13 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
         vm.PropertyChanged += (s, e) =>
         {
           if (e.PropertyName == nameof(BookItemViewModel.IsSelected))
+          {
             UpdateSelectedCount();
+          }
         };
         Books.Add(vm);
       }
+
       UpdateSelectedCount();
 
       if (Books.Count == 0)
@@ -85,14 +88,18 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     private void SelectAll()
     {
       foreach (var book in Books)
+      {
         book.IsSelected = true;
+      }
     }
 
     [RelayCommand]
     private void DeselectAll()
     {
       foreach (var book in Books)
+      {
         book.IsSelected = false;
+      }
     }
 
     [RelayCommand]
@@ -100,7 +107,9 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     {
       var selected = GetSelectedBooks().ToList();
       if (selected.Count > 0)
+      {
         DownloadRequested?.Invoke(this, selected);
+      }
     }
   }
 
@@ -114,14 +123,23 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     }
 
     public Book Book => _book;
+
     public string Asin => _book.Asin;
+
     public string Title => _book.Title;
+
     public string Author => _book.Author;
+
     public string Narrator => _book.Narrator;
+
     public DateTime? PurchaseDate => _book.PurchaseDate;
+
     public DateTime? ReleaseDate => _book.ReleaseDate;
+
     public int? RunTimeLengthSeconds => _book.RunTimeLengthSeconds;
+
     public string CoverImageFile => _book.CoverImageFile;
+
     public EConversionState ConversionState => _book.Conversion?.State ?? EConversionState.unknown;
 
     [ObservableProperty]
@@ -132,7 +150,10 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       get
       {
         if (RunTimeLengthSeconds is null)
+        {
           return null;
+        }
+
         var ts = TimeSpan.FromSeconds(RunTimeLengthSeconds.Value);
         return ts.TotalHours >= 1
           ? $"{(int)ts.TotalHours}h {ts.Minutes:D2}m"
@@ -142,17 +163,22 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 
     // Detail properties
     public string Publisher => _book.PublisherName;
+
     public string Language => _book.Language;
+
     public string Unabridged => _book.Unabridged switch
     {
       true => "Yes",
       false => "No",
       _ => null
     };
+
     public string Series => _book.Series?.Count > 0
       ? string.Join(", ", _book.Series.Select(s => s.ToString()))
       : null;
+
     public string ConversionStateText => ConversionState.ToString();
+
     public int? Parts => _book.Components?.Count > 0 ? _book.Components.Count : (int?)null;
 
     public string Description
@@ -161,7 +187,10 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       {
         var html = _book.PublisherSummary;
         if (string.IsNullOrWhiteSpace(html))
+        {
           return null;
+        }
+
         // Strip HTML tags and decode common entities
         var text = Regex.Replace(html, "<[^>]+>", " ");
         text = text.Replace("&amp;", "&")
@@ -170,6 +199,7 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
                    .Replace("&quot;", "\"")
                    .Replace("&#39;", "'")
                    .Replace("&nbsp;", " ");
+
         // Collapse whitespace
         text = Regex.Replace(text, @"\s+", " ").Trim();
         return text;
@@ -182,7 +212,10 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       {
         var path = _book.CoverImageFile;
         if (!string.IsNullOrEmpty(path) && File.Exists(path))
+        {
           return path;
+        }
+
         return null;
       }
     }

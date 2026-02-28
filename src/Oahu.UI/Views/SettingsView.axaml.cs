@@ -17,13 +17,18 @@ namespace Oahu.Core.UI.Avalonia.Views
     {
       base.OnLoaded(e);
       if (DataContext is SettingsViewModel vm)
+      {
         vm.BrowseFolderRequested += browseFolderAsync;
+      }
     }
 
     protected override void OnUnloaded(RoutedEventArgs e)
     {
       if (DataContext is SettingsViewModel vm)
+      {
         vm.BrowseFolderRequested -= browseFolderAsync;
+      }
+
       base.OnUnloaded(e);
     }
 
@@ -31,7 +36,9 @@ namespace Oahu.Core.UI.Avalonia.Views
     {
       var topLevel = TopLevel.GetTopLevel(this);
       if (topLevel is null)
+      {
         return null;
+      }
 
       var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(
         new FolderPickerOpenOptions
@@ -41,7 +48,9 @@ namespace Oahu.Core.UI.Avalonia.Views
         });
 
       if (folders.Count > 0)
+      {
         return folders[0].Path.LocalPath;
+      }
 
       return null;
     }

@@ -8,7 +8,9 @@ public class MinfBox : Box
   {
     LoadChildren(file);
   }
+
   public StblBox Stbl => GetChildOrThrow<StblBox>();
+
   protected override void Render(Stream file)
   {
     return;

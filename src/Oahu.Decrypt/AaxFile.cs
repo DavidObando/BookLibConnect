@@ -12,16 +12,22 @@ namespace Oahu.Decrypt
   public sealed class AaxFile : Mp4File
   {
     public byte[]? Key { get; private set; }
+
     public byte[]? IV { get; private set; }
 
     public AaxFile(Stream file, long fileSize, bool additionalFixups = true) : base(file, fileSize)
     {
       if (FileType != FileType.Aax && FileType != FileType.Aaxc)
+      {
         throw new ArgumentException($"This instance of {nameof(Mp4File)} is not an Aax or Aaxc file.");
+      }
 
       if (AudioSampleEntry.Esds is EsdsBox esds)
+      {
+
         // This is the flag that, if set, prevents cover art from loading on android.
         esds.ES_Descriptor.DecoderConfig.AudioSpecificConfig.DependsOnCoreCoder = false;
+      }
 
       // Must change the audio type from aavd to mp4a
       AudioSampleEntry.Header.ChangeAtomName("mp4a");
@@ -35,7 +41,9 @@ namespace Oahu.Decrypt
         for (int i = children.Count - 1; i >= 0; i--)
         {
           if (children[i] is FreeBox)
+          {
             children.RemoveAt(i);
+          }
         }
 
         Ftyp = FtypBox.Create("isom", 0x200);
@@ -45,8 +53,14 @@ namespace Oahu.Decrypt
         Ftyp.CompatibleBrands.Add("M4B ");
       }
     }
-    public AaxFile(Stream file) : this(file, file.Length) { }
-    public AaxFile(string fileName, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read) : this(File.Open(fileName, FileMode.Open, access, share)) { }
+
+    public AaxFile(Stream file) : this(file, file.Length)
+    {
+    }
+
+    public AaxFile(string fileName, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read) : this(File.Open(fileName, FileMode.Open, access, share))
+    {
+    }
 
     public override FrameTransformBase<FrameEntry, FrameEntry> GetAudioFrameFilter()
     {
@@ -59,7 +73,9 @@ namespace Oahu.Decrypt
     public void SetDecryptionKey(string activationBytes)
     {
       if (string.IsNullOrWhiteSpace(activationBytes) || activationBytes.Length != 8)
+      {
         throw new ArgumentException($"{nameof(activationBytes)} must be 4 bytes long.");
+      }
 
       byte[] actBytes = ByteUtil.BytesFromHexString(activationBytes);
 
@@ -69,16 +85,20 @@ namespace Oahu.Decrypt
     public void SetDecryptionKey(byte[] activationBytes)
     {
       if (activationBytes is null || activationBytes.Length != 4)
+      {
         throw new ArgumentException($"{nameof(activationBytes)} must be 4 bytes long.");
+      }
+
       if (FileType != FileType.Aax)
+      {
         throw new ArgumentException($"This instance of {nameof(AaxFile)} is not an {FileType.Aax} file.");
+      }
 
       AdrmBox adrm = AudioSampleEntry.GetChild<AdrmBox>()
           ?? throw new InvalidOperationException($"This instance of {nameof(AaxFile)} does not contain an adrm box.");
 
       // Adrm key derrivation from
       // https://github.com/FFmpeg/FFmpeg/blob/master/libavformat/mov.c in mov_read_adrm
-
       byte[] intermediate_key = Crypto.Sha1(
          (audible_fixed_key, 0, audible_fixed_key.Length),
          (activationBytes, 0, activationBytes.Length));
@@ -93,7 +113,9 @@ namespace Oahu.Decrypt
           (intermediate_iv, 0, 16));
 
       if (!ByteUtil.BytesEqual(calculatedChecksum, adrm.Checksum))
+      {
         throw new Exception("Calculated checksum doesn't match AAX file checksum.");
+      }
 
       byte[] drmBlob = ByteUtil.CloneBytes(adrm.DrmBlob);
 
@@ -103,7 +125,9 @@ namespace Oahu.Decrypt
           drmBlob);
 
       if (!ByteUtil.BytesEqual(drmBlob, 0, activationBytes, 0, 4, true))
+      {
         throw new Exception("Supplied key doesn't match calculated key.");
+      }
 
       byte[] file_key = ByteUtil.CloneBytes(drmBlob, 8, 16);
 
@@ -115,7 +139,9 @@ namespace Oahu.Decrypt
       AudioSampleEntry.Children.Remove(adrm);
 
       if (AudioSampleEntry.Children.FirstOrDefault(b => b.Header.Type == "aabd") is IBox aabd)
+      {
         AudioSampleEntry.Children.Remove(aabd);
+      }
 
       SetDecryptionKey(file_key, ByteUtil.CloneBytes(file_iv, 0, 16));
     }
@@ -127,9 +153,14 @@ namespace Oahu.Decrypt
     public void SetDecryptionKey(string audible_key, string audible_iv)
     {
       if (string.IsNullOrWhiteSpace(audible_key) || audible_key.Length != 32)
+      {
         throw new ArgumentException($"{nameof(audible_key)} must be 16 bytes long.");
+      }
+
       if (string.IsNullOrWhiteSpace(audible_iv) || audible_iv.Length != 32)
+      {
         throw new ArgumentException($"{nameof(audible_iv)} must be 16 bytes long.");
+      }
 
       byte[] key = ByteUtil.BytesFromHexString(audible_key);
 
@@ -141,9 +172,14 @@ namespace Oahu.Decrypt
     public void SetDecryptionKey(byte[] key, byte[] iv)
     {
       if (key is null || key.Length != 16)
+      {
         throw new ArgumentException($"{nameof(key)} must be 16 bytes long.");
+      }
+
       if (iv is null || iv.Length != 16)
+      {
         throw new ArgumentException($"{nameof(iv)} must be 16 bytes long.");
+      }
 
       Key = key;
       IV = iv;

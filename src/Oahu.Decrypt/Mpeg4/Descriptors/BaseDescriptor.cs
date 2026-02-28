@@ -8,9 +8,11 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors;
 public abstract class BaseDescriptor
 {
   public DescriptorHeader Header { get; }
+
   public List<BaseDescriptor> Children { get; } = new List<BaseDescriptor>();
 
   public uint RenderSize => 1 + (uint)Header.GetEncodedSizeLength(InternalSize) + (uint)InternalSize;
+
   public virtual int InternalSize => (int)Children.Sum(c => c.RenderSize);
 
   public BaseDescriptor(Stream file, DescriptorHeader header)
@@ -52,7 +54,10 @@ public abstract class BaseDescriptor
       BaseDescriptor child = DescriptorFactory.CreateDescriptor(file);
 
       if (child.InternalSize == 0)
+      {
         break;
+      }
+
       Children.Add(child);
     }
   }

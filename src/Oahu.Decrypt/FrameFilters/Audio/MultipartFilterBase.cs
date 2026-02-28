@@ -21,7 +21,9 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     public MultipartFilterBase(ChapterInfo splitChapters, SampleRate inputSampleRate, bool inputStereo)
     {
       if (splitChapters is null || splitChapters.Count == 0)
+      {
         throw new ArgumentException($"{nameof(splitChapters)} must contain at least one chapter.");
+      }
 
       InputSampleRate = inputSampleRate;
       InputStereo = inputStereo;
@@ -30,7 +32,9 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     }
 
     protected abstract void CloseCurrentWriter();
+
     protected abstract void WriteFrameToFile(TInput audioFrame, bool newChunk);
+
     protected abstract void CreateNewWriter(TCallback callback);
 
     protected sealed override Task FlushAsync()
@@ -64,8 +68,10 @@ namespace Oahu.Decrypt.FrameFilters.Audio
         {
           lastChunkIndex = input.Chunk.ChunkIndex;
         }
+
         WriteFrameToFile(input, newChunk);
       }
+
       currentSample += input.SamplesInFrame;
 
       return Task.CompletedTask;
@@ -74,9 +80,12 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     private bool GetNextChapter()
     {
       if (!splitChapters.MoveNext())
+      {
         return false;
+      }
 
       startSample = timeToSample(splitChapters.Current.StartOffset);
+
       // Depending on time precision, the final EndFrame may be less than the last audio frame in the source file
       endSample = timeToSample(splitChapters.Current.EndOffset);
       return true;
@@ -87,7 +96,10 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     protected override void Dispose(bool disposing)
     {
       if (disposing && !Disposed)
+      {
         splitChapters?.Dispose();
+      }
+
       base.Dispose(disposing);
     }
   }

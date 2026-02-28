@@ -15,10 +15,10 @@ using Oahu.Core.ex;
 
 namespace Oahu.Core
 {
-
   class Authorization : IAuthorization
   {
     public string AuthorizationCode { get; set; }
+
     public string CodeVerifier { get; set; }
 
     public static Authorization Create(Uri uri)
@@ -26,18 +26,24 @@ namespace Oahu.Core
       const string AUTH_KEY = "openid.oa2.authorization_code";
 
       if (!uri.IsAbsoluteUri)
+      {
         return null;
+      }
 
       var query = uri.Query;
       if (query is null)
+      {
         return null;
+      }
 
       NameValueCollection paras = HttpUtility.ParseQueryString(query);
 
       string auth = paras[AUTH_KEY];
 
       if (auth is null)
+      {
         return null;
+      }
 
       return new Authorization { AuthorizationCode = auth };
     }
@@ -45,12 +51,16 @@ namespace Oahu.Core
 
   class TokenBearer : ITokenBearer
   {
-
     public string RefreshToken { get; set; }
+
     public string AccessToken { get; set; }
+
     public DateTime Expiration { get; set; }
 
-    public TokenBearer() { }
+    public TokenBearer()
+    {
+    }
+
     public TokenBearer(string accToken, DateTime expiration)
     {
       AccessToken = accToken;
@@ -67,7 +77,6 @@ namespace Oahu.Core
       const string TOKEN_KEY = "openid.oa2.access_token";
       const string EXPIR_KEY = "openid.pape.auth_time";
 
-
       if (!uri.IsAbsoluteUri)
       {
         return null;
@@ -75,7 +84,9 @@ namespace Oahu.Core
 
       var query = uri.Query;
       if (query is null)
+      {
         return null;
+      }
 
       NameValueCollection paras = HttpUtility.ParseQueryString(query);
 
@@ -83,7 +94,9 @@ namespace Oahu.Core
       string expir = paras[EXPIR_KEY];
 
       if (token is null || expir is null)
+      {
         return null;
+      }
 
       DateTime.TryParse(expir, out DateTime expirTime);
       expirTime += TimeSpan.FromHours(1);
@@ -91,10 +104,11 @@ namespace Oahu.Core
 
       var acctoken = new TokenBearer(token, expirTime);
       if (!Validate(acctoken))
+      {
         return null;
+      }
 
       return acctoken;
-
     }
 
     public static bool Validate(TokenBearer token)
@@ -102,54 +116,76 @@ namespace Oahu.Core
       const string ACC_TOKEN_STUB = "Atna|";
       const string REFR_TOKEN_STUB = "Atnr|";
       if (token is null)
+      {
         return false;
+      }
 
       if (token.AccessToken is null || !token.AccessToken.StartsWith(ACC_TOKEN_STUB))
+      {
         return false;
+      }
 
       if (token.RefreshToken is not null && !token.RefreshToken.StartsWith(REFR_TOKEN_STUB))
+      {
         return false;
+      }
 
       var utcnow = DateTime.UtcNow;
       return token.Expiration > utcnow;
     }
-
   }
 
   class DeviceInfo : IDeviceInfo
   {
     public string Type { get; set; }
+
     public string Name { get; set; }
+
     public string Serial { get; set; }
   }
 
   class CustomerInfo : ICustomerInfo
   {
     public string Name { get; set; }
+
     public string AccountId { get; set; }
   }
 
   class Profile : IProfile
   {
     public uint Id { get; set; }
+
     public bool PreAmazon { get; set; }
+
     public ERegion Region { get; set; }
+
     public Authorization Authorization { get; set; }
+
     public TokenBearer Token { get; set; }
+
     public DeviceInfo DeviceInfo { get; set; }
+
     public CustomerInfo CustomerInfo { get; set; }
+
     public IEnumerable<KeyValuePair<string, string>> Cookies { get; set; }
 
     public string PrivateKey { get; set; }
+
     public string AdpToken { get; set; }
+
     public string StoreAuthentCookie { get; set; }
 
     IAuthorization IProfile.Authorization => Authorization;
+
     ITokenBearer IProfile.Token => Token;
+
     IDeviceInfo IProfile.DeviceInfo => DeviceInfo;
+
     ICustomerInfo IProfile.CustomerInfo => CustomerInfo;
 
-    public Profile() { }
+    public Profile()
+    {
+    }
 
     public Profile(ERegion region, TokenBearer token, IEnumerable<KeyValuePair<string, string>> cookies, string serial)
     {
@@ -207,26 +243,33 @@ namespace Oahu.Core
     class SerializableConfig
     {
       public List<Profile> Profiles { get; set; }
+
       public string Secure { get; set; }
     }
 
     private List<Profile> _profiles;
+
     public IReadOnlyList<Profile> Profiles => _profiles;
 
     public bool Existed { get; private set; }
+
     public bool IsEncrypted { get; private set; }
 
     public IProfile AddOrReplace(Profile profile)
     {
       if (_profiles is null)
+      {
         _profiles = new List<Profile>();
+      }
 
       // uniqueness constraint is customer account id and region
       // this may create zombies unless old profile device is deregistered
-
       uint nextId = 0;
       if (_profiles.Any())
+      {
         nextId = _profiles.Select(p => p.Id).Max() + 1;
+      }
+
       profile.Id = nextId;
 
       var existing =
@@ -238,24 +281,26 @@ namespace Oahu.Core
         return null;
       }
 
-
       int i = _profiles.IndexOf(existing);
       IProfile prevProfile = _profiles[i];
       _profiles[i] = profile;
       return prevProfile;
-
     }
 
     public IProfile Remove(IProfileKey key)
     {
       if (Profiles is null)
+      {
         return null;
+      }
 
       var existing =
         Profiles.FirstOrDefault(d => d.Matches(key));
 
       if (existing is null)
+      {
         return null;
+      }
 
       bool succ = _profiles.Remove(existing);
 
@@ -275,12 +320,18 @@ namespace Oahu.Core
     {
       var config = await FileExtensions.ReadJsonFileAsync<SerializableConfig>(CONFIG_DIR, this.GetType().Name);
       if (config is null)
+      {
         return;
+      }
+
       Existed = true;
       bool encrypted = !token.IsNullOrWhiteSpace();
       Logging.Log(3, this, () => $"{(encrypted ? "decrypt" : string.Empty)}");
       if (!token.IsNullOrWhiteSpace())
+      {
         decrypt(config, token);
+      }
+
       IsEncrypted = config.Profiles is null && !config.Secure.IsNullOrWhiteSpace();
       _profiles = config.Profiles;
     }
@@ -291,7 +342,9 @@ namespace Oahu.Core
       bool encrypted = !token.IsNullOrWhiteSpace();
       Logging.Log(3, this, () => $"{(encrypted ? "encrypt" : string.Empty)}");
       if (encrypted)
+      {
         encrypt(config, token);
+      }
 
       Existed = true;
       Directory.CreateDirectory(CONFIG_DIR);
@@ -302,7 +355,9 @@ namespace Oahu.Core
     private static void encrypt(SerializableConfig configuration, string token)
     {
       if (configuration.Profiles is null)
+      {
         return;
+      }
 
       string json = JsonSerializer.Serialize(configuration.Profiles, new JsonSerializerOptions { TypeInfoResolver = new DefaultJsonTypeInfoResolver() });
       byte[] encrypted = SymmetricEncryptor.EncryptString(json, token);
@@ -315,7 +370,10 @@ namespace Oahu.Core
     private static void decrypt(SerializableConfig configuration, string token)
     {
       if (configuration.Secure is null || configuration.Secure.IsNullOrWhiteSpace())
+      {
         return;
+      }
+
       try
       {
         byte[] encrypted = Convert.FromBase64String(configuration.Secure);
@@ -324,7 +382,9 @@ namespace Oahu.Core
         configuration.Profiles = profiles;
         configuration.Secure = null;
       }
-      catch (Exception) { }
+      catch (Exception)
+      {
+      }
     }
   }
 }

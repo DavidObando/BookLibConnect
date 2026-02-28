@@ -6,13 +6,21 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class MvhdBox : HeaderBox
 {
   public override long RenderSize => base.RenderSize + 4 + 4 + 2 + 2 + 8 + Matrix.Length + Pre_defined.Length + 4;
+
   public uint Timescale { get; set; }
+
   public int Rate { get; }
+
   public short Volume { get; }
+
   public ushort Reserved { get; }
+
   public ulong Reserved2 { get; }
+
   public byte[] Matrix { get; }
+
   public byte[] Pre_defined { get; }
+
   public uint NextTrackID { get; set; }
 
   public MvhdBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
@@ -25,6 +33,7 @@ public class MvhdBox : HeaderBox
     Pre_defined = file.ReadBlock(4 * 6);
     NextTrackID = file.ReadUInt32BE();
   }
+
   protected override void Render(Stream file)
   {
     base.Render(file);

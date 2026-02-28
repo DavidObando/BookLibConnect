@@ -10,7 +10,9 @@ public class MoofBox : Box
   }
 
   public MfhdBox Mfhd => GetChildOrThrow<MfhdBox>();
+
   public TrafBox Traf => GetChildOrThrow<TrafBox>();
+
   protected override void Render(Stream file)
   {
     return;

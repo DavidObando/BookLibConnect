@@ -20,7 +20,6 @@ using R = Oahu.Core.Properties.Resources;
 
 namespace Oahu.Core.ex
 {
-
   public static class JsonExtensions
   {
     public static string CompactJson(this string json) =>
@@ -29,7 +28,10 @@ namespace Oahu.Core.ex
     public static bool ValidateJson(this string json)
     {
       if (json is null)
+      {
         return false;
+      }
+
       try
       {
         var jsonValue = JsonDocument.Parse(json);
@@ -38,6 +40,7 @@ namespace Oahu.Core.ex
       {
         return false;
       }
+
       return true;
     }
   }
@@ -97,6 +100,7 @@ namespace Oahu.Core.ex
             wr.WriteNumber(key, val);
             break;
           }
+
         case JsonValueKind.False:
         case JsonValueKind.True:
           {
@@ -111,11 +115,19 @@ namespace Oahu.Core.ex
     {
       IEnumerable<JsonProperty> props = jElem.EnumerateObject();
       if (key is null)
+      {
         wr.WriteStartObject();
+      }
       else
+      {
         wr.WriteStartObject(key);
+      }
+
       foreach (var prop in props)
+      {
         parseElem(prop.Name, prop.Value, wr);
+      }
+
       wr.WriteEndObject();
     }
 
@@ -123,11 +135,19 @@ namespace Oahu.Core.ex
     {
       IEnumerable<JsonElement> elems = jElem.EnumerateArray();
       if (key is null)
+      {
         wr.WriteStartArray();
+      }
       else
+      {
         wr.WriteStartArray(key);
+      }
+
       foreach (var elem in elems)
+      {
         parseElem(null, elem, wr);
+      }
+
       wr.WriteEndArray();
     }
 
@@ -149,7 +169,9 @@ namespace Oahu.Core.ex
     {
       const string DOC_HTML = "<!doctype html>";
       if (!html.Contains(DOC_HTML, StringComparison.InvariantCultureIgnoreCase))
+      {
         return null;
+      }
 
       return writeTempTextFile(html, filenameStub, HTML);
     }
@@ -157,7 +179,9 @@ namespace Oahu.Core.ex
     public static string WriteTempJsonFile(this string json, string filenameStub = null)
     {
       if (!json.ValidateJson())
+      {
         return null;
+      }
 
       return writeTempTextFile(json, filenameStub, JSON);
     }
@@ -171,23 +195,31 @@ namespace Oahu.Core.ex
     {
       string json = any.SerializeToJsonAny();
       if (json is null)
+      {
         return null;
+      }
 
       if (filenameStub.IsNullOrWhiteSpace())
+      {
         filenameStub = any.GetType().Name;
+      }
 
       return await writeTextFileAsync(json, directory, filenameStub, JSON, unique);
     }
 
     public static async Task<T> ReadJsonFileAsync<T>(string directory, string filenameStub)
     {
-
       if (filenameStub.IsNullOrWhiteSpace())
+      {
         filenameStub = typeof(T).Name;
+      }
 
       string ext = Path.GetExtension(filenameStub);
       if (ext.IsNullOrWhiteSpace())
+      {
         ext = JSON;
+      }
+
       string filename = Path.GetFileNameWithoutExtension(filenameStub) + ext;
       string path = Path.Combine(directory, filename);
       return await ReadJsonFileAsync<T>(path);
@@ -200,14 +232,18 @@ namespace Oahu.Core.ex
         string filename = typeof(T).Name + JSON;
         path = Path.Combine(path, filename);
         if (!File.Exists(path))
+        {
           return default;
+        }
       }
 
       try
       {
         string json = await File.ReadAllTextAsync(path);
         if (json.IsNullOrWhiteSpace())
+        {
           return default;
+        }
 
         T result = json.DeserializeJson<T>();
         return result;
@@ -216,7 +252,6 @@ namespace Oahu.Core.ex
       {
         return default;
       }
-
     }
 
     private static async Task<string> writeTextFileAsync(string text, string dir, string filename, string ext, bool unique)
@@ -225,6 +260,7 @@ namespace Oahu.Core.ex
       {
         Directory.CreateDirectory(dir);
       }
+
       string path = makePathName(dir, filename, ext, unique);
       await File.WriteAllTextAsync(path, text);
       return path;
@@ -241,34 +277,49 @@ namespace Oahu.Core.ex
     private static string makePathName(string dir, string filename, string ext, bool unique)
     {
       if (dir.IsNullOrWhiteSpace())
+      {
         dir = ApplEnv.TempDirectory;
+      }
+
       if (filename.IsNullOrWhiteSpace())
+      {
         filename = ApplEnv.ApplName;
+      }
       else
       {
         string fext = Path.GetExtension(filename);
         if (ext.IsNullOrWhiteSpace())
+        {
           ext = fext;
+        }
+
         filename = Path.GetFileNameWithoutExtension(filename);
       }
 
       if (ext.IsNullOrWhiteSpace())
+      {
         ext = TXT;
+      }
 
       if (!ext.StartsWith('.'))
+      {
         ext = '.' + ext;
+      }
 
       string path = Path.Combine(dir, filename + ext);
       if (unique)
+      {
         return path.GetUniqueTimeBasedFilename();
+      }
       else
+      {
         return path;
+      }
     }
   }
 
   public static class HttpExtensions
   {
-
     public static async Task<byte[]> DownloadImageAsync(this HttpClient httpClient, string url) =>
       await httpClient.DownloadImageAsync(new Uri(url));
 
@@ -301,7 +352,10 @@ namespace Oahu.Core.ex
     public static string HeadersToString(this HttpHeaders headers)
     {
       if (headers is null)
+      {
         return null;
+      }
+
       var sb = new StringBuilder();
       sb.Append($"{headers.GetType().Name}:");
       var enumerator = headers.GetEnumerator();
@@ -309,7 +363,9 @@ namespace Oahu.Core.ex
       {
         var kvp = enumerator.Current;
         foreach (var val in kvp.Value)
+        {
           sb.Append($"{Environment.NewLine}  {kvp.Key} = {val}");
+        }
       }
 
       return sb.ToString();
@@ -318,7 +374,10 @@ namespace Oahu.Core.ex
     public static bool IsNullOrEmpty(this HttpHeaders headers)
     {
       if (headers is null)
+      {
         return true;
+      }
+
       var enumerator = headers.GetEnumerator();
       bool isNotEmpty = enumerator.MoveNext();
       enumerator.Dispose();
@@ -328,10 +387,16 @@ namespace Oahu.Core.ex
     public static string CookiesToString(this CookieContainer cookieContainer, Uri uri)
     {
       if (cookieContainer is null || uri is null)
+      {
         return null;
+      }
+
       var cookies = cookieContainer.GetCookies(uri);
       if (cookies is null)
+      {
         return null;
+      }
+
       var sb = new StringBuilder();
       sb.Append($"{cookies.GetType().Name}:");
       for (int i = 0; i < cookies.Count; i++)
@@ -349,7 +414,9 @@ namespace Oahu.Core.ex
     public static async Task<string> ContentToStringAsync(this HttpContent content, Credentials creds = null)
     {
       if (content is not FormUrlEncodedContent)
+      {
         return null;
+      }
 
       string reqContentString = await content.ReadAsStringAsync();
       var nvc = HttpUtility.ParseQueryString(reqContentString);
@@ -361,11 +428,12 @@ namespace Oahu.Core.ex
         string key = nvc.GetKey(i);
         string[] values = nvc.GetValues(i);
         foreach (var val in values)
+        {
           sb.Append($"{Environment.NewLine}  {key} = {val.AnonymizeCredentials(creds)}");
+        }
       }
 
       return sb.ToString();
-
     }
   }
 
@@ -393,6 +461,7 @@ namespace Oahu.Core.ex
         getAccountAliasFunc.Invoke(ctxt);
         bookLibrary.SetAccountAlias(ctxt);
       }
+
       return ctxt;
     }
 
@@ -403,7 +472,10 @@ namespace Oahu.Core.ex
     {
       string alias = profile.GetAccountAlias(bookLibrary, getAccountAliasFunc);
       if (alias.IsNullOrWhiteSpace())
+      {
         return null;
+      }
+
       return new ProfileAliasKey(profile.Region, alias);
     }
 
@@ -421,7 +493,10 @@ namespace Oahu.Core.ex
     internal static bool Matches(this IProfile profile, IProfileKey key)
     {
       if (profile is null || key is null)
+      {
         return false;
+      }
+
       return profile.Region == key.Region &&
         string.Equals(profile.CustomerInfo.AccountId, key.AccountId);
     }
@@ -429,10 +504,14 @@ namespace Oahu.Core.ex
     internal static bool Matches(this IProfile profile, IProfile other)
     {
       if (profile is null || other is null)
+      {
         return false;
+      }
 
       if (object.Equals(profile, other))
+      {
         return true;
+      }
 
       return profile.Region == other.Region &&
         string.Equals(profile.CustomerInfo.AccountId, other.CustomerInfo.AccountId);
@@ -444,7 +523,9 @@ namespace Oahu.Core.ex
     internal static bool MatchesId(this IProfile profile, IProfileKey key)
     {
       if (profile is null || key is null)
+      {
         return false;
+      }
 
       return profile.Id == key.Id;
     }
@@ -463,7 +544,10 @@ namespace Oahu.Core.ex
     internal static Conversion Copy(this IConversion other)
     {
       if (other is null)
+      {
         return null;
+      }
+
       return new Conversion(other.Id)
       {
         State = other.State,
@@ -475,7 +559,8 @@ namespace Oahu.Core.ex
 
   internal static class DownloadFilenameExtensions
   {
-    static readonly string[] __knownExtensions = new string[] {
+    static readonly string[] __knownExtensions = new string[]
+    {
       R.EncryptedFileExt, R.DecryptedFileExt, R.ExportedFileExt
     };
 
@@ -483,9 +568,13 @@ namespace Oahu.Core.ex
     {
       string ext = Path.GetExtension(downloadFileName).ToLower();
       if (__knownExtensions.Contains(ext))
+      {
         return Path.GetFileNameWithoutExtension(downloadFileName);
+      }
       else
+      {
         return Path.GetFileName(downloadFileName);
+      }
     }
   }
 }

@@ -10,7 +10,6 @@ namespace Oahu.Aux.Diagnostics
   /// <seealso cref="Oahu.Aux.Diagnostics.IPrimitiveTypes" />
   public abstract class AbstractPrimitiveTypes : IPrimitiveTypes
   {
-
     Dictionary<Type, Delegate> _dict = new Dictionary<Type, Delegate>();
 
     /// <summary>
@@ -28,7 +27,6 @@ namespace Oahu.Aux.Diagnostics
     /// </summary>
     /// <param name="type">The type to be checked.</param>
     public bool IsPrimitiveType(Type type) => _dict.ContainsKey(type);
-
 
     /// <summary>
     /// Returns a <see cref="System.String" /> that represents this instance,
@@ -52,7 +50,10 @@ namespace Oahu.Aux.Diagnostics
     public string ToString(object val)
     {
       if (val is null)
+      {
         return string.Empty;
+      }
+
       Type type = val.GetType();
       Delegate d = toStringFunc(type);
       return d?.Method.Invoke(d.Target, new object[] { val }) as string;
@@ -84,9 +85,13 @@ namespace Oahu.Aux.Diagnostics
       Type type = typeof(T);
       bool succ = _dict.TryGetValue(type, out var func);
       if (succ)
+      {
         return func as Func<T, string>;
+      }
       else
+      {
         return null;
+      }
     }
 
     /// <summary>
@@ -97,11 +102,14 @@ namespace Oahu.Aux.Diagnostics
     {
       bool succ = _dict.TryGetValue(type, out var func);
       if (succ)
+      {
         return func;
+      }
       else
+      {
         return null;
+      }
     }
-
 
     /// <summary>
     /// Sets the specified function for the given type.
@@ -119,6 +127,7 @@ namespace Oahu.Aux.Diagnostics
   /// Convenience class as default implementation of <see cref="IPrimitiveTypes"/> with no additional custom types.
   /// </summary>
   /// <seealso cref="Oahu.Aux.Diagnostics.AbstractPrimitiveTypes" />
-  internal class NoPrimitiveTypes : AbstractPrimitiveTypes { }
-
+  internal class NoPrimitiveTypes : AbstractPrimitiveTypes
+  {
+  }
 }

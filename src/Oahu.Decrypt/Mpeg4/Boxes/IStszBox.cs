@@ -7,7 +7,9 @@ public interface IStszBox : IBox
   int MaxSize { get; }
   /// <summary>Sum of all sample sizes in the box</summary>
   long TotalSize { get; }
+
   int GetSizeAtIndex(int index);
+
   long SumFirstNSizes(int firstN);
 
   /// <summary>

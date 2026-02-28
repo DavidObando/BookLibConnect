@@ -9,7 +9,9 @@ public class UdtaBox : Box
     LoadChildren(file);
   }
 
-  private UdtaBox(IBox parent) : base(new BoxHeader(8, "udta"), parent) { }
+  private UdtaBox(IBox parent) : base(new BoxHeader(8, "udta"), parent)
+  {
+  }
 
   public static UdtaBox CreateEmpty(IBox parent)
   {

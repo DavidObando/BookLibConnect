@@ -20,10 +20,12 @@ public class ChunkOffsetList : ICollection<long>
 
   private readonly List<uint> chunkOffsets32;
   private List<long>? chunkOffsets64;
+
   public ChunkOffsetList()
   {
     chunkOffsets32 = [];
   }
+
   private ChunkOffsetList(int capacity)
   {
     chunkOffsets32 = new List<uint>(capacity);
@@ -51,10 +53,13 @@ public class ChunkOffsetList : ICollection<long>
         {
           toMove[i] = (uint)chunkOffsets64[i];
         }
+
         chunkOffsets32.AddRange(toMove);
         chunkOffsets64.RemoveRange(0, countToMove);
         if (chunkOffsets64.Count == 0)
+        {
           chunkOffsets64 = null;
+        }
       }
     }
 
@@ -64,12 +69,16 @@ public class ChunkOffsetList : ICollection<long>
   public long GetOffsetAtIndex(int index)
   {
     if (index < chunkOffsets32.Count)
+    {
       return chunkOffsets32[index];
+    }
     else if (chunkOffsets64 is not null)
     {
       index -= chunkOffsets32.Count;
       if (index < chunkOffsets64.Count)
+      {
         return chunkOffsets64[index];
+      }
     }
 
     throw new IndexOutOfRangeException($"Index {index} is out of range for chunk offsets.");
@@ -100,6 +109,7 @@ public class ChunkOffsetList : ICollection<long>
       {
         chunkOffsets32[index] = (uint)value;
       }
+
       return;
     }
     else if (chunkOffsets64 is not null)
@@ -111,6 +121,7 @@ public class ChunkOffsetList : ICollection<long>
         return;
       }
     }
+
     throw new IndexOutOfRangeException($"Index {index} is out of range for chunk offsets.");
   }
 
@@ -144,12 +155,15 @@ public class ChunkOffsetList : ICollection<long>
           int count = list.chunkOffsets32.Count - i;
           list.chunkOffsets64 = new List<long>(count);
         }
+
         chunkOffset += 1L << 32;
         list.chunkOffsets32.RemoveAt(i--);
         list.chunkOffsets64.Add(chunkOffset);
       }
+
       lastChunkOffset = chunkOffset;
     }
+
     list.chunkOffsets32.Sort();
     list.chunkOffsets64?.Sort();
     return list;
@@ -166,6 +180,7 @@ public class ChunkOffsetList : ICollection<long>
       {
         BinaryPrimitives.ReverseEndianness(longsSpan, longsSpan);
       }
+
       longsSpan.Sort();
 
       int _32BitCount = FindLast32bit(longsSpan) + 1;
@@ -177,6 +192,7 @@ public class ChunkOffsetList : ICollection<long>
       {
         span[i] = (uint)longsSpan[i];
       }
+
       Span<long> remainder = longsSpan[_32BitCount..];
       list.chunkOffsets64 = new List<long>(remainder.Length);
       CollectionsMarshal.SetCount(list.chunkOffsets64, remainder.Length);
@@ -212,19 +228,23 @@ public class ChunkOffsetList : ICollection<long>
         l = mid + 1;
       }
     }
+
     return -1;
   }
 
   public void Write32(Stream file)
   {
     if (chunkOffsets64 != null && chunkOffsets64.Count > 0)
+    {
       throw new InvalidOperationException("Cannot write 32-bit chunk offsets when 64-bit offsets are present.");
+    }
 
     Span<uint> span = CollectionsMarshal.AsSpan(chunkOffsets32);
     if (BitConverter.IsLittleEndian)
     {
       BinaryPrimitives.ReverseEndianness(span, span);
     }
+
     file.Write(MemoryMarshal.AsBytes(span));
     if (BitConverter.IsLittleEndian)
     {
@@ -239,11 +259,13 @@ public class ChunkOffsetList : ICollection<long>
       // Expand 32-bit offsets to 64-bit
       file.WriteInt64BE(offset32);
     }
+
     Span<long> span64 = CollectionsMarshal.AsSpan(chunkOffsets64);
     if (BitConverter.IsLittleEndian)
     {
       BinaryPrimitives.ReverseEndianness(span64, span64);
     }
+
     file.Write(MemoryMarshal.AsBytes(span64));
     if (BitConverter.IsLittleEndian)
     {
@@ -257,14 +279,19 @@ public class ChunkOffsetList : ICollection<long>
     {
       int index32 = chunkOffsets32.IndexOf((uint)item);
       if (index32 >= 0)
+      {
         return index32;
+      }
     }
     else if (chunkOffsets64 is not null)
     {
       int index64 = chunkOffsets64.IndexOf(item);
       if (index64 >= 0)
+      {
         return chunkOffsets32.Count + index64;
+      }
     }
+
     return -1;
   }
 
@@ -284,6 +311,7 @@ public class ChunkOffsetList : ICollection<long>
         return;
       }
     }
+
     throw new IndexOutOfRangeException();
   }
 
@@ -295,7 +323,9 @@ public class ChunkOffsetList : ICollection<long>
       chunkOffsets64.Add(offset);
     }
     else
+    {
       chunkOffsets32.Add((uint)offset);
+    }
   }
 
   public bool Contains(long item) => IndexOf(item) >= 0;
@@ -308,19 +338,21 @@ public class ChunkOffsetList : ICollection<long>
       RemoveAt(index);
       return true;
     }
+
     return false;
   }
 
   public IEnumerator<long> GetEnumerator() => chunkOffsets32.ConvertAll(i => (long)i).Concat(chunkOffsets64 ?? []).GetEnumerator();
+
   IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
   public void CopyTo(long[] array, int arrayIndex)
   {
-
     for (int i = 0; i < chunkOffsets32.Count; i++, arrayIndex++)
     {
       array[arrayIndex] = chunkOffsets32[i];
     }
+
     if (chunkOffsets64 is not null)
     {
       for (int i = 0; i < chunkOffsets64.Count; i++, arrayIndex++)

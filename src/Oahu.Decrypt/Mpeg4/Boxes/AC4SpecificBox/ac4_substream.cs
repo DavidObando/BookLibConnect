@@ -24,9 +24,14 @@ public class ac4_substream
     dsi_sf_multiplier = (byte)reader.Read(2);
     b_substream_bitrate_indicator = reader.ReadBool();
     if (b_substream_bitrate_indicator)
+    {
       substream_bitrate_indicator = (byte)reader.Read(5);
+    }
+
     if (info.b_channel_coded)
+    {
       dsi_substream_channel_mask = (ChannelGroups)reader.Read(24);
+    }
     else
     {
       b_ajoc = reader.ReadBool();
@@ -37,8 +42,10 @@ public class ac4_substream
         {
           n_dmx_objects_minus1 = (byte)reader.Read(4);
         }
+
         n_umx_objects_minus1 = (byte)reader.Read(6);
       }
+
       b_substream_contains_bed_objects = reader.ReadBool();
       b_substream_contains_dynamic_objects = reader.ReadBool();
       b_substream_contains_ISF_objects = reader.ReadBool();

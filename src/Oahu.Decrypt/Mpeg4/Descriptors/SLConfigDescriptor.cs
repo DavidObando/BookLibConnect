@@ -6,7 +6,9 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors;
 internal class SLConfigDescriptor : BaseDescriptor
 {
   private readonly byte[] Blob;
+
   public int Predefined { get; set; }
+
   public override int InternalSize => base.InternalSize + 1 + Blob.Length;
 
   public SLConfigDescriptor(Stream file, DescriptorHeader header) : base(file, header)
@@ -14,6 +16,7 @@ internal class SLConfigDescriptor : BaseDescriptor
     Predefined = file.ReadByte();
     Blob = file.ReadBlock(Header.TotalBoxSize - Header.HeaderSize - 1);
   }
+
   private SLConfigDescriptor(byte predefined, byte[] blob) : base(6)
   {
     Predefined = predefined;

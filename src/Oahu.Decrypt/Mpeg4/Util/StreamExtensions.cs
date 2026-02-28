@@ -32,9 +32,13 @@ namespace Oahu.Decrypt.Mpeg4.Util
     public static async Task SeekToOffsetAsync(this Stream inputStream, long chunkOffset, CancellationToken token)
     {
       if (inputStream.Position == chunkOffset)
+      {
         return;
+      }
       else if (inputStream.CanSeek)
+      {
         inputStream.Position = chunkOffset;
+      }
       else if (inputStream.Position < chunkOffset)
       {
         // Unknown Track or data type. Read past it to next known chunk.
@@ -48,7 +52,9 @@ namespace Oahu.Decrypt.Mpeg4.Util
         }
       }
       else
+      {
         throw new NotSupportedException($"Input stream position 0x{inputStream.Position:X8} is past the chunk offset 0x{chunkOffset:X8} and is not seekable.");
+      }
     }
 
     /// <summary>
@@ -58,9 +64,13 @@ namespace Oahu.Decrypt.Mpeg4.Util
     public static void SeekToOffset(this Stream inputStream, long chunkOffset)
     {
       if (inputStream.Position == chunkOffset)
+      {
         return;
+      }
       else if (inputStream.CanSeek)
+      {
         inputStream.Position = chunkOffset;
+      }
       else if (inputStream.Position < chunkOffset)
       {
         // Unknown Track or data type. Read past it to next known chunk.
@@ -75,7 +85,9 @@ namespace Oahu.Decrypt.Mpeg4.Util
         }
       }
       else
+      {
         throw new NotSupportedException($"Input stream position 0x{inputStream.Position:X8} is past the chunk offset 0x{chunkOffset:X8} and is not seekable.");
+      }
     }
 
     /// <summary>
@@ -87,13 +99,17 @@ namespace Oahu.Decrypt.Mpeg4.Util
     {
       await inputStream.SeekToOffsetAsync(chunkOffset, token);
       if (await inputStream.ReadAsync(chunkBuffer, token) != chunkBuffer.Length)
+      {
         throw new EndOfStreamException($"Stream ended at position {inputStream.Position} before all {chunkBuffer.Length} bytes were read.");
+      }
     }
 
     public static void WriteType(this Stream stream, string type)
     {
       if (type?.Length != 4)
+      {
         throw new ArgumentException("Type must be 4 chars long.");
+      }
 
       stream.Write([(byte)type[0], (byte)type[1], (byte)type[2], (byte)type[3]]);
     }
@@ -104,30 +120,35 @@ namespace Oahu.Decrypt.Mpeg4.Util
       BinaryPrimitives.WriteInt16BigEndian(word, value);
       stream.Write(word);
     }
+
     public static void WriteUInt16BE(this Stream stream, ushort value)
     {
       Span<byte> word = stackalloc byte[2];
       BinaryPrimitives.WriteUInt16BigEndian(word, value);
       stream.Write(word);
     }
+
     public static void WriteInt32BE(this Stream stream, int value)
     {
       Span<byte> dword = stackalloc byte[4];
       BinaryPrimitives.WriteInt32BigEndian(dword, value);
       stream.Write(dword);
     }
+
     public static void WriteUInt32BE(this Stream stream, uint value)
     {
       Span<byte> dword = stackalloc byte[4];
       BinaryPrimitives.WriteUInt32BigEndian(dword, value);
       stream.Write(dword);
     }
+
     public static void WriteInt64BE(this Stream stream, long value)
     {
       Span<byte> qword = stackalloc byte[8];
       BinaryPrimitives.WriteInt64BigEndian(qword, value);
       stream.Write(qword);
     }
+
     public static void WriteUInt64BE(this Stream stream, ulong value)
     {
       Span<byte> qword = stackalloc byte[8];
@@ -141,30 +162,35 @@ namespace Oahu.Decrypt.Mpeg4.Util
       stream.ReadExactly(word);
       return BinaryPrimitives.ReadInt16BigEndian(word);
     }
+
     public static ushort ReadUInt16BE(this Stream stream)
     {
       Span<byte> word = stackalloc byte[2];
       stream.ReadExactly(word);
       return BinaryPrimitives.ReadUInt16BigEndian(word);
     }
+
     public static int ReadInt32BE(this Stream stream)
     {
       Span<byte> dword = stackalloc byte[4];
       stream.ReadExactly(dword);
       return BinaryPrimitives.ReadInt32BigEndian(dword);
     }
+
     public static uint ReadUInt32BE(this Stream stream)
     {
       Span<byte> dword = stackalloc byte[4];
       stream.ReadExactly(dword);
       return BinaryPrimitives.ReadUInt32BigEndian(dword);
     }
+
     public static long ReadInt64BE(this Stream stream)
     {
       Span<byte> qword = stackalloc byte[8];
       stream.ReadExactly(qword);
       return BinaryPrimitives.ReadInt64BigEndian(qword);
     }
+
     public static ulong ReadUInt64BE(this Stream stream)
     {
       Span<byte> qword = stackalloc byte[8];
@@ -182,9 +208,13 @@ namespace Oahu.Decrypt.Mpeg4.Util
     public static byte[] ReadBlock(this Stream stream, int length)
     {
       if (length < 0)
+      {
         throw new ArgumentException("Length must be non-negative", nameof(length));
+      }
       else if (length == 0)
+      {
         return [];
+      }
       else
       {
         byte[] buffer = new byte[length];

@@ -9,9 +9,13 @@ public class SinfBox : Box
   {
     LoadChildren(file);
   }
+
   public FrmaBox OriginalFormat => GetChildOrThrow<FrmaBox>();
+
   public SchmBox? SchemeType => GetChildren<SchmBox>()?.SingleOrDefault();
+
   public SchiBox? SchemeInformation => GetChildren<SchiBox>()?.SingleOrDefault();
+
   protected override void Render(Stream file)
   {
     return;

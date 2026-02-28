@@ -11,7 +11,6 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 {
   public partial class ConversionViewModel : ObservableObject
   {
-
     [ObservableProperty]
     private ObservableCollection<ConversionItemViewModel> _conversions = new();
 
@@ -44,7 +43,10 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     {
       // Avoid duplicates
       if (Conversions.Any(c => c.Asin == book.Asin))
+      {
         return;
+      }
+
       Conversions.Add(new ConversionItemViewModel(book));
       UpdateQueuedCount();
     }
@@ -59,7 +61,10 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     {
       var item = Conversions.FirstOrDefault(c => c.Asin == asin);
       if (item is null)
+      {
         return false;
+      }
+
       Conversions.Remove(item);
       UpdateQueuedCount();
       return true;
@@ -73,7 +78,10 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     {
       var toRemove = Conversions.Where(c => c.IsSelected).ToList();
       foreach (var item in toRemove)
+      {
         Conversions.Remove(item);
+      }
+
       UpdateQueuedCount();
     }
 
@@ -81,7 +89,9 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     private async Task Run()
     {
       if (Conversions.Count == 0 || RunRequested is null)
+      {
         return;
+      }
 
       IsRunning = true;
       IsIdle = false;
@@ -110,7 +120,9 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     {
       OverallProgress = progress;
       if (status is not null)
+      {
         OverallStatusText = status;
+      }
     }
   }
 
@@ -124,8 +136,11 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     }
 
     public Book Book => _book;
+
     public string Title => _book.Title;
+
     public string Author => _book.Author;
+
     public string Asin => _book.Asin;
 
     [ObservableProperty]

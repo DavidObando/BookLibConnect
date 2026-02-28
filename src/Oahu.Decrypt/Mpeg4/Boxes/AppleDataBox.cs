@@ -9,8 +9,11 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class AppleDataBox : Box
 {
   public override long RenderSize => base.RenderSize + 8 + Data.Length;
+
   public AppleDataType DataType { get; }
+
   public uint Flags { get; }
+
   public byte[] Data { get; set; }
 
   [DebuggerHidden]
@@ -39,6 +42,7 @@ public class AppleDataBox : Box
     parent.Children.Add(dataBox);
     return dataBox;
   }
+
   private AppleDataBox(BoxHeader header, IBox parent, byte[] data, AppleDataType type)
       : base(header, parent)
   {
@@ -46,6 +50,7 @@ public class AppleDataBox : Box
     Flags = 0;
     Data = data;
   }
+
   public AppleDataBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
   {
     DataType = (AppleDataType)file.ReadUInt32BE();
@@ -53,6 +58,7 @@ public class AppleDataBox : Box
     long length = RemainingBoxLength(file);
     Data = file.ReadBlock((int)length);
   }
+
   protected override void Render(Stream file)
   {
     file.WriteUInt32BE((uint)DataType);

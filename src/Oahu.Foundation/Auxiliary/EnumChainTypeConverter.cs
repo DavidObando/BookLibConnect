@@ -15,8 +15,8 @@ namespace Oahu.Aux
   {
     // const char USCORE = '_';
     readonly TEnum[] _values;
-    // readonly IChainPunctuation _punct;
 
+    // readonly IChainPunctuation _punct;
     private ResourceManager _resourceManager;
 
     protected ResourceManager ResourceManager
@@ -50,17 +50,25 @@ namespace Oahu.Aux
     public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
     {
       if (destinationType != typeof(string))
+      {
         return base.CanConvertTo(context, destinationType);
+      }
       else
+      {
         return true;
+      }
     }
 
     public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
     {
       if (sourceType != typeof(string))
+      {
         return base.CanConvertFrom(context, sourceType);
+      }
       else
+      {
         return true;
+      }
     }
 
     public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
@@ -88,15 +96,16 @@ namespace Oahu.Aux
         {
           bool succ = _reverseLookup.TryGetValue(s, out TEnum e);
           if (succ)
+          {
             return e;
+          }
         }
       }
-      return base.ConvertFrom(context, culture, value);
 
+      return base.ConvertFrom(context, culture, value);
     }
 
     // static readonly byte __a = Convert.ToByte ('a');
-
     private string toDisplayString(TEnum value) => value.ToDisplayString<TEnum, TPunct>(ResourceManager);
 
     // private string toDisplayString (TEnum value) {
@@ -131,18 +140,15 @@ namespace Oahu.Aux
     //  }
     //  return sb.ToString ();
     // }
-
     private void initReverseLookup()
     {
       _reverseLookup = new Dictionary<string, TEnum>();
       foreach (var v in _values)
+      {
         initReverseLookup(v);
+      }
     }
 
     private void initReverseLookup(TEnum value) => _reverseLookup.Add(toDisplayString(value), value);
-
   }
-
-
-
 }

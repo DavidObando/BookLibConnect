@@ -10,9 +10,13 @@ internal static class HelperExtensions
     int checkedCount;
     bool result;
     if (Vector512.IsHardwareAccelerated)
+    {
       result = AllLessThanOrEqual_512(ints, value, out checkedCount);
+    }
     else if (Vector256.IsHardwareAccelerated)
+    {
       result = AllLessThanOrEqual_256(ints, value, out checkedCount);
+    }
     else
     {
       result = true;
@@ -20,13 +24,18 @@ internal static class HelperExtensions
     }
 
     if (!result)
+    {
       return false;
+    }
 
     for (int i = checkedCount; i < ints.Length; i++)
     {
       if (ints[i].CompareTo(value) == 1)
+      {
         return false;
+      }
     }
+
     return true;
   }
 
@@ -49,6 +58,7 @@ internal static class HelperExtensions
         }
       }
     }
+
     checkedcount = vecSize * numVectors;
     return true;
   }
@@ -72,6 +82,7 @@ internal static class HelperExtensions
         }
       }
     }
+
     checkedcount = vecSize * numVectors;
     return true;
   }

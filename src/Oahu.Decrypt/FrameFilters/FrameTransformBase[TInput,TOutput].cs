@@ -14,13 +14,17 @@ namespace Oahu.Decrypt.FrameFilters
     }
 
     public void LinkTo(FrameFilterBase<TOutput> nextFilter) => Linked = nextFilter;
+
     public abstract TOutput PerformFiltering(TInput input);
+
     protected virtual TOutput? PerformFinalFiltering() => default;
 
     protected sealed override async Task FlushAsync()
     {
       if (PerformFinalFiltering() is TOutput filteredData && Linked is not null)
+      {
         await Linked.AddInputAsync(filteredData);
+      }
     }
 
     protected sealed override async Task HandleInputDataAsync(TInput input)
@@ -45,7 +49,10 @@ namespace Oahu.Decrypt.FrameFilters
     protected override void Dispose(bool disposing)
     {
       if (disposing && !Disposed)
+      {
         Linked?.Dispose();
+      }
+
       base.Dispose(disposing);
     }
   }

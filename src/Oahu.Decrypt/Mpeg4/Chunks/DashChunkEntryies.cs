@@ -11,11 +11,17 @@ namespace Oahu.Decrypt.Mpeg4.Chunks;
 public class DashChunkEntryies : IEnumerable<ChunkEntry>
 {
   private Stream InputStream { get; }
+
   private uint TrackId { get; }
+
   private MoofBox FirstMoof { get; }
+
   private MdatBox FirstMdat { get; }
+
   private SidxBox Sidx { get; }
+
   private long MinimumSample { get; }
+
   private long MaximumSample { get; }
 
   public DashChunkEntryies(Stream inputStream, uint trakId, SidxBox sidx, MoofBox firstMoof, MdatBox firstMdat, long minimumSample, long maximumSample)
@@ -44,7 +50,9 @@ public class DashChunkEntryies : IEnumerable<ChunkEntry>
     while (InputStream.Position < endOfFile)
     {
       if (startSample > MaximumSample)
+      {
         yield break; // No more samples in range
+      }
 
       var trackChunk = ValidateMdatSize(moofBox, mdatBox, startSample);
       startSample += trackChunk.FrameDurations.Sum(d => d);
@@ -70,7 +78,9 @@ public class DashChunkEntryies : IEnumerable<ChunkEntry>
   private ChunkEntry ValidateMdatSize(MoofBox moofBox, MdatBox mdatBox, long startSample)
   {
     if (moofBox.Traf.Trun is not TrunBox trun)
+    {
       throw new InvalidDataException($"The {nameof(TrafBox)} doesn't contain a {nameof(TrunBox)}");
+    }
 
     var frameSizes
         = trun.sample_size_present ? trun.Samples.Select(s => s.SampleSize).OfType<int>().ToArray()
@@ -79,10 +89,14 @@ public class DashChunkEntryies : IEnumerable<ChunkEntry>
 
     var mdatSize = mdatBox.Header.TotalBoxSize - mdatBox.Header.HeaderSize;
     if (frameSizes.Sum() != mdatSize)
+    {
       throw new InvalidDataException("Mdat box size doesn't match sample sizes in track fragment");
+    }
 
     if (mdatSize > int.MaxValue)
+    {
       throw new InvalidDataException("Mdat is larger than Int32.MaxValue");
+    }
 
     var frameDurations
         = trun.sample_duration_present ? trun.Samples.Select(s => s.SampleDuration).OfType<uint>().ToArray()
@@ -90,7 +104,9 @@ public class DashChunkEntryies : IEnumerable<ChunkEntry>
         : throw new InvalidOperationException("Trun sample infos don't contain sample durations and no default sample duration is set.");
 
     if (frameDurations.Length != frameSizes.Length)
+    {
       throw new InvalidDataException($"The number of frame sizes ({frameSizes.Length}) does not match the number of durations ({frameDurations.Length}) in fragment {moofBox.Mfhd.SequenceNumber}");
+    }
 
     object? extraData = null;
 
@@ -120,16 +136,20 @@ public class DashChunkEntryies : IEnumerable<ChunkEntry>
     firstSample = 0;
 
     if (Sidx.Segments.Any(s => s.ReferenceType || !s.StartsWithSAP || s.SapType != 1 || s.SapDeltaTime != 0))
+    {
       throw new InvalidOperationException($"AAXClean doesn't know how to inrepret segment index boxes other than " +
           $"{nameof(SidxBox.Segment.SapType)} = 1, " +
           $"{nameof(SidxBox.Segment.SapDeltaTime)} = 0, " +
           $"{nameof(SidxBox.Segment.StartsWithSAP)} = 1, " +
           $"{nameof(SidxBox.Segment.ReferenceType)} = 0");
+    }
 
     foreach (var segment in Sidx.Segments)
     {
       if (MinimumSample < firstSample + segment.SubsegmentDuration)
+      {
         break;
+      }
 
       dataOffset += segment.ReferenceSize;
       firstSample += segment.SubsegmentDuration;

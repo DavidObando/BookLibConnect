@@ -9,18 +9,21 @@ namespace Oahu.BooksDatabase
   {
     public static class ExCodec
     {
-
       public static AudioQuality ToQuality(this Codec codec) => codec.Name.ToQuality();
 
       public static AudioQuality ToQuality(this ECodec codec)
       {
         string name = codec.ToString();
         if (!name.StartsWith("aax"))
+        {
           return default;
+        }
 
         var parts = name.SplitTrim('_');
         if (parts.Length < 3)
+        {
           return default;
+        }
 
         var qual = new AudioQuality(int.Parse(parts[1]), int.Parse(parts[2]));
         qual = qual with

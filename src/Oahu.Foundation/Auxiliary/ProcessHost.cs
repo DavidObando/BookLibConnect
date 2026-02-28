@@ -7,7 +7,6 @@ namespace Oahu.Aux
 {
   public class ProcessHost
   {
-
     protected Process Process { get; private set; }
 
     /// <summary>
@@ -18,9 +17,10 @@ namespace Oahu.Aux
       bool getStdErrorNotOutput = false,
       DataReceivedEventHandler eventHandler = null)
     {
-
       if (!File.Exists(exePath))
+      {
         return null;
+      }
 
       string result = String.Empty;
       bool async = eventHandler != null;
@@ -33,17 +33,26 @@ namespace Oahu.Aux
         p.StartInfo.Arguments = parameters;
 
         if (getStdErrorNotOutput)
+        {
           p.StartInfo.RedirectStandardError = true;
+        }
         else
+        {
           p.StartInfo.RedirectStandardOutput = true;
+        }
+
         p.StartInfo.RedirectStandardInput = true;
 
         if (async)
         {
           if (getStdErrorNotOutput)
+          {
             p.ErrorDataReceived += eventHandler;
+          }
           else
+          {
             p.OutputDataReceived += eventHandler;
+          }
         }
 
         var processOutputStringBuilder = new StringBuilder();
@@ -63,10 +72,15 @@ namespace Oahu.Aux
         if (async)
         {
           if (getStdErrorNotOutput)
+          {
             p.BeginErrorReadLine();
+          }
           else
+          {
             p.BeginOutputReadLine();
+          }
         }
+
         p.WaitForExit();
 
         Singleton<ProcessList>.Instance.Remove(p);
@@ -75,20 +89,24 @@ namespace Oahu.Aux
         if (!async)
         {
           if (getStdErrorNotOutput)
+          {
             result = p.StandardError.ReadToEnd();
+          }
           else
+          {
             result = p.StandardOutput.ReadToEnd();
+          }
         }
         else
         {
           if (processOutputStringBuilder.Length > 0)
+          {
             result = processOutputStringBuilder.ToString();
+          }
         }
-
       }
 
       return result;
     }
   }
-
 }

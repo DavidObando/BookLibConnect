@@ -7,8 +7,11 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class PsshBox : FullBox
 {
   public override long RenderSize => base.RenderSize + 16 + sizeof(int) + InitData.Length + ExtraData.Length;
+
   public Guid ProtectionSystemId { get; }
+
   public byte[] InitData { get; }
+
   public byte[] ExtraData { get; }
 
   public PsshBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)

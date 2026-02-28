@@ -26,8 +26,11 @@ namespace Oahu.Decrypt.Mpeg4.Util
 
         // Moov is after Mdat, so we have to seek to get it.
         if (box is MdatBox && !boxes.OfType<MoovBox>().Any())
+        {
           file.Position = box.Header.FilePosition + box.Header.TotalBoxSize;
+        }
       }
+
       return boxes;
     }
 
@@ -35,13 +38,24 @@ namespace Oahu.Decrypt.Mpeg4.Util
     {
       const int MoveBufferSize = 8 * 1024 * 1024;
       if (start + shiftVector < 0)
+      {
         throw new ArgumentOutOfRangeException(nameof(shiftVector), "Data cannot be shifted to a negative file position.");
+      }
+
       if (!file.CanRead || !file.CanWrite || !file.CanSeek)
+      {
         throw new ArgumentException("Stream must support reading, writing, and seeking.", nameof(file));
+      }
+
       if (start > file.Length)
+      {
         throw new ArgumentOutOfRangeException(nameof(start), "Start index exceeds the file length.");
+      }
+
       if (start + length > file.Length)
+      {
         throw new ArgumentOutOfRangeException(nameof(length), "End of data block is beyond the end of the file.");
+      }
 
       bool backToFront = shiftVector > 0;
       file.Position = backToFront ? start + length : start;
@@ -50,22 +64,27 @@ namespace Oahu.Decrypt.Mpeg4.Util
         progressTracker.TotalSize = length;
         progressTracker.MovedBytes = 0;
       }
+
       Memory<byte> buffer = new byte[MoveBufferSize];
       int read;
       do
       {
         int toRead = (int)Math.Min(MoveBufferSize, length);
         if (backToFront)
+        {
           file.Position -= toRead;
+        }
 
         read = await file.ReadAsync(buffer[..toRead], cancellationToken);
         file.Position += shiftVector - read;
         await file.WriteAsync(buffer[..read], cancellationToken);
         file.Position -= backToFront ? shiftVector + read : shiftVector;
 
-
         if (progressTracker is not null)
+        {
           progressTracker.MovedBytes += read;
+        }
+
         cancellationToken.ThrowIfCancellationRequested();
         length -= read;
       }
@@ -77,14 +96,24 @@ namespace Oahu.Decrypt.Mpeg4.Util
   public class ProgressTracker
   {
     public event EventHandler? ProgressUpdated;
+
     private readonly DateTime StartTime = DateTime.UtcNow;
     private DateTime NextUpdate = default;
     private long movedBytes;
-    public long MovedBytes { get => movedBytes; set { movedBytes = value; ReportProgress(); } }
+
+    public long MovedBytes
+    {
+      get => movedBytes; set { movedBytes = value; ReportProgress(); }
+    }
+
     public TimeSpan TotalDuration { get; set; }
+
     public long TotalSize { get; set; }
+
     public double Speed { get; private set; }
+
     public TimeSpan Position { get; private set; }
+
     public void ReportProgress(bool forceReport = false)
     {
       if (DateTime.UtcNow > NextUpdate || forceReport)

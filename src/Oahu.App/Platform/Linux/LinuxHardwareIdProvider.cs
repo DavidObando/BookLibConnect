@@ -7,7 +7,6 @@ namespace Oahu.SystemManagement.Linux
 {
   public class LinuxHardwareIdProvider : IHardwareIdProvider
   {
-
     private string _cachedCpuId;
     private string _cachedMotherboardId;
     private string _cachedDiskId;
@@ -15,7 +14,10 @@ namespace Oahu.SystemManagement.Linux
     public string GetCpuId()
     {
       if (_cachedCpuId is not null)
+      {
         return _cachedCpuId;
+      }
+
       try
       {
         // Try lscpu for CPU model name
@@ -32,7 +34,10 @@ namespace Oahu.SystemManagement.Linux
     public string GetMotherboardId()
     {
       if (_cachedMotherboardId is not null)
+      {
         return _cachedMotherboardId;
+      }
+
       try
       {
         // Use /etc/machine-id as primary stable identifier (systemd-based distros)
@@ -42,6 +47,7 @@ namespace Oahu.SystemManagement.Linux
           _cachedMotherboardId = File.ReadAllText(machineIdPath).Trim();
           return _cachedMotherboardId;
         }
+
         // Fallback to DMI board serial
         string dmiPath = "/sys/class/dmi/id/board_serial";
         if (File.Exists(dmiPath))
@@ -49,6 +55,7 @@ namespace Oahu.SystemManagement.Linux
           _cachedMotherboardId = File.ReadAllText(dmiPath).Trim();
           return _cachedMotherboardId;
         }
+
         _cachedMotherboardId = string.Empty;
         return _cachedMotherboardId;
       }
@@ -65,7 +72,10 @@ namespace Oahu.SystemManagement.Linux
         // Use DMI product name as a secondary identifier
         string dmiPath = "/sys/class/dmi/id/product_name";
         if (File.Exists(dmiPath))
+        {
           return File.ReadAllText(dmiPath).Trim();
+        }
+
         return string.Empty;
       }
       catch (Exception)
@@ -77,7 +87,10 @@ namespace Oahu.SystemManagement.Linux
     public string GetDiskId()
     {
       if (_cachedDiskId is not null)
+      {
         return _cachedDiskId;
+      }
+
       try
       {
         // Use lsblk to get the serial of the root disk
@@ -89,6 +102,7 @@ namespace Oahu.SystemManagement.Linux
           output = runCommand("lsblk", "-ndo SERIAL /dev/nvme0n1");
           _cachedDiskId = output?.Trim() ?? string.Empty;
         }
+
         return _cachedDiskId;
       }
       catch (Exception)
@@ -123,16 +137,22 @@ namespace Oahu.SystemManagement.Linux
     private static string extractLscpuValue(string lscpuOutput, string key)
     {
       if (string.IsNullOrEmpty(lscpuOutput))
+      {
         return null;
+      }
+
       foreach (string line in lscpuOutput.Split('\n'))
       {
         if (line.StartsWith(key, StringComparison.OrdinalIgnoreCase))
         {
           int colonIdx = line.IndexOf(':');
           if (colonIdx >= 0)
+          {
             return line.Substring(colonIdx + 1).Trim();
+          }
         }
       }
+
       return null;
     }
   }

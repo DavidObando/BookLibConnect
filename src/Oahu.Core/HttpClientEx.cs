@@ -8,7 +8,9 @@ namespace Oahu.Core
   {
     public CookieContainer CookieContainer { get; } = new CookieContainer();
 
-    private HttpClientEx(HttpMessageHandler handler) : base(handler) { }
+    private HttpClientEx(HttpMessageHandler handler) : base(handler)
+    {
+    }
 
     public static HttpClientEx Create(Uri baseUri)
     {
@@ -30,6 +32,5 @@ namespace Oahu.Core
 
       return client;
     }
-
   }
 }

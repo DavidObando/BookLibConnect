@@ -65,6 +65,7 @@ public class ac4_dsi_v1
         var add_pres_bytes = reader.Read(16);
         pres_bytes += add_pres_bytes;
       }
+
       if (presentation_version == 0)
       {
         // ac4_presentation_v0_dsi();
@@ -80,8 +81,11 @@ public class ac4_dsi_v1
           presentation_bytes = (uint)(reader.Position - start) / 8;
         }
         else
+        {
           presentation_bytes = 0;
+        }
       }
+
       var skip_bytes = pres_bytes - presentation_bytes;
       reader.Position += 8 * (int)skip_bytes;
     }

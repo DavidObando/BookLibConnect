@@ -7,10 +7,13 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public class SidxBox : FullBox
 {
   public override long RenderSize => base.RenderSize + 8 + (Version == 0 ? 8 : 16) + 4 + Segments.Length * 12;
+
   public uint ReferenceId { get; }
+
   public int Timescale { get; }
 
   public long EarliestPresentationTime { get; }
+
   public long FirstOffset { get; }
 
   public Segment[] Segments { get; }
@@ -30,6 +33,7 @@ public class SidxBox : FullBox
       EarliestPresentationTime = file.ReadInt64BE();
       FirstOffset = file.ReadInt64BE();
     }
+
     _ = file.ReadInt16BE();
     int referenceCount = file.ReadUInt16BE();
 
@@ -56,10 +60,13 @@ public class SidxBox : FullBox
       file.WriteInt64BE(EarliestPresentationTime);
       file.WriteInt64BE(FirstOffset);
     }
+
     file.WriteInt16BE(0);
     file.WriteInt16BE((short)Segments.Length);
     foreach (var segment in Segments)
+    {
       segment.Save(file);
+    }
   }
 
   public class Segment
