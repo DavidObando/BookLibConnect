@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
-using System.Text;
 using Oahu.Aux.Extensions;
 using static Oahu.Aux.EnumUtil;
 
 namespace Oahu.Aux {
   public class EnumChainConverter<TEnum, TPunct> : TypeConverter
-    where TEnum : struct, Enum 
-    where TPunct : class, IChainPunctuation, new() 
+    where TEnum : struct, Enum
+    where TPunct : class, IChainPunctuation, new()
   {
     //const char USCORE = '_';
     readonly TEnum[] _values;

@@ -37,7 +37,7 @@ namespace Oahu.Common.Util {
     public PackageInfoLocal (PackageInfo pi) {
       Url = pi.Url;
       AppName = pi.AppName;
-      Version = tryParse (pi.Version); 
+      Version = tryParse (pi.Version);
       Preview = pi.Preview;
       Desc = pi.Desc;
       Md5 = pi.Md5;
@@ -49,7 +49,7 @@ namespace Oahu.Common.Util {
     }
   }
 
-      
+
 }
 
 

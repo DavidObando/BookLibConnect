@@ -5,7 +5,7 @@ namespace Oahu.Aux {
     private readonly static DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
     private static double dateTimeToDouble (DateTime dt) {
-      if (dt == default) 
+      if (dt == default)
         return 0;
 
       TimeSpan ts = dt.Subtract (EPOCH);
@@ -39,24 +39,6 @@ namespace Oahu.Aux {
       DateTime dt = EPOCH.AddMilliseconds (timestampMsec);
       return dt;
     }
-
-    public static int ToUnix32 (this DateTime dt) => DateTimeToUnix32 (dt);
-
-    public static long ToUnix64 (this DateTime dt) => DateTimeToUnix64 (dt);
-
-    public static long ToUnix64Msec (this DateTime dt) => DateTimeToUnix64Msec (dt);
-
-    /// <summary>Replace time kind without changing value.</summary>
-    /// <param name="dt">The DateTime value to be reinterpreted.</param>
-    /// <param name="kind">The new DateTime kind.</param>
-    /// <returns>Reinterpreted DateTime value.</returns>
-    public static DateTime As (this DateTime dt, DateTimeKind kind) => new(dt.Ticks, kind);
-
-    public static DateTime ToDateTimeFromUnix (this int timval) => UnixToDateTime (timval);
-
-    public static DateTime ToDateTimeFromUnix (this long timval) => UnixToDateTime (timval);
-
-    public static DateTime ToDateTimeFromUnixMsec (this long timvalMsec) => UnixMsecToDateTime (timvalMsec);
 
   }
 }

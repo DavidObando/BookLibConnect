@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Oahu.Aux.Diagnostics {
 
   /// <summary>
-  /// An attribute intended to be used as a custom format string in text serialization.   
+  /// An attribute intended to be used as a custom format string in text serialization.
   /// </summary>
   /// <seealso cref="System.Attribute" />
   [AttributeUsage (AttributeTargets.Property)]
@@ -16,15 +16,15 @@ namespace Oahu.Aux.Diagnostics {
   }
 
   /// <summary>
-  /// An attribute intended to convey a custom ToString() method. 
-  /// Given type must be derived from <see cref="ToStringConverter"/>. 
+  /// An attribute intended to convey a custom ToString() method.
+  /// Given type must be derived from <see cref="ToStringConverter"/>.
   /// Optional second parameter to be interpreted as a format specification.
   /// </summary>
   /// <seealso cref="System.Attribute" />
   [AttributeUsage (AttributeTargets.Property)]
   public class ToStringAttribute : Attribute {
-    static readonly Dictionary<Type, ToStringConverter> __converters = new Dictionary<Type, ToStringConverter> ();    
-    
+    static readonly Dictionary<Type, ToStringConverter> __converters = new Dictionary<Type, ToStringConverter> ();
+
     public readonly ToStringConverter Converter;
     public readonly string Format;
 
@@ -46,7 +46,7 @@ namespace Oahu.Aux.Diagnostics {
   }
 
   /// <summary>
-  /// An attribute similar to <see cref="System.ComponentModel.DisplayNameAttribute"/>, 
+  /// An attribute similar to <see cref="System.ComponentModel.DisplayNameAttribute"/>,
   /// but intended to be used with collection items.
   /// </summary>
   /// <seealso cref="System.Attribute" />

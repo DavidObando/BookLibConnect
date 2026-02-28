@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -91,7 +90,7 @@ public class AppleListBox : Box
 	public void EditOrAddTag(string name, byte[]? data)
 	{
 		EditOrAddTag(name, data, AppleDataType.ContainsData);
-	}	
+	}
 
 	public void EditOrAddTag<TData>(string name, TData? data) where TData : IAppleData<TData>
 	{

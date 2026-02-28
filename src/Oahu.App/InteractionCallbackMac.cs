@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -52,7 +51,7 @@ namespace Oahu.App.Avalonia {
 
       // Default behavior: info/warning/error → true, questions → true (yes)
       return message.Type switch {
-        ECallbackType.question or ECallbackType.question3 or 
+        ECallbackType.question or ECallbackType.question3 or
         ECallbackType.errorQuestion or ECallbackType.errorQuestion3 => true,
         _ => true
       };

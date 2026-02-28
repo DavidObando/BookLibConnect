@@ -7,46 +7,13 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using System.Web;
 using System.Xml;
-using static System.Math;
 
 namespace Oahu.Aux.Extensions {
-  public static class ExtDirInfo {
-    public static void Clear (this DirectoryInfo di) {
-      foreach (DirectoryInfo dir in di.GetDirectories ()) {
-        try {
-          dir.Clear ();
-          dir.Delete (true);
-        } catch (IOException) {
-        }
-      }
-      foreach (FileInfo file in di.GetFiles ()) {
-        try {
-          file.Delete ();
-        } catch (IOException) {
-        }
-      }
-    }
-  }
-
-
-  public static class ExInt {
-    public static int Digits (this Int32 n) =>
-          n == 0 ? 1 : 1 + (int)Math.Log10 (Math.Abs (n));
-    public static int Digits (this UInt32 n) =>
-          n == 0 ? 1 : 1 + (int)Math.Log10 (Math.Abs (n));
-  }
-
-  public static class ExDouble {
-    public static double MinMax (this double value, double min, double max) => 
-      Min (Max (value, min), max);
-  }
-
   public static class ExNullable {
-    public static bool IsNullOrWhiteSpace (this string s) => string.IsNullOrWhiteSpace (s); 
-    public static bool IsNullOrEmpty (this string s) => string.IsNullOrEmpty (s); 
-    public static bool IsNullOrEmpty<T> (this IEnumerable<T> e) => e is null || e.Count() == 0; 
+    public static bool IsNullOrWhiteSpace (this string s) => string.IsNullOrWhiteSpace (s);
+    public static bool IsNullOrEmpty (this string s) => string.IsNullOrEmpty (s);
+    public static bool IsNullOrEmpty<T> (this IEnumerable<T> e) => e is null || e.Count() == 0;
     public static bool IsNull (this object o) => o is null;
   }
 
@@ -60,22 +27,22 @@ namespace Oahu.Aux.Extensions {
   public static class ExString {
     public const string SEPARATOR = "; ";
     public const char ELLIPSIS = '…';
-    
+
     public static string FirstEtAl (this IEnumerable<string> values, char separator) =>
       values.firstEtAl ($"{separator} ");
-    
+
     public static string FirstEtAl (this IEnumerable<string> values, string separator = SEPARATOR) =>
       values.firstEtAl (separator);
 
     public static string Combine (this IEnumerable<string> values, char separator) =>
       values.combine (false, $"{separator} ");
-    
+
     public static string Combine (this IEnumerable<string> values, string separator = SEPARATOR) =>
       values.combine (false, separator);
 
     public static string Combine (this IEnumerable<string> values, bool newLine) =>
       values.combine (newLine, SEPARATOR);
-    
+
     private static string firstEtAl (this IEnumerable<string> values, string separator) {
       if (values.IsNullOrEmpty())
         return null;
@@ -165,21 +132,6 @@ namespace Oahu.Aux.Extensions {
 
     const int MAXLEN_SHORTSTRING = 40;
 
-    public static string Shorten (this string s, int maxlen = 0) {
-      if (s is null)
-        return null;
-      if (maxlen == 0)
-        maxlen = MAXLEN_SHORTSTRING;
-      if (maxlen < 0 || s.Length <= maxlen)
-        return s;
-
-      int partLen1 = maxlen * 2 / 3;
-      int partLen2 = maxlen - partLen1 - 1;
-
-      int p2 = s.Length - partLen2;
-      return s.Substring (0, partLen1).Trim() + '…' + s.Substring (p2).Trim();
-    }
-
     /// <summary>
     /// Performs the ROT13 character rotation.
     /// </summary>
@@ -211,7 +163,6 @@ namespace Oahu.Aux.Extensions {
   public static class ExEncoding {
     // TODO implement encoding param
     public static byte[] GetBytes (this string s, Encoding enc = null) => Encoding.ASCII.GetBytes (s);
-    public static string GetString (this byte[] bytes, Encoding enc = null) => Encoding.ASCII.GetString (bytes);
   }
 
   public static class JsonExtensions {
@@ -237,15 +188,6 @@ namespace Oahu.Aux.Extensions {
     }
 
 
-    public static string SerializeToJson<T> (this T value) {
-      try {
-        string result = JsonSerializer.Serialize (value, typeof(T), Options);
-        return result;
-      } catch (Exception) {
-        return null;
-      }
-    }
-
     public static T DeserializeJson<T> (this string json) {
       try {
         T result = JsonSerializer.Deserialize<T> (json, Options);
@@ -256,30 +198,14 @@ namespace Oahu.Aux.Extensions {
     }
   }
 
-  public static class ExTimeSpan {
-    public static string ToStringHMS (this TimeSpan value) {
-      string sgn = value < TimeSpan.Zero ? "-" : string.Empty;
-      int hours = Abs (value.Days) * 24 + Abs (value.Hours);
-      return $"{sgn}{Abs (hours):D2}:{Abs (value.Minutes):D2}:{Abs (value.Seconds):D2}";
-    }
-    public static string ToStringHMSm (this TimeSpan value) => $"{value.ToStringHMS ()}.{Abs (value.Milliseconds):D3}";
-  }
-
   public static class ExDateTime {
     public static DateTime RoundDown (this DateTime date, TimeSpan span) {
       long ticks = date.Ticks / span.Ticks;
       return new DateTime (ticks * span.Ticks, date.Kind);
     }
-    public static DateTime RoundUp (this DateTime date, TimeSpan span) {
-      long ticks = (date.Ticks + span.Ticks - 1) / span.Ticks;
-      return new DateTime (ticks * span.Ticks, date.Kind);
-    }
-
     public static string ToXmlTime (this DateTime dt) =>
       XmlConvert.ToString (dt, XmlDateTimeSerializationMode.Utc);
 
-    public static DateTime FromXmlTime (this string s) =>
-      XmlConvert.ToDateTime (s, XmlDateTimeSerializationMode.Utc);
   }
 
   public static class ExUnc {
@@ -319,30 +245,9 @@ namespace Oahu.Aux.Extensions {
       }
     }
 
-    public static string StripUnc (this string path) {
-      if (!path.IsUnc ())
-        return path;
-      else {
-        string root = Path.GetPathRoot (path);
-
-        if (root.StartsWith (UNC_NET)) {
-          string s = path.Substring (UNC_NET.Length);
-          return @"\\" + s;
-        } else
-          return path.Substring (UNC_PFX.Length);
-      }
-    }
   }
 
   public static class ExHex {
-    public static byte[] HexStringToBytes (this string hex) {
-      int NumberChars = hex.Length;
-      byte[] bytes = new byte[NumberChars / 2];
-      for (int i = 0; i < NumberChars; i += 2)
-        bytes[i / 2] = Convert.ToByte (hex.Substring (i, 2), 16);
-      return bytes;
-    }
-
     public static string BytesToHexString (this byte[] ba) {
       if (ba is null)
         return null;
@@ -360,7 +265,7 @@ namespace Oahu.Aux.Extensions {
       string dir = Path.GetDirectoryName (path);
       string filnamstub = Path.GetFileNameWithoutExtension (path);
       string ext = Path.GetExtension (path);
-      
+
       char c = (alwaysUseSpaceSep || filnamstub.Contains (SPC)) ? SPC : DSH;
       string fmt1 = $"{c}yyyy_MM_dd{c}HH_mm_ss";
       string fmt2 = $"{fmt1}_fff";
@@ -385,12 +290,12 @@ namespace Oahu.Aux.Extensions {
     public static string ToBase64StringTrimmed (this byte [] bytes) =>
       bytes.ToBase64String ().TrimBase64String ();
 
-    public static string ToBase64String (this byte [] bytes) => 
+    public static string ToBase64String (this byte [] bytes) =>
       Convert.ToBase64String (bytes);
-   
+
     public static string ToUrlBase64String (this byte[] bytes) =>
       bytes.ToBase64StringTrimmed ().Replace ('+', '-').Replace ('/', '_');
-        
+
     public static string TrimBase64String (this string s) =>
       s.TrimEnd ('=');
 
@@ -408,9 +313,6 @@ namespace Oahu.Aux.Extensions {
         return null;
       }
     }
-
-    public static byte[] FromUrlBase64String (this string s) =>
-      s.Replace ('_', '/').Replace ('-', '+').FromBase64String ();
 
   }
 
@@ -452,18 +354,6 @@ namespace Oahu.Aux.Extensions {
       return true;
     }
 
-  }
-
-  public static class ExList {
-    public static void StableSort<T> (this List<T> list, IComparer<T> comparer) {
-      var pairs = list.Select ((value, index) => Tuple.Create (value, index)).ToList ();
-      pairs.Sort ((x, y) => {
-        int result = comparer.Compare (x.Item1, y.Item1);
-        return result != 0 ? result : x.Item2 - y.Item2;
-      });
-      list.Clear ();
-      list.AddRange (pairs.Select (key => key.Item1));
-    }
   }
 
   public static class ExException {

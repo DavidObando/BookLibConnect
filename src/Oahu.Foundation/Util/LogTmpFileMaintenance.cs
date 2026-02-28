@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Oahu.Aux;
 using Oahu.Aux.Extensions;
@@ -13,21 +12,21 @@ namespace Oahu.Common.Util {
     //record DirectoryFilesAndStatistics (List<FileInfo> Files, DirectoryStatistics Statistics);
 
     const int MAX_NUM_FILES_PER_DIR = 500;
-    const long MAX_SIZE_PER_DIR = 100_000_000; // 100 MB 
-    const int MAX_AGE_DAYS_PER_DIR = 365; 
-    
+    const long MAX_SIZE_PER_DIR = 100_000_000; // 100 MB
+    const int MAX_AGE_DAYS_PER_DIR = 365;
+
     private bool _inProgress;
     private DateTime Today { get; set; }
     private DateTime Timestamp { get; set; }
 
     private static LogTmpFileMaintenance __instance;
 
-    public static LogTmpFileMaintenance Instance { 
+    public static LogTmpFileMaintenance Instance {
       get {
         if (__instance is null)
           __instance = new LogTmpFileMaintenance ();
         return __instance;
-      } 
+      }
     }
 
     private LogTmpFileMaintenance () { }
@@ -65,7 +64,7 @@ namespace Oahu.Common.Util {
     }
 
     private DirectoryStatistics cleanup (List<FileInfo> fileInfos, DirectoryStatistics stats) => cleanup (fileInfos, stats, null);
-    
+
     private DirectoryStatistics cleanup (List<FileInfo> fileInfos, DateTime enforceByDate) => cleanup (fileInfos, null, enforceByDate);
 
     private DirectoryStatistics cleanup (List<FileInfo> fileInfos, DirectoryStatistics stats, DateTime? enforceByDate) {
@@ -101,7 +100,7 @@ namespace Oahu.Common.Util {
           numFiles++;
           totalSize += fi.Length;
           oldest = i > 1 ? files[i - 1].LastWriteTime : default;
-          
+
           fileInfos.RemoveAt (i);
 
           bool done;
@@ -125,7 +124,7 @@ namespace Oahu.Common.Util {
 
       var di = new DirectoryInfo (dir);
       var fis = di.GetFiles ().OrderByDescending(fi => fi.LastWriteTime).ToList();
-      
+
       long totalSize = 0;
       DateTime oldest = default;
 

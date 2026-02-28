@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Resources;
 using Oahu.Aux.Extensions;
@@ -71,7 +70,7 @@ namespace Oahu.Aux {
       initReverseLookup (true);
     }
 
-    private void initReverseLookup (bool value) => _reverseLookup.Add (toDisplayString (value), value); 
+    private void initReverseLookup (bool value) => _reverseLookup.Add (toDisplayString (value), value);
 
   }
 

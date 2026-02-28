@@ -18,18 +18,10 @@ namespace Oahu.Aux {
       Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
-    public static string ToJsonString<T> (this T obj) {
-      return JsonSerializer.Serialize<T> (obj, __jsonSerializerOptions);
-    }
-
     public static void ToJsonFile<T> (this T obj, string path) {
       using var fs = new FileStream (path, FileMode.Create);
       var task = Task.Run (async () => await JsonSerializer.SerializeAsync (fs, obj, __jsonSerializerOptions));
       task.Wait ();
-    }
-
-    public static T FromJsonString<T> (this string json) {
-      return JsonSerializer.Deserialize<T> (json, __jsonSerializerOptions);
     }
 
     public static T FromJsonFile<T> (this string path) {

@@ -17,7 +17,7 @@ namespace Oahu.Core {
   }
 
   public interface IDownloadSettings : IMultiPartSettings, IAuthorizeSettings {
-    event EventHandler ChangedSettings; 
+    event EventHandler ChangedSettings;
 
     bool AutoUpdateLibrary { get; }
     bool AutoOpenDownloadDialog { get; }
@@ -48,7 +48,7 @@ namespace Oahu.Core {
       set {
         _encryptConfiguration = value;
         OnChange ();
-      } 
+      }
     }
   }
 
@@ -65,7 +65,7 @@ namespace Oahu.Core {
     public EDownloadQuality DownloadQuality {
       get => _downloadQuality.ToFullChoices ();
       set => _downloadQuality = value.ToReducedChoices ();
-    } 
+    }
     public string DownloadDirectory { get; set; }
     public EInitialSorting InitialSorting { get; set; }
     public ProfileAliasKey Profile { get; set; }

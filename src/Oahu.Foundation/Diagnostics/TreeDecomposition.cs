@@ -20,19 +20,19 @@ namespace Oahu.Aux.Diagnostics {
 
   /// <summary>
   /// <para>Decomposition of specified object into a text tree.</para>
-  /// <para>Iterates public properties in specified object. 
-  /// One property name/value pair per text line. 
-  /// Hierarchy levels are determined by property type.  
-  /// Primitive types are written to the same hierarchy level.  
-  /// Non-primitive types are written to the next lower hierarchy level, working recursively.  
-  /// As an option, properties can additionally be grouped by implemented interfaces and their hierarchy. 
-  /// Hierarchy levels are indicated through indentation. 
-  /// Collections are decomposed by item, iterating <see cref="IEnumerable"/>. 
+  /// <para>Iterates public properties in specified object.
+  /// One property name/value pair per text line.
+  /// Hierarchy levels are determined by property type.
+  /// Primitive types are written to the same hierarchy level.
+  /// Non-primitive types are written to the next lower hierarchy level, working recursively.
+  /// As an option, properties can additionally be grouped by implemented interfaces and their hierarchy.
+  /// Hierarchy levels are indicated through indentation.
+  /// Collections are decomposed by item, iterating <see cref="IEnumerable"/>.
   /// Custom primitive types can be set by providing a generic argument, implementing <see cref="IPrimitiveTypes"/>.</para>
-  /// <para>Built-in primitive types as per definition here are not only the scalar types (int, double etc) 
-  /// but also string, enum, and - important - all other .Net framework types in the System namespaces. 
-  /// (The purpose of this facility is to decompose user types, not system types.) 
-  /// Built-in primitive type handling can be overridden 
+  /// <para>Built-in primitive types as per definition here are not only the scalar types (int, double etc)
+  /// but also string, enum, and - important - all other .Net framework types in the System namespaces.
+  /// (The purpose of this facility is to decompose user types, not system types.)
+  /// Built-in primitive type handling can be overridden
   /// by custom primimitive types.</para>
   /// <para>Note: <see cref="AbstractPrimitiveTypes"/> can be used as a base class to implement <see cref="IPrimitiveTypes"/>.</para>
   /// <para>Properties can be annotated with attributes. Recognized attributes are:</para>
@@ -43,7 +43,7 @@ namespace Oahu.Aux.Diagnostics {
   /// <item><see cref="DisplayItemNameAttribute"/>to override the item name in a collection.</item>
   /// <item><see cref="TextFormatAttribute"/>to specify a format string.</item></list>
   /// <item><see cref="ToStringAttribute"/>to specify a custom ToString() method with a type converter derived from <see cref="ToStringConverter"/>.</item></list>
-  /// <para>To be used as a singleton from extension methods, see <see cref="TreeDecompositionExtension"/> for details.</para> 
+  /// <para>To be used as a singleton from extension methods, see <see cref="TreeDecompositionExtension"/> for details.</para>
   /// </summary>
   /// <typeparam name="T">Additional primitive types, implementing <see cref="IPrimitiveTypes"/></typeparam>
   internal class TreeDecomposition<T>
@@ -60,7 +60,7 @@ namespace Oahu.Aux.Diagnostics {
       public readonly ToStringConverter Converter;
       public CustomToString (ToStringConverter converter, string format) : base (format) => Converter = converter;
     }
- 
+
 
     static IPrimitiveTypes __primitveTypes = new T ();
 
@@ -130,9 +130,9 @@ namespace Oahu.Aux.Diagnostics {
               foreach (var path in interfaceHierarchy)
                 dump (ref propInfos, o, path, stack, tw, ind, flags, inEnum);
               dump (o, propInfos, stack, tw, ind, flags, inEnum);
-            } else 
+            } else
               dump (o, propInfos, stack, tw, ind, flags, inEnum);
-          } else 
+          } else
             dump (o, propInfos, stack, tw, ind, flags, inEnum);
         }
       }
@@ -265,12 +265,12 @@ namespace Oahu.Aux.Diagnostics {
 
     private string getTypeDesc (Type type, EDumpFlags flags, bool inEnum) {
       if (!flags.HasFlag (EDumpFlags.inclDesc) || !flags.HasFlag (EDumpFlags.inclTypeDesc) || (inEnum && !flags.HasFlag (EDumpFlags.inclDescInEnum)))
-        return null;      
+        return null;
       object[] attrs = type.GetCustomAttributes (true);
       return attrs.FirstOfType<DescriptionAttribute> ()?.Description;
     }
 
-    private void dumpCollection (object o, Stack<Type> stack, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type objectType, TextWriter tw, Indent ind, 
+    private void dumpCollection (object o, Stack<Type> stack, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type objectType, TextWriter tw, Indent ind,
       EDumpFlags flags, string itemCaption, CustomFormat itemFormat
     ) {
 
@@ -361,7 +361,7 @@ namespace Oahu.Aux.Diagnostics {
         return;
 
       var (m1, m2) = mkr ();
-      string c = flags.HasFlag (EDumpFlags.byInterface) ? string.Empty : ":"; 
+      string c = flags.HasFlag (EDumpFlags.byInterface) ? string.Empty : ":";
 
       if (desc.IsNullOrWhiteSpace ())
         tw.WriteLine ($"{ind}{value}{c}");

@@ -4,7 +4,7 @@ using System.IO;
 namespace Oahu.Decrypt.Mpeg4
 {
 	/// <summary>
-	/// A read-only stream that tracks the stream position based on the number of bytes read. 
+	/// A read-only stream that tracks the stream position based on the number of bytes read.
 	/// </summary>
 	public class TrackedReadStream : Stream
 	{

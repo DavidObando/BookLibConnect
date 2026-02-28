@@ -7,13 +7,13 @@ using Oahu.Aux.Extensions;
 
 namespace Oahu.Aux {
   public static class EnumUtil {
-    // Note: constraint System.Enum available in C# 7.3 
+    // Note: constraint System.Enum available in C# 7.3
     public static IEnumerable<T> GetValues<T> () where T : struct, Enum {
       var values = Enum.GetValues (typeof (T));
       return values.Cast<T> ().ToList ();
     }
 
-    // Note: constraint System.Enum available in C# 7.3 
+    // Note: constraint System.Enum available in C# 7.3
     public static string[] GetStringValues<T> () where T : struct, Enum {
       var values = GetValues<T> ();
       return values.Select (v => $"<{v}>").ToArray ();
@@ -22,9 +22,9 @@ namespace Oahu.Aux {
     const char USCORE = '_';
     static readonly byte __a = Convert.ToByte ('a');
 
-    public static string ToDisplayString<TEnum, TPunct> (this TEnum value, ResourceManager rm) 
+    public static string ToDisplayString<TEnum, TPunct> (this TEnum value, ResourceManager rm)
       where TEnum: struct, Enum
-      where TPunct : class, IChainPunctuation, new() 
+      where TPunct : class, IChainPunctuation, new()
     {
 
 

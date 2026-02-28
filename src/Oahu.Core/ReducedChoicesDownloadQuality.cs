@@ -22,7 +22,5 @@ namespace Oahu.Core {
       };
     }
 
-    public static EDownloadQuality ReduceChoices (this EDownloadQuality value) =>
-      value.ToReducedChoices ().ToFullChoices ();
   }
 }

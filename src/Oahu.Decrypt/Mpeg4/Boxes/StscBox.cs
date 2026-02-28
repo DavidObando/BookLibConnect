@@ -38,7 +38,7 @@ public class StscBox : FullBox
 	}
 
 	/// <summary>
-	/// 
+	///
 	/// </summary>
 	/// <param name="file"></param>
 	/// <param name="header"></param>
@@ -56,7 +56,7 @@ public class StscBox : FullBox
 		if (BitConverter.IsLittleEndian)
 		{
 			Span<uint> uints = MemoryMarshal.Cast<StscChunkEntry, uint>(samples);
-			BinaryPrimitives.ReverseEndianness(uints, uints);	
+			BinaryPrimitives.ReverseEndianness(uints, uints);
 		}
 	}
 

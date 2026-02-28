@@ -9,7 +9,7 @@ public class TXXXFrame : Frame
 		=> IsUnicode(FieldName) || IsUnicode(FieldValue)
 		? 1 + UnicodeLength(FieldName) + 2 + UnicodeLength(FieldValue)
 		: 1 + FieldName.Length + 1 + FieldValue.Length;
-	
+
 	public string FieldName { get; }
 	public string FieldValue { get; }
 	public TXXXFrame(Stream file, Header header, Frame parent) : base(header, parent)

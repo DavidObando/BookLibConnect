@@ -22,7 +22,7 @@ namespace Oahu.Aux.Diagnostics {
         sb.Append (t.Name);
       }
       return sb.ToString ();
-    } 
+    }
 
     [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "Interface types returned by GetInterfaces preserve their own interface metadata.")]
     private static void findLeaves ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type type, IList<Type> path, IDictionary<Type, List<Type>> leaves) {
@@ -36,7 +36,7 @@ namespace Oahu.Aux.Diagnostics {
       var ifcTypes = type.GetInterfaces ();
       foreach (var ifcType in ifcTypes)
         findLeaves (ifcType, path.ToList(), leaves);
-      
+
     }
 
     private static List<List<Type>> sort (Dictionary<Type, List<Type>> leavesDict) {

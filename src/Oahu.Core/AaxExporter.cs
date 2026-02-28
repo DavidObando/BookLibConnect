@@ -40,9 +40,9 @@ namespace Oahu.Core {
     }
 
     private void exportSinglePart (
-      IBookCommon book, 
-      SimpleConversionContext context, 
-      Action<Conversion> onNewStateCallback, 
+      IBookCommon book,
+      SimpleConversionContext context,
+      Action<Conversion> onNewStateCallback,
       bool skipSeries = false
     ) {
       Log (3, this, () => book.ToString ());
@@ -69,8 +69,8 @@ namespace Oahu.Core {
 
 
     private void exportMultiPart (
-      Book book, 
-      SimpleConversionContext context, 
+      Book book,
+      SimpleConversionContext context,
       Action<Conversion> onNewStateCallback
     ) {
       Log (3, this, () => book.ToString ());
@@ -143,7 +143,7 @@ namespace Oahu.Core {
       var accuChapters = new List<List<ChapterExtract>> ();
       var flattenedChapters = BookLibrary?.GetChaptersFlattened (book, accuChapters);
 
-     
+
       if (!flattenedChapters.IsNullOrEmpty()) {
         var chapters = new List<Oahu.Audible.Json.Chapter> ();
         foreach (var chapter in flattenedChapters) {
@@ -222,7 +222,7 @@ namespace Oahu.Core {
       Log (3, this, () => book.ToString ());
 
       foreach (var serbook in book.Series) {
-        var series = serbook.Series;       
+        var series = serbook.Series;
         string asin = series.Asin;
 
         var products = new List<Oahu.Audible.Json.Product> ();

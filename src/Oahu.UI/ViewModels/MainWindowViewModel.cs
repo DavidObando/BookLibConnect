@@ -1,8 +1,6 @@
-using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Oahu.Core;
 
 namespace Oahu.Core.UI.Avalonia.ViewModels {
   public partial class MainWindowViewModel : ObservableObject {

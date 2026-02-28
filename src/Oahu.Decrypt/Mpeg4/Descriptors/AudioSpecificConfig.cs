@@ -53,7 +53,7 @@ public class AudioSpecificConfig : BaseDescriptor, IASC
 	{
 		//AAC-LC, 44.1kHz, 2 channels. Use a an arbitrary valid configuration
 		//to cheat the validators. These must be updated to valid values by
-		//the user before rendering. 
+		//the user before rendering.
 		bitReader = LoadAscBlob(this, [0x13, 0x90]);
 		ascBlobLength = 2;
 	}

@@ -7,7 +7,6 @@ using Oahu.Aux;
 using Microsoft.EntityFrameworkCore;
 using Oahu.Aux.Extensions;
 using static Oahu.Aux.Logging;
-using System.Reflection;
 
 namespace Oahu.BooksDatabase {
 
@@ -76,10 +75,10 @@ namespace Oahu.BooksDatabase {
           string filestub = Path.GetFileNameWithoutExtension (dbContext.DbPath);
           string ext = Path.GetExtension (dbContext.DbPath);
 
-          string mig = dbContext.Database.GetAppliedMigrations ().LastOrDefault ();                   
+          string mig = dbContext.Database.GetAppliedMigrations ().LastOrDefault ();
           if (mig.IsNullOrEmpty ())
             mig = "(no mig)";
-          
+
           string dest = Path.Combine (dir, $"{filestub} {mig}{ext}");
           Log (2, typeof (BookDbContext), () => $"create backup: \"{dest.SubstitUser()}\"");
 
@@ -104,7 +103,7 @@ namespace Oahu.BooksDatabase {
       size = fi.Length / 1024;
       Log (2, typeof (BookDbContext), () => $"after:  {size} kB");
     }
-    
+
     private static readonly Dictionary<Type, EPseudoAsinId> _pseudoAsins
       = new Dictionary<Type, EPseudoAsinId> {
         { typeof (Author), EPseudoAsinId.author },
@@ -205,7 +204,7 @@ namespace Oahu.BooksDatabase {
         .WithOne (e => e.Component)
         .HasForeignKey<ChapterInfo> (e => e.ComponentId)
         .OnDelete (DeleteBehavior.Cascade);
-      
+
       modelBuilder.Entity<Book> ()
         .HasOne (e => e.ChapterInfo)
         .WithOne (e => e.Book)
@@ -218,7 +217,7 @@ namespace Oahu.BooksDatabase {
         .HasForeignKey (e => e.ChapterInfoId)
         .IsRequired (false)
         .OnDelete (DeleteBehavior.Cascade);
-      
+
       modelBuilder.Entity<Chapter> ()
         .HasOne (e => e.ParentChapter)
         .WithMany (e => e.Chapters)
@@ -231,7 +230,7 @@ namespace Oahu.BooksDatabase {
 
   public class BookDbContextLazyLoad : BookDbContext {
 
-    public BookDbContextLazyLoad (string dirpath = null, string filename = null) : 
+    public BookDbContextLazyLoad (string dirpath = null, string filename = null) :
       base (dirpath, filename)
     { }
 

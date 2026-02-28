@@ -6,7 +6,7 @@
     string Message
   );
 
-  public record InteractionMessage<T> (ECallbackType Type, string Message, T Custom) : 
+  public record InteractionMessage<T> (ECallbackType Type, string Message, T Custom) :
     InteractionMessage (Type, Message);
 
 }

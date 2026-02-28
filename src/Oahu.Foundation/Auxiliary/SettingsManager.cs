@@ -99,8 +99,8 @@ namespace Oahu.Aux {
     /// if settings can not be found at the designated user settings directory.
     /// </summary>
     /// <typeparam name="T">Type of the user settings.</typeparam>
-    /// <param name="settingsFile">The settings file. Required for each additional type 
-    /// if more than one type will be used. Can be file name only without directory. 
+    /// <param name="settingsFile">The settings file. Required for each additional type
+    /// if more than one type will be used. Can be file name only without directory.
     /// .json will be added if ncessary.</param>
     /// <param name="renew">Always reads from file and updates existing instance if set to <c>true</c>.</param>
     /// <returns>
@@ -121,10 +121,10 @@ namespace Oahu.Aux {
 
       if (settings is null) {
         (string dir, string file) = getUserSettingsPath (settingsFile);
-        
+
         string path = Path.Combine (dir, file);
         settings = deserializeJsonFile<T> (path);
-        
+
         if (settings is null) {
           path = Path.Combine (AppSettingsDirectory, file);
           settings = deserializeJsonFile<T> (path);
@@ -162,9 +162,9 @@ namespace Oahu.Aux {
     /// <typeparam name="T">Type of the user settings</typeparam>
     /// <param name="settings">The user settings.</param>
     public static bool Save<T> (this T settings)
-      where T : IUserSettings 
+      where T : IUserSettings
     {
-      
+
       string settingsFile;
 
       // use actual arg type, not the generic type which may be an interface.
@@ -190,48 +190,6 @@ namespace Oahu.Aux {
       }
     }
 
-    /// <summary>
-    /// <para>Writes the specified settings to a JSON file, as a template.</para>
-    /// <para>Will write to specified path if filename is not <c>null</c>. 
-    /// Otherwise will use type name of specified settings object as filename and
-    /// add .template.json to it. Will try AppSettingsDirectory first. If this fails 
-    /// (write protected), will use UserSettingsDirectory.</para>
-    /// </summary>
-    /// <typeparam name="T">Type of settings</typeparam>
-    /// <param name="settings">The settings object to serialize</param>
-    /// <param name="filename">Optional custom filename.</param>
-    /// <returns><c>true</c> on success.</returns>
-    public static bool SaveAsTemplate<T> (this T settings, string filename = null) {
-      if (!string.IsNullOrWhiteSpace (filename)) {
-        try {
-          var dir = Path.GetDirectoryName (filename);
-          if (!string.IsNullOrWhiteSpace (dir))
-            Directory.CreateDirectory (dir);
-          settings.ToJsonFile (filename);
-          return true;
-        } catch (IOException) {
-          return false;
-        }
-      } else {
-        string name = settings.GetType ().Name;
-        filename = name + SETTINGS_TEMPLATE_FILE_SUFFIX;
-        string path = Path.Combine (AppSettingsDirectory, filename);
-        try {
-          settings.ToJsonFile (path);
-          return true;
-        } catch (IOException) {
-          Directory.CreateDirectory (UserSettingsDirectory);
-          path = Path.Combine (UserSettingsDirectory, filename);
-        }
-        try {
-          settings.ToJsonFile (path);
-          return true;
-        } catch (IOException) {
-        }
-      }
-      return false;
-    }
-
 
 
     private static (string dir, string path) getUserSettingsPath (string settingsFile) {
@@ -255,7 +213,7 @@ namespace Oahu.Aux {
         return JsonSerialization.FromJsonFile<T> (path);
       } catch (Exception exc) {
         if (doThrow)
-          throw new InvalidOperationException (path, exc); 
+          throw new InvalidOperationException (path, exc);
         return null;
       }
     }

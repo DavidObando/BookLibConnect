@@ -9,7 +9,7 @@ namespace Oahu.Core {
     public string CustomerName { get; }
     public IEnumerable<uint> Hashes { get; }
     public string Alias { get; set; }
-    
+
     public AccountAliasContext (int localId, string customerName, IEnumerable<uint> hashes) {
       LocalId = localId;
       CustomerName = customerName;

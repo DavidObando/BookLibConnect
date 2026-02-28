@@ -20,7 +20,7 @@ namespace Oahu.Aux.Diagnostics {
     bool IsPrimitiveType (Type type);
 
     /// <summary>
-    /// Returns a <see cref="System.String" /> that represents this instance, 
+    /// Returns a <see cref="System.String" /> that represents this instance,
     /// if registered as a custom primitive type. Type-safe variant.
     /// </summary>
     /// <typeparam name="T">generic type</typeparam>
@@ -41,7 +41,7 @@ namespace Oahu.Aux.Diagnostics {
     string ToString (object val);
 
     /// <summary>
-    /// Returns a <see cref="System.String" /> that represents this instance, 
+    /// Returns a <see cref="System.String" /> that represents this instance,
     /// if registered as a custom primitive type. Non-type-safe variant.
     /// </summary>
     /// <typeparam name="T">generic type</typeparam>

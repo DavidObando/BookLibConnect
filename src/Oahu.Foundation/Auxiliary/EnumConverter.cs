@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
@@ -10,8 +9,8 @@ using static Oahu.Aux.EnumUtil;
 
 namespace Oahu.Aux {
 
-  public class EnumConverter<TEnum> : TypeConverter 
-    where TEnum : struct, Enum 
+  public class EnumConverter<TEnum> : TypeConverter
+    where TEnum : struct, Enum
   {
 
     protected IList<TEnum> Values { get; }

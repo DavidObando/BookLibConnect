@@ -17,9 +17,9 @@ namespace Oahu.Core {
     relocatable = 2
   }
 
-  public enum EBookLibInteract { 
+  public enum EBookLibInteract {
     none,
-    checkFile 
+    checkFile
   }
 
   public enum EAuthorizeResult {

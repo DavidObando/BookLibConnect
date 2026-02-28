@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Oahu.Aux.Extensions;
+﻿using Oahu.Aux.Extensions;
 using Oahu.CommonTypes;
 
 namespace Oahu.BooksDatabase {
@@ -21,32 +19,11 @@ namespace Oahu.BooksDatabase {
           return default;
 
         var qual = new AudioQuality (int.Parse (parts[1]), int.Parse (parts[2]));
-        qual = qual with { 
+        qual = qual with {
           SampleRate = qual.SampleRate * 22050 / 22
         };
 
         return qual;
-      }
-
-      public static AudioQuality MaxQuality (this IEnumerable<Codec> codecs) {
-        var aaxCodecs = codecs
-          .Select (c => c.ToQuality())
-          .Where (c => c is not null)
-          .ToList ();
-        if (!aaxCodecs.Any ())
-          return default;
-
-        var max = aaxCodecs.Aggregate ((a, s) => {
-          if (a is null)
-            return s;
-
-          if (s.SampleRate >= a.SampleRate && s.BitRate >= a.BitRate)
-            return s;
-          else
-            return a;
-        });
-
-        return max;
       }
     }
   }

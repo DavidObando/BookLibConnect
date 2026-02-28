@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using Oahu.Aux;
 
 namespace Oahu.Core.UI.Avalonia.ViewModels {
   public partial class AboutViewModel : ObservableObject {

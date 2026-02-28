@@ -4,7 +4,7 @@ using System.Threading;
 namespace Oahu.Aux.Extensions {
 
   /// <summary>
-  ///   <para>Type-safe extensions for invoking methods via a synchronization context. 
+  ///   <para>Type-safe extensions for invoking methods via a synchronization context.
   ///   Will be executed in the thread of the synchronization context.</para>
   ///   <list type="bullet">
   ///     <item>Post: Action delegate, not waiting for completion.</item>
@@ -15,7 +15,7 @@ namespace Oahu.Aux.Extensions {
   /// </summary>
   /// <example><code>
   /// mySyncContext.Send (helloWorld, "Me");
-  /// 
+  ///
   /// void helloWorld (string name) => Console.WriteLine ("Hello world from " + name);
   /// </code></example>
   public static class SyncContextExtensions {
@@ -23,7 +23,7 @@ namespace Oahu.Aux.Extensions {
 
     #region Asynchronous Post Methods
     public static void Post (
-      this SynchronizationContext sync, 
+      this SynchronizationContext sync,
       Action delgat
     ) {
       if (sync is null)
@@ -33,8 +33,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Post<T> (
-      this SynchronizationContext sync, 
-      Action<T> delgat, 
+      this SynchronizationContext sync,
+      Action<T> delgat,
       T p1
     ) {
       if (sync is null)
@@ -44,8 +44,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Post<T1, T2> (
-      this SynchronizationContext sync, 
-      Action<T1, T2> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2> delgat,
       T1 p1, T2 p2
     ) {
       if (sync is null)
@@ -55,8 +55,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Post<T1, T2, T3> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3> delgat,
       T1 p1, T2 p2, T3 p3
     ) {
       if (sync is null)
@@ -66,8 +66,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Post<T1, T2, T3, T4> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3, T4> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3, T4> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4
     ) {
       if (sync is null)
@@ -77,8 +77,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Post<T1, T2, T3, T4, T5> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3, T4, T5> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3, T4, T5> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5
     ) {
       if (sync is null)
@@ -88,8 +88,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Post<T1, T2, T3, T4, T5, T6> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3, T4, T5, T6> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3, T4, T5, T6> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6
     ) {
       if (sync is null)
@@ -99,8 +99,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Post<T1, T2, T3, T4, T5, T6, T7> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3, T4, T5, T6, T7> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3, T4, T5, T6, T7> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7
     ) {
       if (sync is null)
@@ -110,8 +110,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Post<T1, T2, T3, T4, T5, T6, T7, T8> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3, T4, T5, T6, T7, T8> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3, T4, T5, T6, T7, T8> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8
     ) {
       if (sync is null)
@@ -123,7 +123,7 @@ namespace Oahu.Aux.Extensions {
 
     #region Synchronous Send Methods
     public static void Send (
-      this SynchronizationContext sync, 
+      this SynchronizationContext sync,
       Action delgat
     ) {
       if (sync is null)
@@ -133,8 +133,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Send<T> (
-      this SynchronizationContext sync, 
-      Action<T> delgat, 
+      this SynchronizationContext sync,
+      Action<T> delgat,
       T p1
     ) {
       if (sync is null)
@@ -144,8 +144,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Send<T1, T2> (
-      this SynchronizationContext sync, 
-      Action<T1, T2> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2> delgat,
       T1 p1, T2 p2
     ) {
       if (sync is null)
@@ -155,8 +155,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Send<T1, T2, T3> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3> delgat,
       T1 p1, T2 p2, T3 p3
     ) {
       if (sync is null)
@@ -166,8 +166,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Send<T1, T2, T3, T4> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3, T4> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3, T4> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4
     ) {
       if (sync is null)
@@ -177,8 +177,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Send<T1, T2, T3, T4, T5> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3, T4, T5> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3, T4, T5> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5
     ) {
       if (sync is null)
@@ -188,8 +188,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Send<T1, T2, T3, T4, T5, T6> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3, T4, T5, T6> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3, T4, T5, T6> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6
     ) {
       if (sync is null)
@@ -199,8 +199,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Send<T1, T2, T3, T4, T5, T6, T7> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3, T4, T5, T6, T7> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3, T4, T5, T6, T7> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7
     ) {
       if (sync is null)
@@ -210,8 +210,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static void Send<T1, T2, T3, T4, T5, T6, T7, T8> (
-      this SynchronizationContext sync, 
-      Action<T1, T2, T3, T4, T5, T6, T7, T8> delgat, 
+      this SynchronizationContext sync,
+      Action<T1, T2, T3, T4, T5, T6, T7, T8> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8
     ) {
       if (sync is null)
@@ -223,7 +223,7 @@ namespace Oahu.Aux.Extensions {
 
     #region Synchronous Send Methods With Return Value
     public static TResult Send<TResult> (
-      this SynchronizationContext sync, 
+      this SynchronizationContext sync,
       Func<TResult> delgat
     ) {
       if (sync is null)
@@ -233,8 +233,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static TResult Send<T, TResult> (
-      this SynchronizationContext sync, 
-      Func<T, TResult> delgat, 
+      this SynchronizationContext sync,
+      Func<T, TResult> delgat,
       T p1
     ) {
       if (sync is null)
@@ -244,8 +244,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static TResult Send<T1, T2, TResult> (
-      this SynchronizationContext sync, 
-      Func<T1, T2, TResult> delgat, 
+      this SynchronizationContext sync,
+      Func<T1, T2, TResult> delgat,
       T1 p1, T2 p2
     ) {
       if (sync is null)
@@ -255,8 +255,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static TResult Send<T1, T2, T3, TResult> (
-      this SynchronizationContext sync, 
-      Func<T1, T2, T3, TResult> delgat, 
+      this SynchronizationContext sync,
+      Func<T1, T2, T3, TResult> delgat,
       T1 p1, T2 p2, T3 p3
     ) {
       if (sync is null)
@@ -266,8 +266,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static TResult Send<T1, T2, T3, T4, TResult> (
-      this SynchronizationContext sync, 
-      Func<T1, T2, T3, T4, TResult> delgat, 
+      this SynchronizationContext sync,
+      Func<T1, T2, T3, T4, TResult> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4
     ) {
       if (sync is null)
@@ -277,8 +277,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static TResult Send<T1, T2, T3, T4, T5, TResult> (
-      this SynchronizationContext sync, 
-      Func<T1, T2, T3, T4, T5, TResult> delgat, 
+      this SynchronizationContext sync,
+      Func<T1, T2, T3, T4, T5, TResult> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5
     ) {
       if (sync is null)
@@ -288,8 +288,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static TResult Send<T1, T2, T3, T4, T5, T6, TResult> (
-      this SynchronizationContext sync, 
-      Func<T1, T2, T3, T4, T5, T6, TResult> delgat, 
+      this SynchronizationContext sync,
+      Func<T1, T2, T3, T4, T5, T6, TResult> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6
     ) {
       if (sync is null)
@@ -299,8 +299,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static TResult Send<T1, T2, T3, T4, T5, T6, T7, TResult> (
-      this SynchronizationContext sync, 
-      Func<T1, T2, T3, T4, T5, T6, T7, TResult> delgat, 
+      this SynchronizationContext sync,
+      Func<T1, T2, T3, T4, T5, T6, T7, TResult> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7
     ) {
       if (sync is null)
@@ -310,8 +310,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     public static TResult Send<T1, T2, T3, T4, T5, T6, T7, T8, TResult> (
-      this SynchronizationContext sync, 
-      Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> delgat, 
+      this SynchronizationContext sync,
+      Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8
     ) {
       if (sync is null)
@@ -328,7 +328,7 @@ namespace Oahu.Aux.Extensions {
     #region Private Methods
 
     private static void sendOrPost (
-      Action<SendOrPostCallback, object> sendOrPost, 
+      Action<SendOrPostCallback, object> sendOrPost,
       Action delgat
     ) {
       sendOrPost (o => delgat (), null);
@@ -391,8 +391,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     private static void sendOrPost<T1, T2, T3, T4, T5, T6> (
-      Action<SendOrPostCallback, object> sendOrPost, 
-      Action<T1, T2, T3, T4, T5, T6> delgat, 
+      Action<SendOrPostCallback, object> sendOrPost,
+      Action<T1, T2, T3, T4, T5, T6> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6
     ) {
       sendOrPost (o =>
@@ -403,8 +403,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     private static void sendOrPost<T1, T2, T3, T4, T5, T6, T7> (
-      Action<SendOrPostCallback, object> sendOrPost, 
-      Action<T1, T2, T3, T4, T5, T6, T7> delgat, 
+      Action<SendOrPostCallback, object> sendOrPost,
+      Action<T1, T2, T3, T4, T5, T6, T7> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7
     ) {
       sendOrPost (o =>
@@ -415,8 +415,8 @@ namespace Oahu.Aux.Extensions {
     }
 
     private static void sendOrPost<T1, T2, T3, T4, T5, T6, T7, T8> (
-      Action<SendOrPostCallback, object> sendOrPost, 
-      Action<T1, T2, T3, T4, T5, T6, T7, T8> delgat, 
+      Action<SendOrPostCallback, object> sendOrPost,
+      Action<T1, T2, T3, T4, T5, T6, T7, T8> delgat,
       T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8
     ) {
       sendOrPost (o =>
@@ -427,7 +427,7 @@ namespace Oahu.Aux.Extensions {
     }
 
     private static TResult sendOrPost<TResult> (
-      Action<SendOrPostCallback, object> sendOrPost, 
+      Action<SendOrPostCallback, object> sendOrPost,
       Func<TResult> delgat
     ) {
       TResult retval = default;

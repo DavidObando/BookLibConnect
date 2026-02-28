@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,47 +10,6 @@ namespace Oahu.Decrypt.Mpeg4.Util
 {
 	public static class Mpeg4Util
 	{
-		public static async Task<byte[]> HashBoxAsync(this IBox mpeg, CancellationToken cancellationToken = default)
-		{
-			using var sha1 = SHA1.Create();
-			return await mpeg.HashBoxAsync(sha1, cancellationToken);
-		}
-
-		public static async Task<byte[]> HashBoxAsync(this IBox mpeg, HashAlgorithm hashAlgorithm, CancellationToken cancellationToken = default)
-		{
-			using MemoryStream outputStream = new MemoryStream();
-			using (CryptoStream cryptoStream = new CryptoStream(outputStream, hashAlgorithm, CryptoStreamMode.Write))
-			{
-				var trackedWrite = new TrackedWriteStream(cryptoStream, mpeg.Header.FilePosition);
-				// Copy the input stream to the CryptoStream. The data is hashed as it is written.
-				mpeg.Save(trackedWrite);
-			}
-			return hashAlgorithm.Hash!;
-		}
-
-		public static async Task<byte[]> HashBoxAsync(this MdatBox mdat, Stream inputStream, CancellationToken cancellationToken = default)
-		{
-			using var sha1 = SHA1.Create();
-			return await mdat.HashBoxAsync(inputStream, sha1, cancellationToken);
-		}
-
-		public static async Task<byte[]> HashBoxAsync(this MdatBox mdat, Stream inputStream, HashAlgorithm hashAlgorithm, CancellationToken cancellationToken = default)
-		{
-			await inputStream.SeekToOffsetAsync(mdat.Header.FilePosition, cancellationToken);
-
-			long readEndPosition = mdat.Header.FilePosition + mdat.Header.TotalBoxSize;
-			byte[] buffer = new byte[512 * 1024];
-			int read;
-			do
-			{
-				int toRead = (int)Math.Min(buffer.Length, readEndPosition - inputStream.Position);
-				read = await inputStream.ReadAsync(buffer.AsMemory(0, toRead), cancellationToken);
-				hashAlgorithm.TransformBlock(buffer, 0, read, null, 0);
-			} while (read == buffer.Length);
-			_ = hashAlgorithm.TransformFinalBlock(buffer, 0, read);
-			return  hashAlgorithm.Hash!;
-		}
-
 		public static List<IBox> LoadTopLevelBoxes(Stream file)
 		{
 			List<IBox> boxes = new();

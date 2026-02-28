@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -30,8 +29,8 @@ namespace Oahu.Core {
     private string _accountAlias;
 
 #if TEST_INVAL_CHAR
-    const char ORIG = '\''; 
-    const char SUBS = '.'; 
+    const char ORIG = '\'';
+    const char SUBS = '.';
 #endif
 
     //private string BaseUrlAudible { get; }
@@ -42,7 +41,7 @@ namespace Oahu.Core {
     private HttpClientEx HttpClientAudible { get; }
     private HttpClientEx HttpClientAmazon { get; }
     private BookLibrary BookLibrary { get; }
-    
+
     private int AccountId {
       get {
         ensureAccountId ();
@@ -201,7 +200,7 @@ namespace Oahu.Core {
       return await sendForStringAsync (request, HttpClient);
 
     }
-      
+
 
     public async Task<string> GetAccountInfoAsync () {
       using var _ = new LogGuard (3, this);
@@ -336,7 +335,7 @@ namespace Oahu.Core {
       string inputFile = (conversion.DownloadFileName + R.EncryptedFileExt).AsUncIfLong ();
       string outputFile = (conversion.DownloadFileName + R.DecryptedFileExt).AsUncIfLong ();
 
-      
+
       Mp4Operation operation = null;
 
       try {
@@ -495,7 +494,7 @@ namespace Oahu.Core {
     }
 
     private static string buildlicenseRequestBody (EDownloadQuality quality) {
-      string json = $@"{{ 
+      string json = $@"{{
         ""consumption_type"": ""Download"",
         ""supported_drm_types"": [""Adrm"", ""Mpeg""],
         ""quality"": ""{quality}"",
@@ -620,7 +619,7 @@ namespace Oahu.Core {
     }
 
     private string makeRequestSignatureAsync (HttpRequestMessage request) {
-      // HACK 
+      // HACK
       DateTime dt = DateTime.UtcNow.RoundDown (TimeSpan.FromMinutes (10));
 
       string method = request.Method.ToString ().ToUpper ();

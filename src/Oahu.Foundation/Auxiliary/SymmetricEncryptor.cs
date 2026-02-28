@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Oahu.Aux {
   // https://tomrucki.com/posts/aes-encryption-in-csharp/
-  // possibly way over the top for some applications. 
+  // possibly way over the top for some applications.
 
   public static class SymmetricEncryptor {
 

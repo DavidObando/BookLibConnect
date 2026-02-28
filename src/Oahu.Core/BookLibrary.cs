@@ -26,7 +26,7 @@ namespace Oahu.Core {
     public readonly string _dbDir = null;
     public readonly string IMG_DIR = Path.Combine (ApplEnv.LocalApplDirectory, "img");
 
-    public readonly Dictionary<ProfileId, IEnumerable<Book>> _bookCache = 
+    public readonly Dictionary<ProfileId, IEnumerable<Book>> _bookCache =
       new Dictionary<ProfileId, IEnumerable<Book>> ();
 
     private SynchronizationContext _syncContext;
@@ -191,7 +191,7 @@ namespace Oahu.Core {
 
     public void SetAccountAlias (AccountAliasContext ctxt) =>
       setAccountAlias (ctxt.LocalId, ctxt.Alias);
-    
+
 
     private void setAccountAlias (int id, string alias) {
       using var _ = new LogGuard (3, this, () => $"id = {id}, alias = \"{alias}\"" );
@@ -265,7 +265,7 @@ namespace Oahu.Core {
     public void GetChapters (IBookCommon item) {
       if (item.ChapterInfo?.Chapters?.Count > 0)
         return;
-      
+
       using var _ = new LogGuard (3, this, () => item.ToString ());
 
       try {
@@ -305,8 +305,8 @@ namespace Oahu.Core {
 
 
     public AudioQuality UpdateLicenseAndChapters (
-      Oahu.Audible.Json.ContentLicense license, 
-      Conversion conversion, 
+      Oahu.Audible.Json.ContentLicense license,
+      Conversion conversion,
       EDownloadQuality downloadQuality
     ) {
       using var _ = new LogGuard (3, this, () => conversion.ToString ());
@@ -449,7 +449,7 @@ namespace Oahu.Core {
             Log (3, this, () => $"re-added: {cconv}");
           }
         }
-      } 
+      }
     }
 
     private bool checkLocalLocked (Conversion conv, Action<IConversion> callback, string downloadDirectory) =>
@@ -580,7 +580,7 @@ namespace Oahu.Core {
     }
 
     private static AudioQuality setDownloadFilenameAndCodec (
-      Oahu.Audible.Json.ContentLicense license, 
+      Oahu.Audible.Json.ContentLicense license,
       Conversion conversion,
       EDownloadQuality downloadQuality
     ) {
@@ -593,7 +593,7 @@ namespace Oahu.Core {
 
       var sb = new StringBuilder ();
 
-      // title plus asin plus codec.aaxc.m4b 
+      // title plus asin plus codec.aaxc.m4b
       string title = product.Title.Prune ();
       title = title.Substring (0, Math.Min (20, title.Length));
       sb.Append (title);
@@ -730,7 +730,7 @@ namespace Oahu.Core {
       using var dbContext = new BookDbContextLazyLoad (_dbDir);
 
       var latest = dbContext.Books
-          .Where (b => b.PurchaseDate.HasValue && 
+          .Where (b => b.PurchaseDate.HasValue &&
             b.Conversion.AccountId == profileId.AccountId &&
             b.Conversion.Region == profileId.Region)
           .Select (b => b.PurchaseDate.Value)
@@ -1115,9 +1115,9 @@ namespace Oahu.Core {
     }
 
     private void removeBooks (
-      BookDbContextLazyLoad dbContext, 
-      BookCompositeLists bcl, 
-      IEnumerable<Oahu.Audible.Json.Product> products, 
+      BookDbContextLazyLoad dbContext,
+      BookCompositeLists bcl,
+      IEnumerable<Oahu.Audible.Json.Product> products,
       ProfileId profileId
     ) {
       try {

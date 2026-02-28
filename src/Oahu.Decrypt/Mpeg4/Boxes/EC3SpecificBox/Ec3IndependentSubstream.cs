@@ -15,7 +15,7 @@ public class Ec3IndependentSubstream
 	/// </summary>
 	public byte fscod;
 	/// <summary>
-	/// ETSI TS 102 366 4.4.2.1 bsid - Bit stream identification 
+	/// ETSI TS 102 366 4.4.2.1 bsid - Bit stream identification
 	/// </summary>
 	public byte bsid;
 	/// <summary>

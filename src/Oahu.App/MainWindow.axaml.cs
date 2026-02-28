@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Oahu.Aux;
 using Oahu.Aux.Extensions;

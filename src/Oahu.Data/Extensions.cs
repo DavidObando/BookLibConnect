@@ -11,8 +11,8 @@ namespace Oahu.BooksDatabase.ex {
         return state;
       } else
         return ApplicableState(book.Conversion);
-    
-    
+
+
     }
 
     public static EConversionState ApplicableState (this Conversion conv) {
@@ -33,7 +33,7 @@ namespace Oahu.BooksDatabase.ex {
         return book.ApplicableDownloadQuality();
     }
 
-    public static EDownloadQuality ApplicableDownloadQuality (this IBookCommon book) => 
+    public static EDownloadQuality ApplicableDownloadQuality (this IBookCommon book) =>
       book.DownloadQuality ?? EDownloadQuality.Extreme;
 
     public static Book GetBook (this IBookCommon common) {

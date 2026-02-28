@@ -1,5 +1,4 @@
 ﻿using Oahu.Decrypt.Mpeg4.Boxes;
-using System;
 using System.Buffers.Binary;
 using System.IO;
 

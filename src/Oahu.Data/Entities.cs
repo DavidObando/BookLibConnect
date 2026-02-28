@@ -76,7 +76,7 @@ namespace Oahu.BooksDatabase {
     public string Name { get; set; }
 
     public virtual ICollection<Book> Books { get; } = new List<Book> ();
-    
+
     public override string ToString () => $"asin={Asin}, \"{Name}\"";
   }
 
@@ -137,7 +137,7 @@ namespace Oahu.BooksDatabase {
     public string SkuLite { get; set; }
 
     public virtual ICollection<SeriesBook> Books { get; } = new List<SeriesBook> ();
-    
+
     public override string ToString () => $"asin={Asin}, \"{Title}\"";
   }
 
@@ -162,7 +162,7 @@ namespace Oahu.BooksDatabase {
       }
     }
 
-    public override string ToString () => 
+    public override string ToString () =>
       $"{Series.Title} [{SeqString}]";
   }
 
@@ -182,8 +182,8 @@ namespace Oahu.BooksDatabase {
     public int? Mp4AAudio { get; set; } // enum?
     public int? AveTrackLengthMinutes { get; set; }
     public bool? NamedChapters { get; set; }
-    public bool? ChapterMarkAdjusting { get; set; } 
-    public bool? PreferEmbChapMarks { get; set; } 
+    public bool? ChapterMarkAdjusting { get; set; }
+    public bool? PreferEmbChapMarks { get; set; }
     public bool? VariableBitRate { get; set; }
     public int? ReducedBitRate { get; set; }
     public int? ShortChapDurSeconds { get; set; }
@@ -239,7 +239,7 @@ namespace Oahu.BooksDatabase {
     public DateTime? PurchaseDate => BookMeta?.PurchaseDate;
 
     [NotMapped]
-    public Book ParentBook => Book ?? Component?.Book; 
+    public Book ParentBook => Book ?? Component?.Book;
 
     [NotMapped]
     public IBookMeta BookMeta => BookCommon;
@@ -285,17 +285,17 @@ namespace Oahu.BooksDatabase {
     public virtual ICollection<Rung> Rungs { get; } = new List<Rung> ();
     public virtual ICollection<Book> Books { get; } = new List<Book> ();
 
-    public override string ToString () => 
+    public override string ToString () =>
       Rungs.Select (r => r.Genre.Name).Combine (" - ");
   }
 
   public class Rung {
     public int OrderIdx { get; set; }
-    public int GenreId { get; set; }  
+    public int GenreId { get; set; }
 
     public virtual Genre Genre { get; set; }
     public virtual ICollection<Ladder> Ladders { get; } = new List<Ladder> ();
-    
+
     public override string ToString () => $"{OrderIdx}: {Genre?.Name}";
   }
 
@@ -326,7 +326,7 @@ namespace Oahu.BooksDatabase {
     [NotMapped]
     public IBookMeta BookMeta => Book is null ? Component : Book;
 
-    public override string ToString () => 
+    public override string ToString () =>
       $"{Component.Title}: #chapters={Chapters.Count}, accurate={IsAccurate}";
   }
 
@@ -339,21 +339,21 @@ namespace Oahu.BooksDatabase {
 
     internal int? ChapterInfoId { get; set; }
     public virtual ChapterInfo ChapterInfo { get; set; }
-    
+
     public virtual ICollection<Chapter> Chapters { get; } = new List<Chapter> ();
-    
+
     internal int? ParentChapterId { get; set; }
     public virtual Chapter ParentChapter { get; set; }
 
     public Chapter () { }
-    
+
     public Chapter (Chapter other) {
       LengthMs = other.LengthMs;
       StartOffsetMs = other.StartOffsetMs;
       Title = other.Title;
     }
 
-    public override string ToString () => 
+    public override string ToString () =>
       $"{Title}: offs={TimeSpan.FromMilliseconds(StartOffsetMs)}, len={TimeSpan.FromMilliseconds(LengthMs)}, #children={Chapters?.Count}";
   }
 

@@ -18,14 +18,14 @@ namespace Oahu.Aux {
     public static Assembly EntryAssembly { get; } = Assembly.GetEntryAssembly ();
     public static Assembly ExecutingAssembly { get; } = Assembly.GetExecutingAssembly ();
     public static string AssemblyVersion { get; } = ThisAssembly.AssemblyFileVersion;
-    public static string AssemblyTitle { get; } = 
+    public static string AssemblyTitle { get; } =
       getAttribute<AssemblyTitleAttribute> ()?.Title ?? Path.GetFileNameWithoutExtension (ExecutingAssembly.Location);
     public static string AssemblyProduct { get; } = getAttribute<AssemblyProductAttribute> ()?.Product;
     public static string AssemblyCopyright { get; } = getAttribute<AssemblyCopyrightAttribute> ()?.Copyright;
     public static string AssemblyCompany { get; } = getAttribute<AssemblyCompanyAttribute> ()?.Company;
     public static string NeutralCultureName { get; } = getAttribute<NeutralResourcesLanguageAttribute> ()?.CultureName;
 
-    public static string AssemblyGuid { get; } = getAttribute<GuidAttribute> ()?.Value;  
+    public static string AssemblyGuid { get; } = getAttribute<GuidAttribute> ()?.Value;
 
     public static string ApplName { get; } = EntryAssembly.GetName ().Name;
     public static string ApplDirectory { get; } = AppContext.BaseDirectory;

@@ -31,6 +31,6 @@ namespace Oahu.Core {
       if (!succ)
         return null;
       return locale;
-    } 
+    }
   }
 }

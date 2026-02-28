@@ -144,7 +144,7 @@ namespace Oahu.Core {
 
     private void ensureHttpClient (IProfile profile) {
       string domain = Locale.FromCountryCode (profile.Region).Domain;
-        
+
       HttpClientAmazon = ensureHttpClient (HTTP_AUTHORITY_AMZN, HttpClientAmazon);
       HttpClientAudible = ensureHttpClient (HTTP_AUTHORITY_ADBL, HttpClientAudible);
 
@@ -318,7 +318,7 @@ namespace Oahu.Core {
     }
 
     private string buildRegisterBody (IProfile profile, ILocale locale) {
-      string json = $@"{{ 
+      string json = $@"{{
         ""requested_token_type"":
             [""bearer"", ""mac_dms"", ""website_cookies"",
              ""store_authentication_cookie""],
@@ -331,7 +331,7 @@ namespace Oahu.Core {
           ""app_version"": ""{APP_VERSION}"",
           ""device_serial"": ""{profile.DeviceInfo.Serial}"",
           ""device_type"": ""{AudibleLogin.DEVICE_TYPE}"",
-          ""device_name"": 
+          ""device_name"":
               ""%FIRST_NAME%%FIRST_NAME_POSSESSIVE_STRING%%DUPE_STRATEGY_1ST%Audible for iPhone"",
           ""os_version"": ""{IOS_VERSION}"",
           ""software_version"": ""{SOFTWARE_VERSION}"",
@@ -351,7 +351,7 @@ namespace Oahu.Core {
       if (Logging.Level >= 4) {
         string file = json.WriteTempTextFile ();
         Log (4, this, () => $"buildRegisterBody: {file}");
-      } 
+      }
 
       json = json.CompactJson ();
 
@@ -424,12 +424,12 @@ namespace Oahu.Core {
         );
 
         profile.Update (
-          tokenBearer, 
-          cookies, 
-          deviceInfo, 
-          customerInfo, 
-          devicePrivateKey, 
-          adpToken, 
+          tokenBearer,
+          cookies,
+          deviceInfo,
+          customerInfo,
+          devicePrivateKey,
+          adpToken,
           storeAuthentCookie);
 
       } catch (Exception exc) {

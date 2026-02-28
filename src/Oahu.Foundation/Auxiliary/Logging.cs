@@ -69,7 +69,7 @@ namespace Oahu.Aux {
     }
 
     public static bool InstantFlush {
-      get => Instance._instantFlush; 
+      get => Instance._instantFlush;
       set => Instance._instantFlush = value;
     }
 

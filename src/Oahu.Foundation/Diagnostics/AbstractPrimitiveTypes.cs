@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Oahu.Aux.Diagnostics {
   /// <summary>
-  /// Base class to implement <see cref="IPrimitiveTypes"/> with a dictionary. 
+  /// Base class to implement <see cref="IPrimitiveTypes"/> with a dictionary.
   /// Derived classes simply need to call the provided add method with custom function delegates.
   /// </summary>
   /// <seealso cref="Oahu.Aux.Diagnostics.IPrimitiveTypes" />
@@ -28,7 +28,7 @@ namespace Oahu.Aux.Diagnostics {
 
 
     /// <summary>
-    /// Returns a <see cref="System.String" /> that represents this instance, 
+    /// Returns a <see cref="System.String" /> that represents this instance,
     /// if registered as a custom primitive type. Type-safe variant.
     /// </summary>
     /// <typeparam name="T">generic type</typeparam>
@@ -55,7 +55,7 @@ namespace Oahu.Aux.Diagnostics {
     }
 
     /// <summary>
-    /// Returns a <see cref="System.String" /> that represents this instance, 
+    /// Returns a <see cref="System.String" /> that represents this instance,
     /// if registered as a custom primitive type. Non-type-safe variant.
     /// </summary>
     /// <typeparam name="T">generic type</typeparam>
@@ -108,7 +108,7 @@ namespace Oahu.Aux.Diagnostics {
   }
 
   /// <summary>
-  /// Convenience class as default implementation of <see cref="IPrimitiveTypes"/> with no additional custom types.  
+  /// Convenience class as default implementation of <see cref="IPrimitiveTypes"/> with no additional custom types.
   /// </summary>
   /// <seealso cref="Oahu.Aux.Diagnostics.AbstractPrimitiveTypes" />
   internal class NoPrimitiveTypes : AbstractPrimitiveTypes {  }

@@ -39,7 +39,7 @@ namespace Oahu.Decrypt
 
 	public class Mp4File : Oahu.Decrypt.Mpeg4.Mpeg4File
 	{
-		public FileType FileType { get; }	
+		public FileType FileType { get; }
 
 		public SampleRate SampleRate => (SampleRate)TimeScale;
 
@@ -78,7 +78,7 @@ namespace Oahu.Decrypt
 		/// <para/>if <see cref="true"/>, the <see cref="MdatBox"/> is shifted to make room for the <see cref="MoovBox"/>.
 		/// <para/>if <see cref="false"/>, the original <see cref="MoovBox"/> is replaced with a <see cref="FreeBox"/> and the new <see cref="MoovBox"/> is written at the end of the file.
 		/// </param>
-		/// 
+		///
 		public Mp4Operation SaveAsync(bool keepMoovInFront = true)
 		{
 			ProgressTracker tracker = new() { TotalDuration = Duration };

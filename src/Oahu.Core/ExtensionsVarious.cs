@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,27 +8,19 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using Oahu.Aux;
 using Oahu.Aux.Extensions;
 using Oahu.BooksDatabase;
-using HtmlAgilityPack;
 using static Oahu.Aux.ApplEnv;
 
 using R = Oahu.Core.Properties.Resources;
 
 namespace Oahu.Core.ex {
-  public static class AnonExtensions {
-    public static string ToAnonString (this Credentials creds) {
-      return $"usr={creds.Username.AnonymizeUsername ()}, pwd={creds.Password.AnonymizePassword ()}";
-    }
-  }
 
   public static class JsonExtensions {
-
     public static string CompactJson (this string json) =>
       Regex.Replace (json, "(\"(?:[^\"\\\\]|\\\\.)*\")|\\s+", "$1");
 
@@ -125,27 +116,12 @@ namespace Oahu.Core.ex {
       string newValue = $"string {value.Length} chars";
       wr.WriteString (key, newValue);
     }
-
-
   }
 
   public static class FileExtensions {
     const string JSON = ".json";
     const string HTML = ".html";
     const string TXT = ".txt";
-
-    static readonly TimeSpan ONE_MILLI_SECOND = TimeSpan.FromMilliseconds (1);
-
-    public static string WriteTempImageFile (this byte[] bytes) {
-      string ext = bytes.FindImageFormat ();
-      if (ext is null)
-        return null;
-      string path = makePathName (ext, true);
-      Directory.CreateDirectory (TempDirectory);
-      File.WriteAllBytes (path, bytes);
-      return path;
-    }
-
 
     public static string WriteTempHtmlFile (this string html, string filenameStub = null) {
       const string DOC_HTML = "<!doctype html>";
@@ -166,16 +142,6 @@ namespace Oahu.Core.ex {
       return writeTempTextFile (text, filenameStub, TXT);
     }
 
-    public static string WriteTempJsonFile (this object any, string filenameStub = null) {
-      string json = any.SerializeToJsonAny ();
-      if (json is null)
-        return null;
-
-      return writeTempTextFile (json, filenameStub, JSON);
-    }
-    public static async Task<string> WriteJsonFileAsync (this object any, string directory, bool unique) =>
-      await WriteJsonFileAsync (any, directory, null, unique);
-
     public static async Task<string> WriteJsonFileAsync (this object any, string directory, string filenameStub = null, bool unique = false) {
       string json = any.SerializeToJsonAny ();
       if (json is null)
@@ -187,39 +153,6 @@ namespace Oahu.Core.ex {
       return await writeTextFileAsync (json, directory, filenameStub, JSON, unique);
     }
 
-    public static string WriteJsonFile (this object any, string directory, bool unique) =>
-      WriteJsonFile (any, directory, null, unique);
-
-    public static string WriteJsonFile (this object any, string directory, string filenameStub = null, bool unique = false) {
-      string json = any.SerializeToJsonAny ();
-      if (json is null)
-        return null;
-
-      if (filenameStub.IsNullOrWhiteSpace ())
-        filenameStub = any.GetType ().Name;
-
-      return writeTextFile (json, directory, filenameStub, JSON, unique);
-    }
-
-    public static T ReadJsonFile<T> (string directory, string filename) =>
-      ReadJsonFile<T> (Path.Combine (directory, filename));
-
-    public static T ReadJsonFile<T> (string path) {
-      if (!File.Exists (path))
-        return default;
-
-      try {
-        string json = File.ReadAllText (path);
-        if (json.IsNullOrWhiteSpace ())
-          return default;
-
-        T result = json.DeserializeJson<T> ();
-        return result;
-      } catch (Exception) {
-        return default;
-      }
-
-    }
     public static async Task<T> ReadJsonFileAsync<T> (string directory, string filenameStub) {
 
       if (filenameStub.IsNullOrWhiteSpace ())
@@ -254,15 +187,6 @@ namespace Oahu.Core.ex {
 
     }
 
-    private static string writeTextFile (string text, string dir, string filename, string ext, bool unique) {
-      if (!dir.IsNullOrWhiteSpace ()) {
-        Directory.CreateDirectory (dir);
-      }
-      string path = makePathName (dir, filename, ext, unique);
-      File.WriteAllText (path, text);
-      return path;
-    }
-
     private static async Task<string> writeTextFileAsync (string text, string dir, string filename, string ext, bool unique) {
       if (!dir.IsNullOrWhiteSpace ()) {
         Directory.CreateDirectory (dir);
@@ -278,9 +202,6 @@ namespace Oahu.Core.ex {
       File.WriteAllText (path, text);
       return path;
     }
-
-    private static string makePathName (string ext, bool unique) =>
-      makePathName (null, null, ext, unique);
 
     private static string makePathName (string dir, string filename, string ext, bool unique) {
       if (dir.IsNullOrWhiteSpace ())
@@ -310,7 +231,7 @@ namespace Oahu.Core.ex {
 
   public static class HttpExtensions {
 
-    public static async Task<byte[]> DownloadImageAsync (this HttpClient httpClient, string url) => 
+    public static async Task<byte[]> DownloadImageAsync (this HttpClient httpClient, string url) =>
       await httpClient.DownloadImageAsync (new Uri (url));
 
     public static async Task<byte[]> DownloadImageAsync (this HttpClient httpClient, Uri uri) {
@@ -327,15 +248,11 @@ namespace Oahu.Core.ex {
       }
     }
 
-
     public static string HeadersToString (this HttpResponseMessage response) =>
       response?.Headers.HeadersToString();
 
     public static string HeadersToString (this HttpRequestMessage request) =>
       request?.Headers.HeadersToString ();
-
-    public static string HeadersToString (this HttpContent content) =>
-      content?.Headers.HeadersToString ();
 
     public static string HeadersToString (this HttpHeaders headers) {
       if (headers is null)
@@ -361,9 +278,6 @@ namespace Oahu.Core.ex {
       return !isNotEmpty;
     }
 
-    public static string CookiesToString (this CookieContainer cookieContainer, string url) =>
-      cookieContainer.CookiesToString (new Uri (url));
-    
     public static string CookiesToString (this CookieContainer cookieContainer, Uri uri) {
       if (cookieContainer is null || uri is null)
         return null;
@@ -374,37 +288,10 @@ namespace Oahu.Core.ex {
       sb.Append ($"{cookies.GetType().Name}:");
       for (int i = 0; i < cookies.Count; i++) {
         var cookie = cookies[i];
-        sb.Append ($"{Environment.NewLine}  {cookie.Name} = {cookie.Value}");        
+        sb.Append ($"{Environment.NewLine}  {cookie.Name} = {cookie.Value}");
       }
 
       return sb.ToString ();
-    }
-
-    public static string StringKvpCollectionToString (this IEnumerable<KeyValuePair<string,string>> kvps) {
-      var sb = new StringBuilder ();
-      sb.Append ($"{kvps.GetType().Name}:");
-      foreach (var kvp in kvps)
-        sb.Append ($"{Environment.NewLine}  {kvp.Key} = {kvp.Value}");        
-
-
-      return sb.ToString ();
-    }
-
-    public static IReadOnlyList<KeyValuePair<string, string>> CookiesToList (this CookieCollection cookieCollection) {
-      if (cookieCollection is null)
-        return null;
-      var cookies = cookieCollection
-        .Select (c => new KeyValuePair<string, string> (c.Name, c.Value))
-        .ToList ();
-
-      return cookies;
-    }
-
-    public static IReadOnlyList<KeyValuePair<string, string>> CookiesToList (this CookieContainer cookieContainer, Uri uri) {
-      if (cookieContainer is null || uri is null)
-        return null;
-      var cookies = cookieContainer.GetCookies (uri).CookiesToList();
-      return cookies;
     }
 
     public static async Task<string> ContentToStringAsync (this HttpRequestMessage request, Credentials creds = null) =>
@@ -419,7 +306,7 @@ namespace Oahu.Core.ex {
 
       var sb = new StringBuilder ();
       sb.Append ($"{content.GetType ().Name}:");
-      for (int i = 0; i < nvc.Count; i++) {  
+      for (int i = 0; i < nvc.Count; i++) {
         string key = nvc.GetKey (i);
         string[] values = nvc.GetValues (i);
         foreach (var val in values)
@@ -431,102 +318,7 @@ namespace Oahu.Core.ex {
     }
   }
 
-  public static class HtmlExtensions {
-    public static string FormatLineBreaks (this string html) {
-      //first - remove all the existing '\n' from HTML
-      //they mean nothing in HTML, but break our logic
-      html = html.Replace ("\r", "").Replace ("\n", " ");
-
-      //now create an Html Agile Doc object
-      HtmlDocument doc = new HtmlDocument ();
-      doc.LoadHtml (html);
-
-      //remove comments, head, style and script tags
-      foreach (HtmlNode node in doc.DocumentNode.SafeSelectNodes ("//comment() | //script | //style | //head")) {
-        node.ParentNode.RemoveChild (node);
-      }
-
-      //now remove all "meaningless" inline elements like "span"
-      foreach (HtmlNode node in doc.DocumentNode.SafeSelectNodes ("//span | //label")) //add "b", "i" if required
-      {
-        node.ParentNode.ReplaceChild (HtmlNode.CreateNode (node.InnerHtml), node);
-      }
-
-      //block-elements - convert to line-breaks
-      foreach (HtmlNode node in doc.DocumentNode.SafeSelectNodes ("//p | //div")) //you could add more tags here
-      {
-        //we add a "\n" ONLY if the node contains some plain text as "direct" child
-        //meaning - text is not nested inside children, but only one-level deep
-
-        //use XPath to find direct "text" in element
-        var txtNode = node.SelectSingleNode ("text()");
-
-        //no "direct" text - NOT ADDDING the \n !!!!
-        if (txtNode == null || txtNode.InnerHtml.Trim () == "")
-          continue;
-
-        //"surround" the node with line breaks
-        node.ParentNode.InsertBefore (doc.CreateTextNode ("\r\n"), node);
-        node.ParentNode.InsertAfter (doc.CreateTextNode ("\r\n"), node);
-      }
-
-      //todo: might need to replace multiple "\n\n" into one here, I'm still testing...
-
-      //now BR tags - simply replace with "\n" and forget
-      foreach (HtmlNode node in doc.DocumentNode.SafeSelectNodes ("//br"))
-        node.ParentNode.ReplaceChild (doc.CreateTextNode ("\r\n"), node);
-
-      //finally - return the text which will have our inserted line-breaks in it
-      return doc.DocumentNode.InnerText.Trim ();
-
-      //todo - you should probably add "&code;" processing, to decode all the &nbsp; and such
-    }
-
-    //here's the extension method I use
-    private static HtmlNodeCollection SafeSelectNodes (this HtmlNode node, string selector) {
-      return (node.SelectNodes (selector) ?? new HtmlNodeCollection (node));
-    }
-
-  }
-
-
-  static class AccessTokenExtensions {
-    const string TOKEN_STUB = "Atna|";
-    public static bool Validate (this TokenBearer token) {
-      if (token is null)
-        return false;
-
-      if (!token.AccessToken?.StartsWith (TOKEN_STUB) ?? false)
-        return false;
-
-      //var utcnow = DateTime.UtcNow;
-      //return token.Expiration < utcnow;
-      return true;
-    }
-  }
-
-  public static partial class NameValueExtensions {
-    public static IReadOnlyList<KeyValuePair<string, string>> ToList (this NameValueCollection @this) {
-      var list = new List<KeyValuePair<string, string>> ();
-
-      if (@this is not null) {
-        foreach (string key in @this.AllKeys) {
-          if (key is null)
-            continue;
-          list.Add (new KeyValuePair<string, string>(key, @this[key]));
-        }
-      }
-
-      return list;
-    }
-  }
-
   public static partial class ProfileExtensions {
-
-    public static bool Matches (this IProfileKey profile, IProfileKey other) =>
-      profile is not null && other is not null && 
-        profile.Region == other.Region && string.Equals (profile.AccountId, other.AccountId);
-
     internal static string GetAccountAlias (
       this IProfile profile,
       BookLibrary bookLibrary,
@@ -562,21 +354,21 @@ namespace Oahu.Core.ex {
       return new ProfileAliasKey (profile.Region, alias);
     }
 
-    internal static IProfileKey CreateKey (this IProfile profile) => 
+    internal static IProfileKey CreateKey (this IProfile profile) =>
       new ProfileKey (profile.Id, profile.Region, profile.CustomerInfo?.AccountId);
-    
-    internal static IProfileKeyEx CreateKeyEx (this IProfile profile) => 
+
+    internal static IProfileKeyEx CreateKeyEx (this IProfile profile) =>
       new ProfileKeyEx (
         profile.Id,
-        profile.Region, 
-        profile.CustomerInfo?.Name, 
-        profile.CustomerInfo?.AccountId, 
+        profile.Region,
+        profile.CustomerInfo?.Name,
+        profile.CustomerInfo?.AccountId,
         profile.DeviceInfo?.Name);
 
     internal static bool Matches (this IProfile profile, IProfileKey key) {
       if (profile is null || key is null)
         return false;
-      return profile.Region == key.Region && 
+      return profile.Region == key.Region &&
         string.Equals (profile.CustomerInfo.AccountId, key.AccountId);
     }
 
@@ -587,7 +379,7 @@ namespace Oahu.Core.ex {
       if (object.Equals (profile, other))
         return true;
 
-      return profile.Region == other.Region && 
+      return profile.Region == other.Region &&
         string.Equals (profile.CustomerInfo.AccountId, other.CustomerInfo.AccountId);
     }
 
@@ -626,7 +418,7 @@ namespace Oahu.Core.ex {
       R.EncryptedFileExt, R.DecryptedFileExt, R.ExportedFileExt
     };
 
-    public static string GetDownloadFileNameWithoutExtension (this string downloadFileName) { 
+    public static string GetDownloadFileNameWithoutExtension (this string downloadFileName) {
       string ext = Path.GetExtension (downloadFileName).ToLower();
       if (__knownExtensions.Contains (ext))
         return Path.GetFileNameWithoutExtension (downloadFileName);

@@ -27,8 +27,8 @@ namespace Oahu.Core {
     private Action<Conversion> OnNewStateCallback { get; }
 
     public DownloadDecryptJob (
-      IAudibleApi api, 
-      IDownloadSettings settings, 
+      IAudibleApi api,
+      IDownloadSettings settings,
       Action<Conversion> onNewStateCallback
     ) {
       AudibleApi = api;

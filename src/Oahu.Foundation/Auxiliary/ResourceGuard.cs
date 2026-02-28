@@ -2,8 +2,8 @@
 
 namespace Oahu.Aux {
   /// <summary>
-  /// Implementing <see cref="IResource"/> and using it with <see cref="ResourceGuard"/> allows 
-  /// RAII behavior within the lifecycle of an instance, beyond ctor/dtor, e.g. for indentation of text. 
+  /// Implementing <see cref="IResource"/> and using it with <see cref="ResourceGuard"/> allows
+  /// RAII behavior within the lifecycle of an instance, beyond ctor/dtor, e.g. for indentation of text.
   /// </summary>
   public interface IResource {
     void Acquire ();
@@ -11,35 +11,35 @@ namespace Oahu.Aux {
   }
 
   /// <summary>
-  /// The "using" statement in C# is syntactic sugar for try {} finally {} and implements the RAII programming idiom. 
-  /// In conjunction with <see cref="ResourceGuard"/> and optionally <see cref="IResource"/> it can be used 
+  /// The "using" statement in C# is syntactic sugar for try {} finally {} and implements the RAII programming idiom.
+  /// In conjunction with <see cref="ResourceGuard"/> and optionally <see cref="IResource"/> it can be used
   /// for all sorts of dedicated and guaranteed scope entry/exit action.
-  /// 
+  ///
   /// <para>Examples:</para>
   /// <para>
-  /// var resource = new NonIDisposableResource(); 
+  /// var resource = new NonIDisposableResource();
   /// using (new ResourceGuard(() => resource.Close()) {
   ///   /* ... */
   /// }
   /// </para>
   /// <para>
-  /// bool flag = false; 
+  /// bool flag = false;
   /// using (new ResourceGuard(x => flag = x)) {
   ///   /* ... */
   /// }
   /// </para>
   /// <para>
-  /// var stopwatch = Stopwatch.StartNew(); 
+  /// var stopwatch = Stopwatch.StartNew();
   /// /* pausing(!) stopwatch */
   /// using (new ResourceGuard(x => {
-  ///     if (x) stopwatch.Stop(); else stopwatch.Start(); 
+  ///     if (x) stopwatch.Stop(); else stopwatch.Start();
   ///   })) {
   ///   /* ... */
   /// }
   /// </para>
   /// <para>
-  /// class Indent : IResource { /*...*/ }  
-  /// Indent ind = new Indent (); 
+  /// class Indent : IResource { /*...*/ }
+  /// Indent ind = new Indent ();
   /// using (new ResourceGuard(ind)) {
   ///   /* ... */
   /// }
@@ -49,7 +49,7 @@ namespace Oahu.Aux {
     readonly Action _onDispose;
     readonly Action<bool> _onNewAndDispose;
     readonly IResource _resource;
-    
+
     public ResourceGuard (IResource resource) {
       _resource = resource;
       _resource.Acquire ();

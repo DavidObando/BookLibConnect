@@ -27,7 +27,7 @@ namespace Oahu.Core {
     string AuthorizationCode { get;}
     string CodeVerifier { get; }
   }
-      
+
   interface ITokenBearer {
     string RefreshToken { get; }
     string AccessToken { get; }
@@ -97,8 +97,8 @@ namespace Oahu.Core {
     void RestorePersistentState (Conversion conversion);
     EConversionState GetPersistentState (Conversion conversion);
     void CheckUpdateFilesAndState (
-      IDownloadSettings downloadSettings, 
-      IExportSettings exportSettings, 
+      IDownloadSettings downloadSettings,
+      IExportSettings exportSettings,
       Action<IConversion> callbackRefConversion,
       IInteractionCallback<InteractionMessage<BookLibInteract>, bool?> interactCallback
     );

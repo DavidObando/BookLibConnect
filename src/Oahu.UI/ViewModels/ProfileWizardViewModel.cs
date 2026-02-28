@@ -98,7 +98,7 @@ namespace Oahu.Core.UI.Avalonia.ViewModels {
     private bool _registrationSucceeded;
 
     /// <summary>
-    /// The resulting profile key after successful registration. 
+    /// The resulting profile key after successful registration.
     /// Set by the wizard upon completion.
     /// </summary>
     public IProfileKeyEx ProfileKey { get; private set; }

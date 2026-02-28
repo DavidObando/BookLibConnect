@@ -8,10 +8,10 @@ namespace Oahu.Aux {
 #region Private Fields
     private readonly SynchronizationContext _sync;
     private readonly int _managedThreadId;
-    
+
     #endregion Private Fields
     #region Private Props
-    private bool Affine => 
+    private bool Affine =>
       _managedThreadId == Thread.CurrentThread.ManagedThreadId;
     #endregion Private Props
     #region ctor

@@ -131,7 +131,7 @@ public class ac4_presentation_v1_dsi
 		if (read <= (pres_bytes - 1) * 8)
 		{
 			de_indicator = (byte)reader.Read(1);
-			//Extension to AC-4 DSI 
+			//Extension to AC-4 DSI
 			dolby_atmos_indicator = reader.ReadBool();
 			_ = reader.Read(4);
 			b_extended_presentation_id = reader.ReadBool();

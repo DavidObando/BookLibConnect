@@ -76,7 +76,7 @@ namespace Oahu.Decrypt
 			AdrmBox adrm = AudioSampleEntry.GetChild<AdrmBox>()
 				?? throw new InvalidOperationException($"This instance of {nameof(AaxFile)} does not contain an adrm box.");
 
-			//Adrm key derrivation from 
+			//Adrm key derrivation from
 			//https://github.com/FFmpeg/FFmpeg/blob/master/libavformat/mov.c in mov_read_adrm
 
 			byte[] intermediate_key = Crypto.Sha1(

@@ -169,7 +169,7 @@ public class Mpeg4File : IDisposable
 				else
 				{
 					//Shift mdat to accomodate ftyp size change
-					//Since Moov is being re-written at the end, we don't need to worry about the stco/co64 
+					//Since Moov is being re-written at the end, we don't need to worry about the stco/co64
 					//conversion changing the size of the moov box. Moov gets rewritten at the end anyway.
 					Moov.ShiftChunkOffsets(ftypSizeChange);
 					await Mdat.ShiftMdatAsync(InputStream, ftypSizeChange, progressTracker, cancellationToken);

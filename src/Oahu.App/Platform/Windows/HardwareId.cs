@@ -22,7 +22,7 @@ namespace Oahu.SystemManagement {
     }
 
     public static string GetDiskId () {
-      try { 
+      try {
         ManagementObject dsk = new ManagementObject (@"win32_logicaldisk.deviceid=""c:""");
         dsk.Get ();
         string id = dsk["VolumeSerialNumber"].ToString ();

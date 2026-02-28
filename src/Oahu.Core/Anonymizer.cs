@@ -17,7 +17,7 @@ namespace Oahu.Core.ex {
       string intermed = source.AnonymizeUsername (username);
       string result = intermed.AnonymizePassword (password);
       return result;
-    } 
+    }
 
     public static string AnonymizeUsername (this string source, string username) {
       if (username.IsNullOrWhiteSpace ())
@@ -32,9 +32,6 @@ namespace Oahu.Core.ex {
       const string STUB = "PASSW";
       return replaceWithSubstitute (Passwords, source, password, STUB);
     }
-
-    public static string AnonymizeUsername (this string username) => AnonymizeUsername (null, username);
-    public static string AnonymizePassword (this string password) => AnonymizePassword (null, password);
 
     private static string replaceWithSubstitute (Dictionary<uint, string> dict, string source, string password, string STUB) {
       if (source is null)

@@ -14,7 +14,7 @@ namespace Oahu.Aux.Win32 {
     // Error handling - In each public function of this class where an error can occur, an ApplicationException is
     // thrown with the Win32Exception message info if an error is detected.  If no exception is thrown, then a normal
     // return is considered success.
-    // 
+    //
     // This code is not thread safe.  Thread control primitives need to be added if running this in a multi-threaded
     // environment.
     //
@@ -38,7 +38,7 @@ namespace Oahu.Aux.Win32 {
     private const uint CREATE_NEW = 1;
     private const uint FILE_SHARE_READ = 1;
     private const int BlockSize = 65536;
-    
+
     private GCHandle gchBuf;            // Handle to GCHandle object used to pin the I/O buffer in memory.
     private SafeHandle handle;          // Handle to the file to be read from or written to
     private void* pBuffer;              // Pointer to the buffer used to perform I/O.

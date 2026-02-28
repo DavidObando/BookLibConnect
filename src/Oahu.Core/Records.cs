@@ -13,7 +13,7 @@ namespace Oahu.Core {
     public Action ApprovalCallback { get; init; }
     public Func<string> MfaCallback { get; init; }
     public Func<string> CvfCallback { get; init; }
-    
+
     public Func<Uri, Uri> ExternalLoginCallback { get; init; }
     public Func<IProfileKeyEx, bool> DeregisterDeviceConfirmCallback { get; init; }
     public Func<AccountAliasContext, bool> GetAccountAliasFunc { get; init; }
@@ -25,27 +25,27 @@ namespace Oahu.Core {
     Credentials (Credentials.Username, Credentials.Password);
 
   public record RegisterResult (
-    EAuthorizeResult Result, 
-    IProfileKeyEx NewProfileKey, 
+    EAuthorizeResult Result,
+    IProfileKeyEx NewProfileKey,
     string PrevDeviceName
   );
 
   public record ProfileKey (uint Id, ERegion Region, string AccountId) : IProfileKey {
-    public override string ToString () => 
+    public override string ToString () =>
       $"{GetType().Name} {nameof (Id)}={Id}, {nameof (Region)}={Region}, {nameof (AccountId)}=#<{AccountId.Checksum32 ()}>";
   }
-  public record ProfileKeyEx (uint Id, ERegion Region, string AccountName, string AccountId, string DeviceName) :  
+  public record ProfileKeyEx (uint Id, ERegion Region, string AccountName, string AccountId, string DeviceName) :
     ProfileKey (Id, Region, AccountId), IProfileKeyEx {
-    public override string ToString () => 
+    public override string ToString () =>
       $"{base.ToString()}, {nameof (AccountName)}=#<{AccountName.Checksum32}>, {nameof (DeviceName)}=#<{DeviceName.Checksum32 ()}>";
   }
 
   public record ProfileId (int AccountId, ERegion Region);
 
-  public record AccountAlias (string AccountId, string Alias); 
-  
+  public record AccountAlias (string AccountId, string Alias);
+
   public record SimpleConversionContext (
-    IProgress<ProgressMessage> Progress, 
+    IProgress<ProgressMessage> Progress,
     CancellationToken CancellationToken
   );
 
@@ -58,17 +58,17 @@ namespace Oahu.Core {
   record ProfileBundle (IProfile Profile, IProfileKey Key, IProfileAliasKey AliasKey);
 
   record BookCompositeLists (
-    List<string> BookAsins,  
-    List<Conversion> Conversions,  
-    List<Component> Components,  
-    List<Series> Series,  
-    List<SeriesBook> SeriesBooks,  
-    List<Author> Authors,  
-    List<Narrator> Narrators,  
-    List<Genre> Genres,  
-    List<Ladder> Ladders,  
-    List<Rung> Rungs,  
-    List<Codec> Codecs  
+    List<string> BookAsins,
+    List<Conversion> Conversions,
+    List<Component> Components,
+    List<Series> Series,
+    List<SeriesBook> SeriesBooks,
+    List<Author> Authors,
+    List<Narrator> Narrators,
+    List<Genre> Genres,
+    List<Ladder> Ladders,
+    List<Rung> Rungs,
+    List<Codec> Codecs
   );
 
   record ConfigurationTokenResult (string Token, bool Weak);

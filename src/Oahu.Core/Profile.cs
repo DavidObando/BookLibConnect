@@ -39,7 +39,7 @@ namespace Oahu.Core {
       return new Authorization { AuthorizationCode = auth };
     }
   }
-    
+
   class TokenBearer : ITokenBearer {
 
     public string RefreshToken { get; set; }
@@ -52,12 +52,12 @@ namespace Oahu.Core {
       Expiration = expiration;
     }
 
-    public TokenBearer (string accToken, string refrToken, DateTime expiration) : 
-      this (accToken, expiration)     
+    public TokenBearer (string accToken, string refrToken, DateTime expiration) :
+      this (accToken, expiration)
     {
       RefreshToken = refrToken;
     }
-    
+
     public static TokenBearer Create (Uri uri) {
       const string TOKEN_KEY = "openid.oa2.access_token";
       const string EXPIR_KEY = "openid.pape.auth_time";
@@ -99,7 +99,7 @@ namespace Oahu.Core {
 
       if (token.AccessToken is null || !token.AccessToken.StartsWith (ACC_TOKEN_STUB))
         return false;
-      
+
       if (token.RefreshToken is not null && !token.RefreshToken.StartsWith (REFR_TOKEN_STUB))
         return false;
 
@@ -178,7 +178,7 @@ namespace Oahu.Core {
 
       // TODO validate inputs
     }
-        
+
     public void Refresh (TokenBearer token) {
       Token.AccessToken = token.AccessToken;
       Token.Expiration = token.Expiration;
@@ -188,7 +188,7 @@ namespace Oahu.Core {
   class Configuration {
     private static readonly string CONFIG_DIR = Path.Combine (ApplEnv.LocalApplDirectory, "config");
 
-    class SerializableConfig { 
+    class SerializableConfig {
       public List<Profile> Profiles { get; set; }
       public string Secure { get; set; }
     }
@@ -242,7 +242,7 @@ namespace Oahu.Core {
       return existing;
     }
 
-    public Profile Get (IProfileKey key) => 
+    public Profile Get (IProfileKey key) =>
       Profiles?.FirstOrDefault (p => p.Matches (key));
 
     public IEnumerable<Profile> GetSorted () {
@@ -286,7 +286,7 @@ namespace Oahu.Core {
       configuration.Secure = base64;
       configuration.Profiles = null;
     }
-  
+
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "SerializableConfig and Profile types are preserved via TrimMode=partial.")]
     private static void decrypt (SerializableConfig configuration, string token) {
       if (configuration.Secure is null || configuration.Secure.IsNullOrWhiteSpace())

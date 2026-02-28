@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Oahu.Aux {
   /// <summary>
@@ -224,21 +223,6 @@ namespace Oahu.Aux {
 
       public static uint Checksum32 (this string text) =>
         text.GetBytes ().Checksum32 ();
-
-      public static byte[] Checksum32Bytes (this byte[] bytes) =>
-        BitConverter.GetBytes (bytes.Checksum32 ());
-    }
-
-    public static class Crc64Extensions {
-      public static ulong Checksum64 (this byte[] bytes) {
-        return Crc64Iso.Compute (bytes);
-      }
-
-      public static ulong Checksum64 (this string text) =>
-        text.GetBytes ().Checksum64 ();
-
-      public static byte[] Checksum64Bytes (this byte[] bytes) =>
-        BitConverter.GetBytes (bytes.Checksum64 ());
     }
 
   }

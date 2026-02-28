@@ -17,8 +17,8 @@ namespace Oahu.Aux {
     }
 
     /// <summary>
-    /// Get the instance of the singleton. 
-    /// C#-style implementation as a property. 
+    /// Get the instance of the singleton.
+    /// C#-style implementation as a property.
     /// </summary>
     /// <value>
     /// Instance of singleton.

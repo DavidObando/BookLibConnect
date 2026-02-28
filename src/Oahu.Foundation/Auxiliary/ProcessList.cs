@@ -40,9 +40,9 @@ namespace Oahu.Aux {
       }
 
       lock (_lockable)
-        foreach (Process p in _processes) 
+        foreach (Process p in _processes)
           p.Kill ();
-      
+
       _disposed = true;
     }
   }

@@ -2,7 +2,7 @@
 using System.ComponentModel;
 
 namespace Oahu.Aux.Diagnostics {
-  
+
   /// <summary>
   /// Flags to control dump output
   /// </summary>
@@ -16,17 +16,17 @@ namespace Oahu.Aux.Diagnostics {
     withItmCnt = 1,
 
     /// <summary>
-    /// Include properties with <c>null</c> values 
+    /// Include properties with <c>null</c> values
     /// </summary>
     inclNullVals = 2,
 
     /// <summary>
-    /// Include property description, <see cref="DescriptionAttribute"/> 
+    /// Include property description, <see cref="DescriptionAttribute"/>
     /// </summary>
     inclDesc = 4,
 
     /// <summary>
-    /// Description above property, if included. Behind property by default. 
+    /// Description above property, if included. Behind property by default.
     /// </summary>
     descOnTop = 8,
 
@@ -36,12 +36,12 @@ namespace Oahu.Aux.Diagnostics {
     inclTypeDesc = 16,
 
     /// <summary>
-    /// Include description in enumerations 
+    /// Include description in enumerations
     /// </summary>
     inclDescInEnum = 32,
 
     /// <summary>
-    /// Inherit attributes defined for properities in base interfaces, <see cref="TreeDecomposition{T}"/> for recognized attributes 
+    /// Inherit attributes defined for properities in base interfaces, <see cref="TreeDecomposition{T}"/> for recognized attributes
     /// </summary>
     inherInterfaceAttribs = 64,
 
@@ -51,7 +51,7 @@ namespace Oahu.Aux.Diagnostics {
     byInterface = 128,
 
     /// <summary>
-    /// Include grouping by interface for types further down the hierarchy 
+    /// Include grouping by interface for types further down the hierarchy
     /// </summary>
     byInterfaceNestedTypes = 256,
   }
