@@ -3,7 +3,7 @@ A standalone Audible downloader and decrypter
 
 [![GitHub All Releases](https://img.shields.io/github/downloads/DavidObando/Oahu/total)](https://github.com/DavidObando/Oahu/releases) [![GitHub](https://img.shields.io/github/license/DavidObando/Oahu)](https://github.com/DavidObando/Oahu/blob/main/LICENSE) [![](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](http://microsoft.com/windows) [![](https://img.shields.io/badge/language-C%23-blue)](http://csharp.net/) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/DavidObando/Oahu)](https://github.com/DavidObando/Oahu/releases/latest)
 
-![](src/Connect.app.avalonia.core/Resources/audio.png?raw=true)
+![](src/Oahu.App/Resources/audio.png?raw=true)
 
 Oahu is an Audible downloader app for Windows, macOS, and Linux. Forked from [audiamus/BookLibConnect](https://github.com/audiamus/BookLibConnect).
 
@@ -44,22 +44,22 @@ The repository now ships a single cross-platform Avalonia client (Windows, macOS
 dotnet build src/Oahu.sln
 
 # Run the Avalonia app
-dotnet run --project src/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj
+dotnet run --project src/Oahu.App/Oahu.App.csproj
 
 # Publish for macOS (Apple Silicon)
-dotnet publish src/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
+dotnet publish src/Oahu.App/Oahu.App.csproj \
   -r osx-arm64 -c Release --self-contained -p:PublishTrimmed=true
 
 # Publish for macOS (Intel)
-dotnet publish src/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
+dotnet publish src/Oahu.App/Oahu.App.csproj \
   -r osx-x64 -c Release --self-contained -p:PublishTrimmed=true
 
 # Publish for Windows
-dotnet publish src/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
+dotnet publish src/Oahu.App/Oahu.App.csproj \
   -r win-x64 -c Release --self-contained -p:PublishTrimmed=true
 
 # Publish for Linux
-dotnet publish src/Connect.app.avalonia.core/Connect.app.avalonia.core.csproj \
+dotnet publish src/Oahu.App/Oahu.App.csproj \
   -r linux-x64 -c Release --self-contained -p:PublishTrimmed=true
 ```
 
@@ -80,23 +80,18 @@ Platform-specific build scripts are provided in the `build/` directory:
 
 ### Project Architecture
 
-```
-Shared (platform-neutral):
-  CommonTypes.lib.core    — Interfaces and enums
-  AuxLib.core             — Utilities, logging, settings
-  Audible.json.core       — Audible API JSON models
-  BooksDatabase.core      — EF Core + SQLite database
-  TreeDecomposition.core  — Diagnostics
-  CommonUtil.lib.core     — File operations, online update
-  Connect.lib.core        — Core business logic (Audible API, library, auth)
+The solution is organized into 5 projects with a strict layered dependency graph:
 
-Cross-platform Avalonia app (Windows, macOS, Linux):
-  AuxWin32Lib.core         — Win32 file I/O helper (used conditionally)
-  SystemMgmt.core         — Windows hardware ID (WMI)
-  SystemMgmt.mac.core     — macOS hardware ID (sysctl/IOKit)
-  SystemMgmt.linux.core   — Linux hardware ID (DMI/machine-id)
-  Connect.ui.avalonia.core — Avalonia MVVM ViewModels + Views
-  Connect.app.avalonia.core — Avalonia application entry point
+```
+Oahu.Foundation   — Utilities, logging, settings, diagnostics, shared types, IO
+      ↑
+Oahu.Data         — EF Core + SQLite database (entities, migrations)
+      ↑
+Oahu.Core         — Core business logic (Audible API, auth, library, download/decrypt)
+      ↑
+Oahu.UI           — Avalonia MVVM ViewModels + Views
+      ↑
+Oahu.App          — Application entry point + platform-specific hardware ID providers
 ```
 
 ## Acknowledgments
