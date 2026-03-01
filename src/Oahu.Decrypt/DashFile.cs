@@ -1,119 +1,149 @@
-﻿using Oahu.Decrypt.Chunks;
-using Oahu.Decrypt.FrameFilters;
-using Oahu.Decrypt.FrameFilters.Audio;
-using Oahu.Decrypt.Mpeg4.Boxes;
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.Buffers;
 using System.IO;
 using System.Linq;
+using Oahu.Decrypt.Chunks;
+using Oahu.Decrypt.FrameFilters;
+using Oahu.Decrypt.FrameFilters.Audio;
+using Oahu.Decrypt.Mpeg4.Boxes;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt;
 
 public class DashFile : Mp4File
 {
-	public MoofBox FirstMoof { get; }
-	public MdatBox FirstMdat => Mdat;
-	public SidxBox Sidx => TopLevelBoxes.OfType<SidxBox>().Single();
+  public DashFile(string fileName, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
+      : this(File.Open(fileName, FileMode.Open, access, share))
+  {
+  }
 
-	public override TimeSpan Duration => TimeSpan.FromSeconds((double)Moov.GetChildOrThrow<MvexBox>().GetChildOrThrow<MehdBox>().FragmentDuration / TimeScale);
+  public DashFile(Stream file) : this(file, file.Length)
+  {
+  }
 
-	private new MdatBox Mdat => base.Mdat;
+  public DashFile(Stream file, long fileLength) : base(file, fileLength)
+  {
+    if (FileType != FileType.Dash)
+    {
+      throw new ArgumentException($"This instance of {nameof(Mp4File)} is not a Dash file.");
+    }
 
-	public TencBox? Tenc { get; }
+    FirstMoof = TopLevelBoxes.OfType<MoofBox>().Single();
 
-	public byte[]? Key { get; private set; }
+    var audioSampleEntry = Moov.AudioTrack.Mdia.Minf.Stbl.Stsd.AudioSampleEntry
+        ?? throw new InvalidDataException($"The audio track doesn't contain an {nameof(AudioSampleEntry)}");
 
-	protected override uint CalculateBitrate()
-	{
-		var totalSize = Sidx.Segments.Sum(s => (long)s.ReferenceSize) * 8;
-		var totalDuration = Sidx.Segments.Sum(s => (long)s.SubsegmentDuration);
-		var bitRate = totalSize * Sidx.Timescale / totalDuration;
-		return (uint)bitRate;
-	}
+    if (audioSampleEntry.GetChild<SinfBox>() is { } sinf)
+    {
+      if (sinf.SchemeType?.Type != SchmBox.SchemeType.Cenc)
+      {
+        throw new NotSupportedException($"Only {nameof(SchmBox.SchemeType.Cenc)} dash files are currently supported.");
+      }
 
-	public DashFile(string fileName, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
-		: this(File.Open(fileName, FileMode.Open, access, share)) { }
-	public DashFile(Stream file) : this(file, file.Length) { }
-	public DashFile(Stream file, long fileLength) : base(file, fileLength)
-	{
-		if (FileType != FileType.Dash)
-			throw new ArgumentException($"This instance of {nameof(Mp4File)} is not a Dash file.");
+      Tenc = sinf.SchemeInformation?.TrackEncryption;
+      audioSampleEntry.Children.Remove(sinf);
+      audioSampleEntry.Header.ChangeAtomName(sinf.OriginalFormat.DataFormat);
+    }
 
-		FirstMoof = TopLevelBoxes.OfType<MoofBox>().Single();
+    foreach (var pssh in Moov.GetChildren<PsshBox>().ToArray())
+    {
+      Moov.Children.Remove(pssh);
+    }
 
-		var audioSampleEntry = Moov.AudioTrack.Mdia.Minf.Stbl.Stsd.AudioSampleEntry
-			?? throw new InvalidDataException($"The audio track doesn't contain an {nameof(AudioSampleEntry)}");
+    if (AudioSampleEntry.Dec3 is not null || AudioSampleEntry.Dac4 is not null)
+    {
+      Ftyp = FtypBox.Create("mp42", 0);
+      Ftyp.CompatibleBrands.Add("dby1");
+      Ftyp.CompatibleBrands.Add("iso8");
+      Ftyp.CompatibleBrands.Add("isom");
+      Ftyp.CompatibleBrands.Add("mp41");
+      Ftyp.CompatibleBrands.Add("M4A ");
+      Ftyp.CompatibleBrands.Add("M4B ");
+    }
+    else
+    {
+      Ftyp = FtypBox.Create("isom", 0x200);
+      Ftyp.CompatibleBrands.Add("iso2");
+      Ftyp.CompatibleBrands.Add("mp41");
+      Ftyp.CompatibleBrands.Add("M4A ");
+      Ftyp.CompatibleBrands.Add("M4B ");
+    }
+  }
 
-		if (audioSampleEntry.GetChild<SinfBox>() is { } sinf)
-		{
-			if (sinf.SchemeType?.Type != SchmBox.SchemeType.Cenc)
-				throw new NotSupportedException($"Only {nameof(SchmBox.SchemeType.Cenc)} dash files are currently supported.");
-			Tenc = sinf.SchemeInformation?.TrackEncryption;
-			audioSampleEntry.Children.Remove(sinf);
-			audioSampleEntry.Header.ChangeAtomName(sinf.OriginalFormat.DataFormat);
-		}
+  public MoofBox FirstMoof { get; }
 
-		foreach (var pssh in Moov.GetChildren<PsshBox>().ToArray())
-			Moov.Children.Remove(pssh);
+  public MdatBox FirstMdat => Mdat;
 
-		if (AudioSampleEntry.Dec3 is not null || AudioSampleEntry.Dac4 is not null)
-		{
-			Ftyp = FtypBox.Create("mp42", 0);
-			Ftyp.CompatibleBrands.Add("dby1");
-			Ftyp.CompatibleBrands.Add("iso8");
-			Ftyp.CompatibleBrands.Add("isom");
-			Ftyp.CompatibleBrands.Add("mp41");
-			Ftyp.CompatibleBrands.Add("M4A ");
-			Ftyp.CompatibleBrands.Add("M4B ");
-		}
-		else
-		{
-			Ftyp = FtypBox.Create("isom", 0x200);
-			Ftyp.CompatibleBrands.Add("iso2");
-			Ftyp.CompatibleBrands.Add("mp41");
-			Ftyp.CompatibleBrands.Add("M4A ");
-			Ftyp.CompatibleBrands.Add("M4B ");
-		}
-	}
+  public SidxBox Sidx => TopLevelBoxes.OfType<SidxBox>().Single();
 
-	public void SetDecryptionKey(string keyId, string decryptionKey)
-	{
-		if (string.IsNullOrWhiteSpace(keyId) || keyId.Length != AesCtr.AES_BLOCK_SIZE * 2)
-			throw new ArgumentException($"{nameof(keyId)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
-		if (string.IsNullOrWhiteSpace(decryptionKey) || decryptionKey.Length != AesCtr.AES_BLOCK_SIZE * 2)
-			throw new ArgumentException($"{nameof(decryptionKey)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
+  public override TimeSpan Duration => TimeSpan.FromSeconds((double)Moov.GetChildOrThrow<MvexBox>().GetChildOrThrow<MehdBox>().FragmentDuration / TimeScale);
 
-		byte[] keyIdBts = Convert.FromHexString(keyId);
-		byte[] decryptionKeyBts = Convert.FromHexString(decryptionKey);
+  public TencBox? Tenc { get; }
 
-		SetDecryptionKey(keyIdBts, decryptionKeyBts);
-	}
+  public byte[]? Key { get; private set; }
 
-	protected override IChunkReader CreateChunkReader(Stream inputStream, TimeSpan startTime, TimeSpan endTime)
-		=> new DashChunkReader(this, inputStream, startTime, endTime);
+  private new MdatBox Mdat => base.Mdat;
 
-	public override FrameTransformBase<FrameEntry, FrameEntry> GetAudioFrameFilter()
-	{
-		return Key is null && Tenc is not null
-			? throw new InvalidOperationException($"This instance of {nameof(DashFile)} does not have a decryption key set.")
-			: new DashFilter(Key);
-	}
+  public void SetDecryptionKey(string keyId, string decryptionKey)
+  {
+    if (string.IsNullOrWhiteSpace(keyId) || keyId.Length != AesCtr.AES_BLOCK_SIZE * 2)
+    {
+      throw new ArgumentException($"{nameof(keyId)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
+    }
 
-	public void SetDecryptionKey(byte[] keyId, byte[] decryptionKey)
-	{
-		if (Tenc is null)
-			throw new InvalidOperationException($"This instance of {nameof(DashFile)} does not contain a {nameof(TencBox)}.");
-		if (keyId is null || keyId.Length != AesCtr.AES_BLOCK_SIZE)
-			throw new ArgumentException($"{nameof(keyId)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
-		if (decryptionKey is null || decryptionKey.Length != AesCtr.AES_BLOCK_SIZE)
-			throw new ArgumentException($"{nameof(decryptionKey)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
+    if (string.IsNullOrWhiteSpace(decryptionKey) || decryptionKey.Length != AesCtr.AES_BLOCK_SIZE * 2)
+    {
+      throw new ArgumentException($"{nameof(decryptionKey)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
+    }
 
-		var keyUUID = new Guid(keyId, bigEndian: true);
+    byte[] keyIdBts = Convert.FromHexString(keyId);
+    byte[] decryptionKeyBts = Convert.FromHexString(decryptionKey);
 
-		if (keyUUID != Tenc.DefaultKID)
-			throw new InvalidOperationException($"Supplied keyId does not match dash default keyId: {Convert.ToHexString(Tenc.DefaultKID.ToByteArray(bigEndian: true))}");
+    SetDecryptionKey(keyIdBts, decryptionKeyBts);
+  }
 
-		Key = decryptionKey;
-	}
+  public override FrameTransformBase<FrameEntry, FrameEntry> GetAudioFrameFilter()
+  {
+    return Key is null && Tenc is not null
+        ? throw new InvalidOperationException($"This instance of {nameof(DashFile)} does not have a decryption key set.")
+        : new DashFilter(Key);
+  }
+
+  public void SetDecryptionKey(byte[] keyId, byte[] decryptionKey)
+  {
+    if (Tenc is null)
+    {
+      throw new InvalidOperationException($"This instance of {nameof(DashFile)} does not contain a {nameof(TencBox)}.");
+    }
+
+    if (keyId is null || keyId.Length != AesCtr.AES_BLOCK_SIZE)
+    {
+      throw new ArgumentException($"{nameof(keyId)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
+    }
+
+    if (decryptionKey is null || decryptionKey.Length != AesCtr.AES_BLOCK_SIZE)
+    {
+      throw new ArgumentException($"{nameof(decryptionKey)} must be {AesCtr.AES_BLOCK_SIZE} bytes long.");
+    }
+
+    var keyUUID = new Guid(keyId, bigEndian: true);
+
+    if (keyUUID != Tenc.DefaultKID)
+    {
+      throw new InvalidOperationException($"Supplied keyId does not match dash default keyId: {Convert.ToHexString(Tenc.DefaultKID.ToByteArray(bigEndian: true))}");
+    }
+
+    Key = decryptionKey;
+  }
+
+  protected override uint CalculateBitrate()
+  {
+    var totalSize = Sidx.Segments.Sum(s => (long)s.ReferenceSize) * 8;
+    var totalDuration = Sidx.Segments.Sum(s => (long)s.SubsegmentDuration);
+    var bitRate = totalSize * Sidx.Timescale / totalDuration;
+    return (uint)bitRate;
+  }
+
+  protected override IChunkReader CreateChunkReader(Stream inputStream, TimeSpan startTime, TimeSpan endTime)
+      => new DashChunkReader(this, inputStream, startTime, endTime);
 }

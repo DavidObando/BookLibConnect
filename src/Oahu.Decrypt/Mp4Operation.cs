@@ -6,92 +6,106 @@ using System.Threading.Tasks;
 
 namespace Oahu.Decrypt
 {
-	public class Mp4Operation
-	{
-		public event EventHandler<ConversionProgressEventArgs>? ConversionProgressUpdate;
-		public bool IsCompleted => Continuation?.IsCompleted is true;
-		public bool IsFaulted => _readerTask?.IsFaulted is true;
-		public bool IsCanceled => _readerTask?.IsCanceled is true;
-		public bool IsCompletedSuccessfully => _readerTask?.IsCompletedSuccessfully is true && Continuation?.IsCompletedSuccessfully is true;
-		public TimeSpan CurrentProcessPosition => _lastArgs?.ProcessPosition ?? TimeSpan.Zero;
-		public double ProcessSpeed => _lastArgs?.ProcessSpeed ?? 0;
-		public TaskStatus TaskStatus => _readerTask?.Status ?? TaskStatus.Created;
-		public Task OperationTask => Continuation;
-		public Mp4File? Mp4File { get; }
+  public class Mp4Operation
+  {
+    private readonly CancellationTokenSource _cancellationSource = new();
+    private readonly Func<CancellationTokenSource, Task> _startAction;
+    private readonly Action<Task>? _continuationAction;
+    private ConversionProgressEventArgs? _lastArgs;
+    private Task? _continuation;
+    private Task? _readerTask;
 
-		protected virtual Task Continuation => _continuation ?? Task.CompletedTask;
+    internal Mp4Operation(Func<CancellationTokenSource, Task> startAction, Mp4File? mp4File, Action<Task> continuationTask)
+        : this(startAction, mp4File)
+    {
+      _continuationAction = continuationTask;
+    }
 
-		private readonly CancellationTokenSource _cancellationSource = new();
-		private readonly Func<CancellationTokenSource, Task> _startAction;
-		private readonly Action<Task>? _continuationAction;
-		private ConversionProgressEventArgs? _lastArgs;
-		private Task? _continuation;
-		private Task? _readerTask;
+    protected Mp4Operation(Func<CancellationTokenSource, Task> startAction, Mp4File? mp4File)
+    {
+      _startAction = startAction;
+      Mp4File = mp4File;
+    }
 
-		internal Mp4Operation(Func<CancellationTokenSource, Task> startAction, Mp4File? mp4File, Action<Task> continuationTask)
-			: this(startAction, mp4File)
-		{
-			_continuationAction = continuationTask;
-		}
+    public event EventHandler<ConversionProgressEventArgs>? ConversionProgressUpdate;
 
-		protected Mp4Operation(Func<CancellationTokenSource, Task> startAction, Mp4File? mp4File)
-		{
-			_startAction = startAction;
-			Mp4File = mp4File;
-		}
+    public bool IsCompleted => Continuation?.IsCompleted is true;
 
-		/// <summary>Cancel the operation</summary>
-		public Task CancelAsync()
-		{
-			_cancellationSource.Cancel();
-			return Continuation is null ? Task.FromCanceled(_cancellationSource.Token) : Continuation;
-		}
+    public bool IsFaulted => _readerTask?.IsFaulted is true;
 
-		/// <summary>Start the Mp4 operation</summary>
-		public void Start()
-		{
-			if (_readerTask is null)
-			{
-				_readerTask = Task.Run(() => _startAction(_cancellationSource));
-				SetContinuation(_readerTask);
-			}
-		}
+    public bool IsCanceled => _readerTask?.IsCanceled is true;
 
-		protected virtual void SetContinuation(Task readerTask)
-		{
-			_continuation = readerTask.ContinueWith(t =>
-			{
-				//Call the continuation delegate to cleanup disposables
-				try
-				{
-					_continuationAction?.Invoke(t);
-				}
-				catch (Exception ex)
-				{
-					if (t.Exception is null)
-						throw;
+    public bool IsCompletedSuccessfully => _readerTask?.IsCompletedSuccessfully is true && Continuation?.IsCompletedSuccessfully is true;
 
-					throw new AggregateException("Two or more errors occurred.", t.Exception.InnerExceptions.Append(ex));
-				}
-				if (t.IsFaulted && t.Exception is not null)
-					throw t.Exception;
-			},
-			TaskContinuationOptions.ExecuteSynchronously);
-		}
+    public TimeSpan CurrentProcessPosition => _lastArgs?.ProcessPosition ?? TimeSpan.Zero;
 
-		public ConfiguredTaskAwaitable.ConfiguredTaskAwaiter GetAwaiter()
-		{
-			Start();
-			return Continuation.ConfigureAwait(false).GetAwaiter();
-		}
+    public double ProcessSpeed => _lastArgs?.ProcessSpeed ?? 0;
 
-		internal void OnProgressUpdate(ConversionProgressEventArgs args)
-		{
-			_lastArgs = args;
-			ConversionProgressUpdate?.Invoke(this, args);
-		}
+    public TaskStatus TaskStatus => _readerTask?.Status ?? TaskStatus.Created;
 
-		public static Mp4Operation FromCompleted(Mp4File? mp4File)
-			=> new Mp4Operation(c => Task.CompletedTask, mp4File, _ => { });
-	}
+    public Task OperationTask => Continuation;
+
+    public Mp4File? Mp4File { get; }
+
+    protected virtual Task Continuation => _continuation ?? Task.CompletedTask;
+
+    public static Mp4Operation FromCompleted(Mp4File? mp4File)
+        => new Mp4Operation(c => Task.CompletedTask, mp4File, _ => { });
+
+    /// <summary>Cancel the operation</summary>
+    public Task CancelAsync()
+    {
+      _cancellationSource.Cancel();
+      return Continuation is null ? Task.FromCanceled(_cancellationSource.Token) : Continuation;
+    }
+
+    /// <summary>Start the Mp4 operation</summary>
+    public void Start()
+    {
+      if (_readerTask is null)
+      {
+        _readerTask = Task.Run(() => _startAction(_cancellationSource));
+        SetContinuation(_readerTask);
+      }
+    }
+
+    public ConfiguredTaskAwaitable.ConfiguredTaskAwaiter GetAwaiter()
+    {
+      Start();
+      return Continuation.ConfigureAwait(false).GetAwaiter();
+    }
+
+    internal void OnProgressUpdate(ConversionProgressEventArgs args)
+    {
+      _lastArgs = args;
+      ConversionProgressUpdate?.Invoke(this, args);
+    }
+
+    protected virtual void SetContinuation(Task readerTask)
+    {
+      _continuation = readerTask.ContinueWith(t =>
+      {
+        // Call the continuation delegate to cleanup disposables
+        try
+        {
+          _continuationAction?.Invoke(t);
+        }
+        catch (Exception ex)
+        {
+          if (t.Exception is null)
+          {
+            throw;
+          }
+
+          throw new AggregateException("Two or more errors occurred.", t.Exception.InnerExceptions.Append(ex));
+        }
+
+        if (t.IsFaulted && t.Exception is not null)
+        {
+          throw t.Exception;
+        }
+      },
+      TaskContinuationOptions.ExecuteSynchronously);
+    }
+  }
 }

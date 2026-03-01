@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.43" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Oahu.Decrypt\Oahu.Decrypt.csproj" />
     <ProjectReference Include="..\Oahu.Foundation\Oahu.Foundation.csproj" />
     <ProjectReference Include="..\Oahu.Data\Oahu.Data.csproj" />

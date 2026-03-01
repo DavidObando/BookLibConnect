@@ -1,50 +1,62 @@
-﻿using System.IO;
+using System.IO;
 
-namespace Oahu.Aux {
+namespace Oahu.Aux
+{
   /// <summary>
   /// Automatic indentation, managed as a resource
   /// </summary>
-  public class Indent : IResource {
-
+  public class Indent : IResource
+  {
     uint _inc = 2;
     uint _offset = 0;
     int _indent;
     string _output = string.Empty;
 
-    public int Level { get; private set; }
+    public Indent()
+    {
+    }
 
-    public Indent () { }
-    public Indent (uint inc) => this._inc = inc;
-    public Indent (uint? inc, uint offset) {
+    public Indent(uint inc) => this._inc = inc;
+
+    public Indent(uint? inc, uint offset)
+    {
       this._inc = inc ?? this._inc;
       this._offset = offset;
-      buildString ();
+      buildString();
     }
 
-    public void Acquire () {
+    public int Level { get; private set; }
+
+    public void Acquire()
+    {
       Level++;
       _indent += (int)_inc;
-      buildString ();
+      buildString();
     }
 
-    public void Release () {
+    public void Release()
+    {
       Level--;
       _indent -= (int)_inc;
-      buildString ();
+      buildString();
     }
 
-    public bool InRange (int level) {
+    public bool InRange(int level)
+    {
       if (level < 0)
+      {
         return true;
+      }
       else
+      {
         return Level <= level;
+      }
     }
 
-    public override string ToString () => _output;
+    public override string ToString() => _output;
 
-    public void Write (TextWriter osm) => osm.Write (this);
+    public void Write(TextWriter osm) => osm.Write(this);
 
-    private void buildString () => _output = new string (' ', (int)_offset + _indent);
-
+    private void buildString() => _output = new string(' ', (int)_offset + _indent);
   }
 }

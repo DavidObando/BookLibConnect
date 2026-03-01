@@ -1,16 +1,20 @@
-﻿namespace Oahu.Decrypt.Mpeg4.Boxes;
+namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public interface IChunkOffsets : IBox
 {
-	uint EntryCount { get; }
-	ChunkOffsetList ChunkOffsets { get; }
+  uint EntryCount { get; }
 
-	public static IChunkOffsets Create(StblBox stbl, ChunkOffsetList offsets)
-	{
-		if (offsets.Count == 0)
-			return StcoBox.CreateBlank(stbl, offsets);
-		offsets.Sort();
-		long maxOffset = offsets.GetOffsetAtIndex(offsets.Count - 1);
-		return maxOffset > uint.MaxValue ? Co64Box.CreateBlank(stbl, offsets) : StcoBox.CreateBlank(stbl, offsets);
-	}
+  ChunkOffsetList ChunkOffsets { get; }
+
+  public static IChunkOffsets Create(StblBox stbl, ChunkOffsetList offsets)
+  {
+    if (offsets.Count == 0)
+    {
+      return StcoBox.CreateBlank(stbl, offsets);
+    }
+
+    offsets.Sort();
+    long maxOffset = offsets.GetOffsetAtIndex(offsets.Count - 1);
+    return maxOffset > uint.MaxValue ? Co64Box.CreateBlank(stbl, offsets) : StcoBox.CreateBlank(stbl, offsets);
+  }
 }

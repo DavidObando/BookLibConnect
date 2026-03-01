@@ -1,106 +1,111 @@
-﻿using Oahu.Decrypt.FrameFilters;
-using Oahu.Decrypt.Mpeg4;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using Oahu.Decrypt.FrameFilters;
+using Oahu.Decrypt.Mpeg4;
 
 namespace Oahu.Decrypt
 {
-	public class ChapterEntry
-	{
-		public Memory<byte> FrameData { get; init; }
-		public uint SamplesInFrame { get; init; }
-		public string Title { get; }
-		public ChapterEntry(string title)
-		{
-			ArgumentNullException.ThrowIfNull(title, nameof(title));
-			Title = title;
-		}
-	}
+  public class ChapterEntry
+  {
+    public ChapterEntry(string title)
+    {
+      ArgumentNullException.ThrowIfNull(title, nameof(title));
+      Title = title;
+    }
 
-	/// <summary>
-	/// Chapters to be written to an mp4 file.
-	/// </summary>
-	public class ChapterQueue
-	{
-		private int subtractNext = 0;
-		private readonly double SampleScaleFactor;
-		private readonly SampleRate OutputSampleRate;
-		private readonly object lockObj = new();
-		private readonly Queue<ChapterEntry> chapterEntries = new();
+    public Memory<byte> FrameData { get; init; }
 
-		public ChapterQueue(SampleRate inputRate, SampleRate outputRate)
-		{
-			OutputSampleRate = outputRate;
-			SampleScaleFactor = (double)outputRate / (double)inputRate;
-		}
+    public uint SamplesInFrame { get; init; }
 
-		public bool TryGetNextChapter([NotNullWhen(true)] out ChapterEntry? chapterEntry)
-		{
-			lock (lockObj)
-			{
-				if (chapterEntries.Count > 0)
-				{
-					chapterEntry = chapterEntries.Dequeue();
-					return true;
-				}
-			}
+    public string Title { get; }
+  }
 
-			chapterEntry = null;
-			return false;
-		}
+  /// <summary>
+  /// Chapters to be written to an mp4 file.
+  /// </summary>
+  public class ChapterQueue
+  {
+    private readonly double SampleScaleFactor;
+    private readonly SampleRate OutputSampleRate;
+    private readonly object lockObj = new();
+    private readonly Queue<ChapterEntry> chapterEntries = new();
+    private int subtractNext = 0;
 
-		public void AddRange(IEnumerable<Chapter> chapters)
-		{
-			foreach (var ch in chapters)
-				Add(ch);
-		}
+    public ChapterQueue(SampleRate inputRate, SampleRate outputRate)
+    {
+      OutputSampleRate = outputRate;
+      SampleScaleFactor = (double)outputRate / (double)inputRate;
+    }
 
-		/// <summary>
-		/// Add a user-defined chapter
-		/// </summary>
-		public void Add(Chapter chapter)
-		{
-			byte[] frameData = new byte[chapter.RenderSize];
+    public bool TryGetNextChapter([NotNullWhen(true)] out ChapterEntry? chapterEntry)
+    {
+      lock (lockObj)
+      {
+        if (chapterEntries.Count > 0)
+        {
+          chapterEntry = chapterEntries.Dequeue();
+          return true;
+        }
+      }
 
-			using var ms = new MemoryStream(frameData);
-			chapter.WriteChapter(ms);
-			uint sampleDelta = (uint)(chapter.Duration.TotalSeconds * (int)OutputSampleRate);
+      chapterEntry = null;
+      return false;
+    }
 
-			lock (lockObj)
-			{
-				chapterEntries.Enqueue(new ChapterEntry(chapter.Title)
-				{
-					FrameData = frameData,
-					SamplesInFrame = sampleDelta
-				});
-			}
-		}
+    public void AddRange(IEnumerable<Chapter> chapters)
+    {
+      foreach (var ch in chapters)
+      {
+        Add(ch);
+      }
+    }
 
-		/// <summary>
-		/// Add a chapter read directly from the timed text track.
-		/// </summary>
-		public void Add(FrameEntry entry)
-		{
-			ReadOnlySpan<byte> frameData = entry.FrameData.Span;
-			int size = frameData[1] | frameData[0];
-			string title = Encoding.UTF8.GetString(frameData.Slice(2, size));
+    /// <summary>
+    /// Add a user-defined chapter
+    /// </summary>
+    public void Add(Chapter chapter)
+    {
+      byte[] frameData = new byte[chapter.RenderSize];
 
-			//Takes care of 'negative' sample deltas in malformed Stts entries (e.g. Broken Angels)
-			var sif = (int)entry.SamplesInFrame;
+      using var ms = new MemoryStream(frameData);
+      chapter.WriteChapter(ms);
+      uint sampleDelta = (uint)(chapter.Duration.TotalSeconds * (int)OutputSampleRate);
 
-			lock (lockObj)
-			{
-				chapterEntries.Enqueue(new ChapterEntry(title)
-				{
-					FrameData = entry.FrameData,
-					SamplesInFrame = (uint)(Math.Max(0, sif + subtractNext) * SampleScaleFactor)
-				});
-			}
+      lock (lockObj)
+      {
+        chapterEntries.Enqueue(new ChapterEntry(chapter.Title)
+        {
+          FrameData = frameData,
+          SamplesInFrame = sampleDelta
+        });
+      }
+    }
 
-			subtractNext = sif < 0 ? sif : 0;
-		}
-	}
+    /// <summary>
+    /// Add a chapter read directly from the timed text track.
+    /// </summary>
+    public void Add(FrameEntry entry)
+    {
+      ReadOnlySpan<byte> frameData = entry.FrameData.Span;
+      int size = frameData[1] | frameData[0];
+      string title = Encoding.UTF8.GetString(frameData.Slice(2, size));
+
+      // Takes care of 'negative' sample deltas in malformed Stts entries (e.g. Broken Angels)
+      var sif = (int)entry.SamplesInFrame;
+
+      lock (lockObj)
+      {
+        chapterEntries.Enqueue(new ChapterEntry(title)
+        {
+          FrameData = entry.FrameData,
+          SamplesInFrame = (uint)(Math.Max(0, sif + subtractNext) * SampleScaleFactor)
+        });
+      }
+
+      subtractNext = sif < 0 ? sif : 0;
+    }
+  }
 }

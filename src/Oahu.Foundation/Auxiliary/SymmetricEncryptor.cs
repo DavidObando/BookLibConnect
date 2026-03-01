@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Oahu.Aux {
+namespace Oahu.Aux
+{
   // https://tomrucki.com/posts/aes-encryption-in-csharp/
-  // possibly way over the top for some applications. 
-
-  public static class SymmetricEncryptor {
-
+  // possibly way over the top for some applications.
+  public static class SymmetricEncryptor
+  {
     private const int AES_BLOCK_BYTE_SIZE = 128 / 8;
 
     private const int PASSWORD_SALT_BYTE_SIZE = 128 / 8;
@@ -25,107 +25,122 @@ namespace Oahu.Aux {
         SIGNATURE_BYTE_SIZE; // signature tag
 
     private static readonly Encoding _stringEncoding = Encoding.UTF8;
-    private static readonly RandomNumberGenerator _random = RandomNumberGenerator.Create ();
+    private static readonly RandomNumberGenerator _random = RandomNumberGenerator.Create();
 
-    public static byte[] EncryptString (string toEncrypt, string password) {
-      using (var aes = Aes.Create ()) {
+    public static byte[] EncryptString(string toEncrypt, string password)
+    {
+      using (var aes = Aes.Create())
+      {
         // encrypt
-        var keySalt = generateRandomBytes (PASSWORD_SALT_BYTE_SIZE);
-        var key = getKey (password, keySalt);
-        var iv = generateRandomBytes (AES_BLOCK_BYTE_SIZE);
+        var keySalt = generateRandomBytes(PASSWORD_SALT_BYTE_SIZE);
+        var key = getKey(password, keySalt);
+        var iv = generateRandomBytes(AES_BLOCK_BYTE_SIZE);
 
         byte[] cipherText;
-        using (var encryptor = aes.CreateEncryptor (key, iv)) {
-          var plainText = _stringEncoding.GetBytes (toEncrypt);
+        using (var encryptor = aes.CreateEncryptor(key, iv))
+        {
+          var plainText = _stringEncoding.GetBytes(toEncrypt);
           cipherText = encryptor
-              .TransformFinalBlock (plainText, 0, plainText.Length);
+              .TransformFinalBlock(plainText, 0, plainText.Length);
         }
 
         // sign
-        var authKeySalt = generateRandomBytes (PASSWORD_SALT_BYTE_SIZE);
-        var authKey = getKey (password, authKeySalt);
-        var result = mergeArrays (
+        var authKeySalt = generateRandomBytes(PASSWORD_SALT_BYTE_SIZE);
+        var authKey = getKey(password, authKeySalt);
+        var result = mergeArrays(
             additionalCapacity: SIGNATURE_BYTE_SIZE,
             authKeySalt, keySalt, iv, cipherText);
 
-        using (var hmac = new HMACSHA256 (authKey)) {
+        using (var hmac = new HMACSHA256(authKey))
+        {
           var payloadToSignLength = result.Length - SIGNATURE_BYTE_SIZE;
-          var signatureTag = hmac.ComputeHash (result, 0, payloadToSignLength);
-          signatureTag.CopyTo (result, payloadToSignLength);
+          var signatureTag = hmac.ComputeHash(result, 0, payloadToSignLength);
+          signatureTag.CopyTo(result, payloadToSignLength);
         }
 
         return result;
       }
     }
 
-    public static string DecryptToString (byte[] encryptedData, string password) {
+    public static string DecryptToString(byte[] encryptedData, string password)
+    {
       if (encryptedData is null
-          || encryptedData.Length < MINIMUM_ENCRYPTED_MESSAGE_BYTE_SIZE) {
-        throw new ArgumentException ("Invalid length of encrypted data");
+          || encryptedData.Length < MINIMUM_ENCRYPTED_MESSAGE_BYTE_SIZE)
+      {
+        throw new ArgumentException("Invalid length of encrypted data");
       }
 
       var authKeySalt = encryptedData
-          .AsSpan (0, PASSWORD_SALT_BYTE_SIZE).ToArray ();
+          .AsSpan(0, PASSWORD_SALT_BYTE_SIZE).ToArray();
       var keySalt = encryptedData
-          .AsSpan (PASSWORD_SALT_BYTE_SIZE, PASSWORD_SALT_BYTE_SIZE).ToArray ();
+          .AsSpan(PASSWORD_SALT_BYTE_SIZE, PASSWORD_SALT_BYTE_SIZE).ToArray();
       var iv = encryptedData
-          .AsSpan (2 * PASSWORD_SALT_BYTE_SIZE, AES_BLOCK_BYTE_SIZE).ToArray ();
+          .AsSpan(2 * PASSWORD_SALT_BYTE_SIZE, AES_BLOCK_BYTE_SIZE).ToArray();
       var signatureTag = encryptedData
-          .AsSpan (encryptedData.Length - SIGNATURE_BYTE_SIZE, SIGNATURE_BYTE_SIZE).ToArray ();
+          .AsSpan(encryptedData.Length - SIGNATURE_BYTE_SIZE, SIGNATURE_BYTE_SIZE).ToArray();
 
       var cipherTextIndex = authKeySalt.Length + keySalt.Length + iv.Length;
       var cipherTextLength =
           encryptedData.Length - cipherTextIndex - signatureTag.Length;
 
-      var authKey = getKey (password, authKeySalt);
-      var key = getKey (password, keySalt);
+      var authKey = getKey(password, authKeySalt);
+      var key = getKey(password, keySalt);
 
       // verify signature
-      using (var hmac = new HMACSHA256 (authKey)) {
+      using (var hmac = new HMACSHA256(authKey))
+      {
         var payloadToSignLength = encryptedData.Length - SIGNATURE_BYTE_SIZE;
         var signatureTagExpected = hmac
-            .ComputeHash (encryptedData, 0, payloadToSignLength);
+            .ComputeHash(encryptedData, 0, payloadToSignLength);
 
         // constant time checking to prevent timing attacks
         var signatureVerificationResult = 0;
-        for (int i = 0; i < signatureTag.Length; i++) {
+        for (int i = 0; i < signatureTag.Length; i++)
+        {
           signatureVerificationResult |= signatureTag[i] ^ signatureTagExpected[i];
         }
 
-        if (signatureVerificationResult != 0) {
-          throw new CryptographicException ("Invalid signature");
+        if (signatureVerificationResult != 0)
+        {
+          throw new CryptographicException("Invalid signature");
         }
       }
 
       // decrypt
-      using (var aes = Aes.Create ()) {
-        using (var encryptor = aes.CreateDecryptor (key, iv)) {
+      using (var aes = Aes.Create())
+      {
+        using (var encryptor = aes.CreateDecryptor(key, iv))
+        {
           var decryptedBytes = encryptor
-              .TransformFinalBlock (encryptedData, cipherTextIndex, cipherTextLength);
-          return _stringEncoding.GetString (decryptedBytes);
+              .TransformFinalBlock(encryptedData, cipherTextIndex, cipherTextLength);
+          return _stringEncoding.GetString(decryptedBytes);
         }
       }
     }
 
-    private static byte[] getKey (string password, byte[] passwordSalt) {
-      var keyBytes = _stringEncoding.GetBytes (password);
+    private static byte[] getKey(string password, byte[] passwordSalt)
+    {
+      var keyBytes = _stringEncoding.GetBytes(password);
 
-      return Rfc2898DeriveBytes.Pbkdf2 (
+      return Rfc2898DeriveBytes.Pbkdf2(
           keyBytes, passwordSalt,
           PASSWORD_ITERATION_COUNT, HashAlgorithmName.SHA256, PASSWORD_BYTE_SIZE);
     }
 
-    private static byte[] generateRandomBytes (int numberOfBytes) {
+    private static byte[] generateRandomBytes(int numberOfBytes)
+    {
       var randomBytes = new byte[numberOfBytes];
-      _random.GetBytes (randomBytes);
+      _random.GetBytes(randomBytes);
       return randomBytes;
     }
 
-    private static byte[] mergeArrays (int additionalCapacity = 0, params byte[][] arrays) {
-      var merged = new byte[arrays.Sum (a => a.Length) + additionalCapacity];
+    private static byte[] mergeArrays(int additionalCapacity = 0, params byte[][] arrays)
+    {
+      var merged = new byte[arrays.Sum(a => a.Length) + additionalCapacity];
       var mergeIndex = 0;
-      for (int i = 0; i < arrays.GetLength (0); i++) {
-        arrays[i].CopyTo (merged, mergeIndex);
+      for (int i = 0; i < arrays.GetLength(0); i++)
+      {
+        arrays[i].CopyTo(merged, mergeIndex);
         mergeIndex += arrays[i].Length;
       }
 

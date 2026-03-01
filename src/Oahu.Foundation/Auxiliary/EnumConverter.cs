@@ -1,97 +1,112 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
 using Oahu.Aux.Extensions;
 using static Oahu.Aux.EnumUtil;
 
-namespace Oahu.Aux {
-
-  public class EnumConverter<TEnum> : TypeConverter 
-    where TEnum : struct, Enum 
+namespace Oahu.Aux
+{
+  public class EnumConverter<TEnum> : TypeConverter
+    where TEnum : struct, Enum
   {
+    private ResourceManager _resourceManager;
+    Dictionary<string, TEnum> _reverseLookup;
+
+    public EnumConverter()
+    {
+      Values = GetValues<TEnum>().ToArray();
+    }
 
     protected IList<TEnum> Values { get; }
 
-    private ResourceManager _resourceManager;
-
-    protected ResourceManager ResourceManager {
+    protected ResourceManager ResourceManager
+    {
       get => _resourceManager;
       set
       {
         _resourceManager = value;
-        initReverseLookup ();
+        initReverseLookup();
       }
     }
 
-    Dictionary<string, TEnum> _reverseLookup;
+    public override bool GetStandardValuesSupported(ITypeDescriptorContext context) => true;
 
-    public EnumConverter () {
-      Values = GetValues<TEnum> ().ToArray ();
-    }
-
-    public override bool GetStandardValuesSupported (ITypeDescriptorContext context) => true;
-
-    public override StandardValuesCollection GetStandardValues (ITypeDescriptorContext context) {
-      StandardValuesCollection svc = new StandardValuesCollection (Values.ToArray());
+    public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+    {
+      StandardValuesCollection svc = new StandardValuesCollection(Values.ToArray());
       return svc;
     }
 
-
-    public override bool CanConvertTo (ITypeDescriptorContext context, Type destinationType) {
-      if (destinationType != typeof (string))
-        return base.CanConvertTo (context, destinationType);
+    public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+    {
+      if (destinationType != typeof(string))
+      {
+        return base.CanConvertTo(context, destinationType);
+      }
       else
+      {
         return true;
+      }
     }
 
-    public override bool CanConvertFrom (ITypeDescriptorContext context, Type sourceType) {
-      if (sourceType != typeof (string))
-        return base.CanConvertFrom (context, sourceType);
+    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+    {
+      if (sourceType != typeof(string))
+      {
+        return base.CanConvertFrom(context, sourceType);
+      }
       else
+      {
         return true;
+      }
     }
 
-
-    public override object ConvertTo (ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) {
+    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+    {
 #if TRACE && EXTRA
       Trace.WriteLine ($"{nameof (ConvertTo)}: \"{value}\", from: {value.GetType ().Name}, to: {destinationType.Name}");
 #endif
-      switch (value) {
+      switch (value)
+      {
         default:
-          return base.ConvertTo (context, culture, value, destinationType);
+          return base.ConvertTo(context, culture, value, destinationType);
         case TEnum enm:
-          return toDisplayString (enm);
+          return toDisplayString(enm);
       }
     }
 
-    public override object ConvertFrom (ITypeDescriptorContext context, CultureInfo culture, object value) {
+    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+    {
 #if TRACE && EXTRA
       Trace.WriteLine ($"{nameof (ConvertFrom)}: \"{value}\", from: {value.GetType ().Name}");
 #endif
-      if (!(_reverseLookup is null)) {
-        if (value is string s) {
-          bool succ = _reverseLookup.TryGetValue (s, out TEnum e);
+      if (!(_reverseLookup is null))
+      {
+        if (value is string s)
+        {
+          bool succ = _reverseLookup.TryGetValue(s, out TEnum e);
           if (succ)
+          {
             return e;
+          }
         }
       }
-      return base.ConvertFrom (context, culture, value);
 
+      return base.ConvertFrom(context, culture, value);
     }
 
-    private string toDisplayString (TEnum value) => ResourceManager.GetStringEx (value.ToString ());
+    private string toDisplayString(TEnum value) => ResourceManager.GetStringEx(value.ToString());
 
-    private void initReverseLookup () {
-      _reverseLookup = new Dictionary<string, TEnum> ();
+    private void initReverseLookup()
+    {
+      _reverseLookup = new Dictionary<string, TEnum>();
       foreach (var v in Values)
-        _reverseLookup.Add (toDisplayString (v), v);
+      {
+        _reverseLookup.Add(toDisplayString(v), v);
+      }
     }
-
   }
-
-
 }

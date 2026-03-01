@@ -1,66 +1,79 @@
-﻿using Oahu.Decrypt.Mpeg4;
-using Oahu.Decrypt.Mpeg4.Boxes;
 using System;
 using System.IO;
+using Oahu.Decrypt.Mpeg4;
+using Oahu.Decrypt.Mpeg4.Boxes;
 
 namespace Oahu.Decrypt.FrameFilters.Audio
 {
-	internal sealed class LosslessMultipartFilter : MultipartFilterBase<FrameEntry, NewSplitCallback>
-	{
-		public bool CurrentWriterOpen { get; private set; }
-		protected override int InputBufferSize => 1000;
+  internal sealed class LosslessMultipartFilter : MultipartFilterBase<FrameEntry, NewSplitCallback>
+  {
+    private readonly FtypBox ftyp;
+    private readonly MoovBox moov;
+    private readonly Action<NewSplitCallback> newFileCallback;
+    private Mp4aWriter? Mp4writer;
 
-		private Mp4aWriter? Mp4writer;
-		private readonly FtypBox ftyp;
-		private readonly MoovBox moov;
-		private readonly Action<NewSplitCallback> newFileCallback;
+    public LosslessMultipartFilter(ChapterInfo splitChapters, FtypBox ftyp, MoovBox moov, Action<NewSplitCallback> newFileCallback)
+        : base(splitChapters, (SampleRate)moov.AudioTrack.Mdia.Mdhd.Timescale, moov.AudioTrack.Mdia.Minf.Stbl.Stsd.AudioSampleEntry?.ChannelCount == 2)
+    {
+      this.ftyp = ftyp;
+      this.moov = moov;
+      this.newFileCallback = newFileCallback;
+    }
 
-		public LosslessMultipartFilter(ChapterInfo splitChapters, FtypBox ftyp, MoovBox moov, Action<NewSplitCallback> newFileCallback)
-			: base(splitChapters, (SampleRate)moov.AudioTrack.Mdia.Mdhd.Timescale, moov.AudioTrack.Mdia.Minf.Stbl.Stsd.AudioSampleEntry?.ChannelCount == 2)
-		{
-			this.ftyp = ftyp;
-			this.moov = moov;
-			this.newFileCallback = newFileCallback;
-		}
+    public bool CurrentWriterOpen { get; private set; }
 
-		protected override void CloseCurrentWriter()
-		{
-			if (!CurrentWriterOpen) return;
+    protected override int InputBufferSize => 1000;
 
-			Mp4writer?.Close();
-			Mp4writer?.OutputFile.Close();
-			CurrentWriterOpen = false;
-		}
+    protected override void CloseCurrentWriter()
+    {
+      if (!CurrentWriterOpen)
+      {
+        return;
+      }
 
-		protected override void WriteFrameToFile(FrameEntry audioFrame, bool newChunk)
-		{
-			Mp4writer?.AddFrame(audioFrame.FrameData.Span, newChunk, audioFrame.SamplesInFrame);
-		}
+      Mp4writer?.Close();
+      Mp4writer?.OutputFile.Close();
+      CurrentWriterOpen = false;
+    }
 
-		protected override void CreateNewWriter(NewSplitCallback callback)
-		{
-			newFileCallback(callback);
-			if (callback.OutputFile is not Stream outfile)
-				throw new InvalidOperationException("Output file stream null");
+    protected override void WriteFrameToFile(FrameEntry audioFrame, bool newChunk)
+    {
+      Mp4writer?.AddFrame(audioFrame.FrameData.Span, newChunk, audioFrame.SamplesInFrame);
+    }
 
-			CurrentWriterOpen = true;
+    protected override void CreateNewWriter(NewSplitCallback callback)
+    {
+      newFileCallback(callback);
+      if (callback.OutputFile is not Stream outfile)
+      {
+        throw new InvalidOperationException("Output file stream null");
+      }
 
-			Mp4writer = new Mp4aWriter(outfile, ftyp, moov);
-			Mp4writer.RemoveTextTrack();
+      CurrentWriterOpen = true;
 
-			if (Mp4writer.Moov.ILst is not null)
-			{
-				var tags = new MetadataItems(Mp4writer.Moov.ILst);
-				if (callback.TrackNumber.HasValue && callback.TrackCount.HasValue)
-					tags.TrackNumber = (callback.TrackNumber.Value, callback.TrackCount.Value);
-				tags.Title = callback.TrackTitle ?? tags.Title;
-			}
-		}
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing && !Disposed)
-				CloseCurrentWriter();
-			base.Dispose(disposing);
-		}
-	}
+      Mp4writer = new Mp4aWriter(outfile, ftyp, moov);
+      Mp4writer.RemoveTextTrack();
+
+      if (Mp4writer.Moov.ILst is not null)
+      {
+        var tags = new MetadataItems(Mp4writer.Moov.ILst);
+        if (callback.TrackNumber.HasValue && callback.TrackCount.HasValue)
+        {
+          tags.TrackNumber = (callback.TrackNumber.Value, callback.TrackCount.Value);
+        }
+
+        tags.Title = callback.TrackTitle ?? tags.Title;
+      }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+      if (disposing && !Disposed)
+      {
+        CloseCurrentWriter();
+      }
+
+      base.Dispose(disposing);
+    }
+  }
 }

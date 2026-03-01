@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,31 +7,36 @@ namespace Oahu.Decrypt.Mpeg4;
 
 public record ChapterInfo : IEnumerable<Chapter>
 {
-	public TimeSpan StartOffset { get; }
-	public TimeSpan EndOffset => Count == 0 ? StartOffset : _chapterList.Max(c => c.EndOffset);
+  private readonly List<Chapter> _chapterList = new();
 
-	private readonly List<Chapter> _chapterList = new();
-	public IReadOnlyList<Chapter> Chapters => _chapterList;
-	public int Count => _chapterList.Count;
-	public int RenderSize => _chapterList.Sum(c => c.RenderSize);
+  public ChapterInfo(TimeSpan offsetFromBeginning = default) => StartOffset = offsetFromBeginning;
 
-	public ChapterInfo(TimeSpan offsetFromBeginning = default) => StartOffset = offsetFromBeginning;
+  public TimeSpan StartOffset { get; }
 
-	public void AddChapter(string title, TimeSpan duration)
-	{
-		TimeSpan startTime = Count == 0 ? StartOffset : _chapterList[^1].EndOffset;
+  public TimeSpan EndOffset => Count == 0 ? StartOffset : _chapterList.Max(c => c.EndOffset);
 
-		_chapterList.Add(new Chapter(title, startTime, duration));
-	}
-	public void Add(string title, TimeSpan duration) => AddChapter(title, duration);
+  public IReadOnlyList<Chapter> Chapters => _chapterList;
 
-	public IEnumerator<Chapter> GetEnumerator()
-	{
-		return _chapterList.GetEnumerator();
-	}
+  public int Count => _chapterList.Count;
 
-	IEnumerator IEnumerable.GetEnumerator()
-	{
-		return GetEnumerator();
-	}
+  public int RenderSize => _chapterList.Sum(c => c.RenderSize);
+
+  public void AddChapter(string title, TimeSpan duration)
+  {
+    TimeSpan startTime = Count == 0 ? StartOffset : _chapterList[^1].EndOffset;
+
+    _chapterList.Add(new Chapter(title, startTime, duration));
+  }
+
+  public void Add(string title, TimeSpan duration) => AddChapter(title, duration);
+
+  public IEnumerator<Chapter> GetEnumerator()
+  {
+    return _chapterList.GetEnumerator();
+  }
+
+  IEnumerator IEnumerable.GetEnumerator()
+  {
+    return GetEnumerator();
+  }
 }

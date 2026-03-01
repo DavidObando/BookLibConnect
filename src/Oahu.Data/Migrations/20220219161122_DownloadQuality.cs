@@ -1,33 +1,33 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Oahu.BooksDatabase.Migrations
 {
-    public partial class DownloadQuality : Migration
+  public partial class DownloadQuality : Migration
+  {
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<int>(
-                name: "DownloadQuality",
-                table: "Components",
-                type: "INTEGER",
-                nullable: true);
+      migrationBuilder.AddColumn<int>(
+          name: "DownloadQuality",
+          table: "Components",
+          type: "INTEGER",
+          nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "DownloadQuality",
-                table: "Books",
-                type: "INTEGER",
-                nullable: true);
-        }
-
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "DownloadQuality",
-                table: "Components");
-
-            migrationBuilder.DropColumn(
-                name: "DownloadQuality",
-                table: "Books");
-        }
+      migrationBuilder.AddColumn<int>(
+          name: "DownloadQuality",
+          table: "Books",
+          type: "INTEGER",
+          nullable: true);
     }
+
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+      migrationBuilder.DropColumn(
+          name: "DownloadQuality",
+          table: "Components");
+
+      migrationBuilder.DropColumn(
+          name: "DownloadQuality",
+          table: "Books");
+    }
+  }
 }

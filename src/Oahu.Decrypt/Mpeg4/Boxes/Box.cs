@@ -1,111 +1,125 @@
-﻿using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes
 {
-	public abstract class Box : IBox
-	{
-		public IBox? Parent { get; }
-		public BoxHeader Header { get; }
-		public List<IBox> Children { get; } = new List<IBox>();
-		public virtual long RenderSize => 8 + Children.Sum(b => b.RenderSize);
+  public abstract class Box : IBox
+  {
+    private int m_Disposed = 0;
 
-		protected long RemainingBoxLength(Stream file) => Header.FilePosition + Header.TotalBoxSize - file.Position;
+    public Box(BoxHeader header, IBox? parent)
+    {
+      Header = header;
+      Parent = parent;
+    }
 
-		public Box(BoxHeader header, IBox? parent)
-		{
-			Header = header;
-			Parent = parent;
-		}
-		protected abstract void Render(Stream file);
-		public T? GetChild<T>() where T : IBox
-		{
-			IEnumerable<T> children = GetChildren<T>();
+    ~Box()
+    {
+      Dispose(disposing: false);
+    }
 
-			return children.Count() switch
-			{
-				0 => default,
-				1 => children.First(),
-				_ => throw new InvalidOperationException($"{GetType().Name} has {children.Count()} children of type {typeof(T)}. Call {nameof(GetChildren)} instead."),
-			};
-		}
+    public IBox? Parent { get; }
 
-		public T GetChildOrThrow<T>() where T : IBox
-			=> GetChild<T>() ?? throw new InvalidDataException($"{Header.Type} does not contain a child of type {typeof(T)}");
+    public BoxHeader Header { get; }
 
-		public IEnumerable<T> GetChildren<T>() where T : IBox
-		{
-			return Children.OfType<T>();
-		}
+    public List<IBox> Children { get; } = new List<IBox>();
 
-		protected void LoadChildren(Stream file)
-		{
-			long endPos = Header.FilePosition + Header.TotalBoxSize;
+    public virtual long RenderSize => 8 + Children.Sum(b => b.RenderSize);
 
-			while (file.Position < endPos)
-			{
-				IBox child = BoxFactory.CreateBox(file, this);
+    protected bool Disposed => m_Disposed != 0;
 
-				if (child.Header.TotalBoxSize == 0)
-					break;
-				Children.Add(child);
-				if (child.Header.FilePosition + child.Header.TotalBoxSize != file.Position)
-					break;
-			}
-		}
+    public T? GetChild<T>() where T : IBox
+    {
+      IEnumerable<T> children = GetChildren<T>();
 
-		public List<FreeBox> GetFreeBoxes()
-		{
-			List<FreeBox> freeBoxes = GetChildren<FreeBox>().ToList();
+      return children.Count() switch
+      {
+        0 => default,
+        1 => children.First(),
+        _ => throw new InvalidOperationException($"{GetType().Name} has {children.Count()} children of type {typeof(T)}. Call {nameof(GetChildren)} instead."),
+      };
+    }
 
-			foreach (var child in Children)
-				freeBoxes.AddRange(child.GetFreeBoxes());
+    public T GetChildOrThrow<T>() where T : IBox
+        => GetChild<T>() ?? throw new InvalidDataException($"{Header.Type} does not contain a child of type {typeof(T)}");
 
-			return freeBoxes;
-		}
+    public IEnumerable<T> GetChildren<T>() where T : IBox
+    {
+      return Children.OfType<T>();
+    }
 
-		public void Save(Stream file)
-		{
-			ObjectDisposedException.ThrowIf(Disposed, this);
-			Header.FilePosition = file.Position;
-			file.WriteHeader(Header, RenderSize);
+    public List<FreeBox> GetFreeBoxes()
+    {
+      List<FreeBox> freeBoxes = GetChildren<FreeBox>().ToList();
 
-			Render(file);
+      foreach (var child in Children)
+      {
+        freeBoxes.AddRange(child.GetFreeBoxes());
+      }
 
-			foreach (var child in Children)
-			{
-				child.Save(file);
-			}
-		}
+      return freeBoxes;
+    }
 
-		#region IDisposable
-		private int m_Disposed = 0;
-		protected bool Disposed => m_Disposed != 0;
-		public void Dispose()
-		{
-			Dispose(disposing: true);
-			GC.SuppressFinalize(this);
-		}
+    public void Save(Stream file)
+    {
+      ObjectDisposedException.ThrowIf(Disposed, this);
+      Header.FilePosition = file.Position;
+      file.WriteHeader(Header, RenderSize);
 
-		~Box()
-		{
-			Dispose(disposing: false);
-		}
+      Render(file);
 
-		protected virtual void Dispose(bool disposing)
-		{
-			if (disposing && Interlocked.CompareExchange(ref m_Disposed, 1, 0) == 0)
-			{
-				foreach (IBox child in Children)
-					child?.Dispose();
+      foreach (var child in Children)
+      {
+        child.Save(file);
+      }
+    }
 
-				Children.Clear();
-			}
-		}
-		#endregion
-	}
+    public void Dispose()
+    {
+      Dispose(disposing: true);
+      GC.SuppressFinalize(this);
+    }
+
+    protected long RemainingBoxLength(Stream file) => Header.FilePosition + Header.TotalBoxSize - file.Position;
+
+    protected abstract void Render(Stream file);
+
+    protected void LoadChildren(Stream file)
+    {
+      long endPos = Header.FilePosition + Header.TotalBoxSize;
+
+      while (file.Position < endPos)
+      {
+        IBox child = BoxFactory.CreateBox(file, this);
+
+        if (child.Header.TotalBoxSize == 0)
+        {
+          break;
+        }
+
+        Children.Add(child);
+        if (child.Header.FilePosition + child.Header.TotalBoxSize != file.Position)
+        {
+          break;
+        }
+      }
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+      if (disposing && Interlocked.CompareExchange(ref m_Disposed, 1, 0) == 0)
+      {
+        foreach (IBox child in Children)
+        {
+          child?.Dispose();
+        }
+
+        Children.Clear();
+      }
+    }
+  }
 }

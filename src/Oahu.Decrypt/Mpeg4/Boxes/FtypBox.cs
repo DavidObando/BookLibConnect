@@ -1,54 +1,65 @@
-﻿using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
+
 namespace Oahu.Decrypt.Mpeg4.Boxes
 {
-	public class FtypBox : Box
-	{
-		public override long RenderSize => base.RenderSize + 8 + CompatibleBrands.Count * 4;
-		public string MajorBrand { get; set; }
-		public int MajorVersion { get; set; }
-		public List<string> CompatibleBrands { get; } = new List<string>();
+  public class FtypBox : Box
+  {
+    public FtypBox(Stream file, BoxHeader header) : base(header, null)
+    {
+      long endPos = header.FilePosition + header.TotalBoxSize;
 
-		public static FtypBox Create(string majorBrand, int majorVersion)
-		{
-			ArgumentException.ThrowIfNullOrWhiteSpace(majorBrand, nameof(majorBrand));
-			return majorBrand.Length == 4
-				? new FtypBox(new BoxHeader(16, "ftyp"), majorBrand, majorVersion)
-				: throw new ArgumentException("Major brand must be 4 chars long.", nameof(majorBrand));
-		}
+      MajorBrand = file.ReadType();
+      MajorVersion = file.ReadInt32BE();
 
-		private FtypBox(BoxHeader header, string majorBrand, int majorVersion) : base(header, null)
-		{
-			MajorBrand = majorBrand;
-			MajorVersion = majorVersion;
-		}
+      while (file.Position < endPos)
+      {
+        CompatibleBrands.Add(file.ReadType());
+      }
+    }
 
-		public FtypBox(Stream file, BoxHeader header) : base(header, null)
-		{
-			long endPos = header.FilePosition + header.TotalBoxSize;
+    private FtypBox(BoxHeader header, string majorBrand, int majorVersion) : base(header, null)
+    {
+      MajorBrand = majorBrand;
+      MajorVersion = majorVersion;
+    }
 
-			MajorBrand = file.ReadType();
-			MajorVersion = file.ReadInt32BE();
+    public override long RenderSize => base.RenderSize + 8 + CompatibleBrands.Count * 4;
 
-			while (file.Position < endPos)
-				CompatibleBrands.Add(file.ReadType());
-		}
+    public string MajorBrand { get; set; }
 
-		protected override void Render(Stream file)
-		{
-			file.WriteType(MajorBrand);
-			file.WriteInt32BE(MajorVersion);
-			foreach (string brand in CompatibleBrands)
-				file.WriteType(brand);
-		}
+    public int MajorVersion { get; set; }
 
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing && !Disposed)
-				CompatibleBrands.Clear();
-			base.Dispose(disposing);
-		}
-	}
+    public List<string> CompatibleBrands { get; } = new List<string>();
+
+    public static FtypBox Create(string majorBrand, int majorVersion)
+    {
+      ArgumentException.ThrowIfNullOrWhiteSpace(majorBrand, nameof(majorBrand));
+      return majorBrand.Length == 4
+          ? new FtypBox(new BoxHeader(16, "ftyp"), majorBrand, majorVersion)
+          : throw new ArgumentException("Major brand must be 4 chars long.", nameof(majorBrand));
+    }
+
+    protected override void Render(Stream file)
+    {
+      file.WriteType(MajorBrand);
+      file.WriteInt32BE(MajorVersion);
+      foreach (string brand in CompatibleBrands)
+      {
+        file.WriteType(brand);
+      }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+      if (disposing && !Disposed)
+      {
+        CompatibleBrands.Clear();
+      }
+
+      base.Dispose(disposing);
+    }
+  }
 }

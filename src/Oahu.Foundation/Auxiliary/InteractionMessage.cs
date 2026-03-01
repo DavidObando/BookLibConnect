@@ -1,12 +1,14 @@
-﻿namespace Oahu.Aux {
-  public enum ECallbackType { info, infoCancel, warning, error, errorQuestion, errorQuestion3, question, question3 }
+﻿namespace Oahu.Aux
+{
+  public enum ECallbackType
+  {
+    info, infoCancel, warning, error, errorQuestion, errorQuestion3, question, question3
+  }
 
-  public record InteractionMessage (
+  public record InteractionMessage(
     ECallbackType Type,
-    string Message
-  );
+    string Message);
 
-  public record InteractionMessage<T> (ECallbackType Type, string Message, T Custom) : 
-    InteractionMessage (Type, Message);
-
+  public record InteractionMessage<T>(ECallbackType Type, string Message, T Custom) :
+    InteractionMessage(Type, Message);
 }

@@ -1,4 +1,4 @@
-﻿using Oahu.Decrypt.Mpeg4.Util;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes.AC4SpecificBox;
 
@@ -7,13 +7,14 @@ namespace Oahu.Decrypt.Mpeg4.Boxes.AC4SpecificBox;
 /// </summary>
 public class ac4_bitrate_dsi
 {
-	public BitRateMode bit_rate_mode;
-	public uint bit_rate;
-	public uint bit_rate_precision;
-	public ac4_bitrate_dsi(BitReader reader)
-	{
-		bit_rate_mode = (BitRateMode)reader.Read(2);
-		bit_rate = reader.Read(32);
-		bit_rate_precision = reader.Read(32);
-	}
+  public BitRateMode bit_rate_mode;
+  public uint bit_rate;
+  public uint bit_rate_precision;
+
+  public ac4_bitrate_dsi(BitReader reader)
+  {
+    bit_rate_mode = (BitRateMode)reader.Read(2);
+    bit_rate = reader.Read(32);
+    bit_rate_precision = reader.Read(32);
+  }
 }
