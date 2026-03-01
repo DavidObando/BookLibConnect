@@ -1,39 +1,17 @@
+using System;
+using System.Buffers;
+using System.IO;
+using System.Linq;
 using Oahu.Decrypt.Chunks;
 using Oahu.Decrypt.FrameFilters;
 using Oahu.Decrypt.FrameFilters.Audio;
 using Oahu.Decrypt.Mpeg4.Boxes;
 using Oahu.Decrypt.Mpeg4.Util;
-using System;
-using System.Buffers;
-using System.IO;
-using System.Linq;
 
 namespace Oahu.Decrypt;
 
 public class DashFile : Mp4File
 {
-  public MoofBox FirstMoof { get; }
-
-  public MdatBox FirstMdat => Mdat;
-
-  public SidxBox Sidx => TopLevelBoxes.OfType<SidxBox>().Single();
-
-  public override TimeSpan Duration => TimeSpan.FromSeconds((double)Moov.GetChildOrThrow<MvexBox>().GetChildOrThrow<MehdBox>().FragmentDuration / TimeScale);
-
-  private new MdatBox Mdat => base.Mdat;
-
-  public TencBox? Tenc { get; }
-
-  public byte[]? Key { get; private set; }
-
-  protected override uint CalculateBitrate()
-  {
-    var totalSize = Sidx.Segments.Sum(s => (long)s.ReferenceSize) * 8;
-    var totalDuration = Sidx.Segments.Sum(s => (long)s.SubsegmentDuration);
-    var bitRate = totalSize * Sidx.Timescale / totalDuration;
-    return (uint)bitRate;
-  }
-
   public DashFile(string fileName, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
       : this(File.Open(fileName, FileMode.Open, access, share))
   {
@@ -92,6 +70,20 @@ public class DashFile : Mp4File
     }
   }
 
+  public MoofBox FirstMoof { get; }
+
+  public MdatBox FirstMdat => Mdat;
+
+  public SidxBox Sidx => TopLevelBoxes.OfType<SidxBox>().Single();
+
+  public override TimeSpan Duration => TimeSpan.FromSeconds((double)Moov.GetChildOrThrow<MvexBox>().GetChildOrThrow<MehdBox>().FragmentDuration / TimeScale);
+
+  public TencBox? Tenc { get; }
+
+  public byte[]? Key { get; private set; }
+
+  private new MdatBox Mdat => base.Mdat;
+
   public void SetDecryptionKey(string keyId, string decryptionKey)
   {
     if (string.IsNullOrWhiteSpace(keyId) || keyId.Length != AesCtr.AES_BLOCK_SIZE * 2)
@@ -109,9 +101,6 @@ public class DashFile : Mp4File
 
     SetDecryptionKey(keyIdBts, decryptionKeyBts);
   }
-
-  protected override IChunkReader CreateChunkReader(Stream inputStream, TimeSpan startTime, TimeSpan endTime)
-      => new DashChunkReader(this, inputStream, startTime, endTime);
 
   public override FrameTransformBase<FrameEntry, FrameEntry> GetAudioFrameFilter()
   {
@@ -146,4 +135,15 @@ public class DashFile : Mp4File
 
     Key = decryptionKey;
   }
+
+  protected override uint CalculateBitrate()
+  {
+    var totalSize = Sidx.Segments.Sum(s => (long)s.ReferenceSize) * 8;
+    var totalDuration = Sidx.Segments.Sum(s => (long)s.SubsegmentDuration);
+    var bitRate = totalSize * Sidx.Timescale / totalDuration;
+    return (uint)bitRate;
+  }
+
+  protected override IChunkReader CreateChunkReader(Stream inputStream, TimeSpan startTime, TimeSpan endTime)
+      => new DashChunkReader(this, inputStream, startTime, endTime);
 }

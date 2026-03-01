@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-
 using Oahu.Aux.Extensions;
 using Oahu.BooksDatabase;
-using Oahu.CommonTypes;
 using Oahu.Common.Util;
+using Oahu.CommonTypes;
 
 namespace Oahu.Core
 {

@@ -10,20 +10,18 @@ namespace Oahu.Common.Util
 {
   public class LogTmpFileMaintenance
   {
-    record DirectoryStatistics(int NumFiles, long TotalSize, DateTime Timestamp);
-
     // record DirectoryFilesAndStatistics (List<FileInfo> Files, DirectoryStatistics Statistics);
     const int MAX_NUM_FILES_PER_DIR = 500;
     const long MAX_SIZE_PER_DIR = 100_000_000; // 100 MB
     const int MAX_AGE_DAYS_PER_DIR = 365;
 
+    private static LogTmpFileMaintenance __instance;
+
     private bool _inProgress;
 
-    private DateTime Today { get; set; }
-
-    private DateTime Timestamp { get; set; }
-
-    private static LogTmpFileMaintenance __instance;
+    private LogTmpFileMaintenance()
+    {
+    }
 
     public static LogTmpFileMaintenance Instance
     {
@@ -38,9 +36,9 @@ namespace Oahu.Common.Util
       }
     }
 
-    private LogTmpFileMaintenance()
-    {
-    }
+    private DateTime Today { get; set; }
+
+    private DateTime Timestamp { get; set; }
 
     public async Task CleanupAsync() => await Task.Run(() => Cleanup());
 
@@ -192,5 +190,7 @@ namespace Oahu.Common.Util
 
       return exceed;
     }
+
+    record DirectoryStatistics(int NumFiles, long TotalSize, DateTime Timestamp);
   }
 }

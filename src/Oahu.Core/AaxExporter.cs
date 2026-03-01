@@ -6,10 +6,10 @@ using Oahu.Aux;
 using Oahu.Aux.Extensions;
 using Oahu.BooksDatabase;
 using Oahu.BooksDatabase.ex;
-using Oahu.Core.ex;
 using Oahu.Common.Util;
-using R = Oahu.Core.Properties.Resources;
+using Oahu.Core.ex;
 using static Oahu.Aux.Logging;
+using R = Oahu.Core.Properties.Resources;
 
 namespace Oahu.Core
 {
@@ -21,19 +21,19 @@ namespace Oahu.Core
 
     private static readonly object __lockable = new object();
 
-    private IExportSettings ExportSettings { get; }
-
-    private IMultiPartSettings MultipartSettings { get; }
-
-    private List<List<ChapterExtract>> AccuChapters { get; } = new List<List<ChapterExtract>>();
-
-    public IBookLibrary BookLibrary { private get; set; }
-
     public AaxExporter(IExportSettings exportSettings, IMultiPartSettings multipartSettings)
     {
       ExportSettings = exportSettings;
       MultipartSettings = multipartSettings;
     }
+
+    public IBookLibrary BookLibrary { private get; set; }
+
+    private IExportSettings ExportSettings { get; }
+
+    private IMultiPartSettings MultipartSettings { get; }
+
+    private List<List<ChapterExtract>> AccuChapters { get; } = new List<List<ChapterExtract>>();
 
     public void Export(Book book, SimpleConversionContext context, Action<Conversion> onNewStateCallback)
     {
@@ -47,84 +47,6 @@ namespace Oahu.Core
       {
         exportMultiPart(book, context, onNewStateCallback);
       }
-    }
-
-    private void exportSinglePart(
-      IBookCommon book,
-      SimpleConversionContext context,
-      Action<Conversion> onNewStateCallback,
-      bool skipSeries = false)
-    {
-      Log(3, this, () => book.ToString());
-
-      book.Conversion.State = EConversionState.converting;
-      onNewStateCallback?.Invoke(book.Conversion);
-
-      bool succ = copyFile(book, context);
-      if (!succ)
-      {
-        book.Conversion.State = EConversionState.conversion_error;
-        onNewStateCallback?.Invoke(book.Conversion);
-        return;
-      }
-
-      exportChapters(book);
-
-      exportProduct(book);
-
-      if (!skipSeries)
-      {
-        exportSeries(book);
-      }
-
-      BookLibrary.SavePersistentState(book.Conversion, EConversionState.exported);
-      onNewStateCallback?.Invoke(book.Conversion);
-    }
-
-    private void exportMultiPart(
-      Book book,
-      SimpleConversionContext context,
-      Action<Conversion> onNewStateCallback)
-    {
-      Log(3, this, () => book.ToString());
-
-      bool skipSeries = false;
-      foreach (var comp in book.Components)
-      {
-        exportSinglePart(comp, context, onNewStateCallback, skipSeries);
-        skipSeries = true;
-      }
-    }
-
-    private bool copyFile(IBookCommon book, SimpleConversionContext context)
-    {
-      Log(3, this, () => book.ToString());
-      Conversion conv = book.Conversion;
-      string sourcefile = (conv.DownloadFileName + R.DecryptedFileExt).AsUncIfLong();
-      if (!File.Exists(sourcefile))
-      {
-        return false;
-      }
-
-      string filename = conv.DownloadFileName.GetDownloadFileNameWithoutExtension();
-      string destfile = Path.Combine(ExportSettings.ExportDirectory, filename + R.ExportedFileExt).AsUncIfLong();
-
-      try
-      {
-        lock (__lockable)
-        {
-          bool succ = FileEx.Copy(sourcefile, destfile, true,
-            pm => context.Progress?.Report(pm),
-            () => context.CancellationToken.IsCancellationRequested);
-          return succ;
-        }
-      }
-      catch (Exception exc)
-      {
-        Log(1, this, () => exc.Summary());
-      }
-
-      return false;
     }
 
     // internal instead of private for testing only
@@ -205,6 +127,84 @@ namespace Oahu.Core
       updateAccuChapters(accuChapters);
 
       return outpath;
+    }
+
+    private void exportSinglePart(
+      IBookCommon book,
+      SimpleConversionContext context,
+      Action<Conversion> onNewStateCallback,
+      bool skipSeries = false)
+    {
+      Log(3, this, () => book.ToString());
+
+      book.Conversion.State = EConversionState.converting;
+      onNewStateCallback?.Invoke(book.Conversion);
+
+      bool succ = copyFile(book, context);
+      if (!succ)
+      {
+        book.Conversion.State = EConversionState.conversion_error;
+        onNewStateCallback?.Invoke(book.Conversion);
+        return;
+      }
+
+      exportChapters(book);
+
+      exportProduct(book);
+
+      if (!skipSeries)
+      {
+        exportSeries(book);
+      }
+
+      BookLibrary.SavePersistentState(book.Conversion, EConversionState.exported);
+      onNewStateCallback?.Invoke(book.Conversion);
+    }
+
+    private void exportMultiPart(
+      Book book,
+      SimpleConversionContext context,
+      Action<Conversion> onNewStateCallback)
+    {
+      Log(3, this, () => book.ToString());
+
+      bool skipSeries = false;
+      foreach (var comp in book.Components)
+      {
+        exportSinglePart(comp, context, onNewStateCallback, skipSeries);
+        skipSeries = true;
+      }
+    }
+
+    private bool copyFile(IBookCommon book, SimpleConversionContext context)
+    {
+      Log(3, this, () => book.ToString());
+      Conversion conv = book.Conversion;
+      string sourcefile = (conv.DownloadFileName + R.DecryptedFileExt).AsUncIfLong();
+      if (!File.Exists(sourcefile))
+      {
+        return false;
+      }
+
+      string filename = conv.DownloadFileName.GetDownloadFileNameWithoutExtension();
+      string destfile = Path.Combine(ExportSettings.ExportDirectory, filename + R.ExportedFileExt).AsUncIfLong();
+
+      try
+      {
+        lock (__lockable)
+        {
+          bool succ = FileEx.Copy(sourcefile, destfile, true,
+            pm => context.Progress?.Report(pm),
+            () => context.CancellationToken.IsCancellationRequested);
+          return succ;
+        }
+      }
+      catch (Exception exc)
+      {
+        Log(1, this, () => exc.Summary());
+      }
+
+      return false;
     }
 
     private bool skipChapter(Chapter ch)

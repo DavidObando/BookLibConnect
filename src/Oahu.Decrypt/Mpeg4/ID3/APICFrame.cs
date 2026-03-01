@@ -5,6 +5,17 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 
 public class APICFrame : Frame
 {
+  public APICFrame(Stream file, Header header, Frame parent) : base(header, parent)
+  {
+    var startPos = file.Position;
+    var textEncoding = file.ReadByte();
+    ImageFormat = ReadNullTerminatedString(file, false);
+    Description = ReadNullTerminatedString(file, textEncoding == 1);
+    Type = (byte)file.ReadByte();
+    Image = new byte[(int)(startPos + header.Size - file.Position)];
+    file.ReadExactly(Image);
+  }
+
   public override int Size
   {
     get
@@ -29,17 +40,6 @@ public class APICFrame : Frame
   public byte Type { get; set; }
 
   public byte[] Image { get; set; }
-
-  public APICFrame(Stream file, Header header, Frame parent) : base(header, parent)
-  {
-    var startPos = file.Position;
-    var textEncoding = file.ReadByte();
-    ImageFormat = ReadNullTerminatedString(file, false);
-    Description = ReadNullTerminatedString(file, textEncoding == 1);
-    Type = (byte)file.ReadByte();
-    Image = new byte[(int)(startPos + header.Size - file.Position)];
-    file.ReadExactly(Image);
-  }
 
   public override void Render(Stream file)
   {

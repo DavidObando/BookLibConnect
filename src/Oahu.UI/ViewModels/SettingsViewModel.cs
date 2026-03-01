@@ -13,18 +13,18 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     private readonly ExportSettings _exportSettings;
     private readonly ConfigSettings _configSettings;
 
-    /// <summary>
-    /// Event raised when the user wants to browse for a folder.
-    /// The view code-behind handles the native folder picker and returns the selected path.
-    /// </summary>
-    public event Func<string, Task<string>> BrowseFolderRequested;
-
     public SettingsViewModel(DownloadSettings downloadSettings, ExportSettings exportSettings, ConfigSettings configSettings)
     {
       _downloadSettings = downloadSettings;
       _exportSettings = exportSettings;
       _configSettings = configSettings;
     }
+
+    /// <summary>
+    /// Event raised when the user wants to browse for a folder.
+    /// The view code-behind handles the native folder picker and returns the selected path.
+    /// </summary>
+    public event Func<string, Task<string>> BrowseFolderRequested;
 
     // Download settings
     public bool AutoUpdateLibrary

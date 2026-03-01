@@ -76,6 +76,17 @@ namespace Oahu.Aux.Diagnostics
     }
 
     /// <summary>
+    /// Sets the specified function for the given type.
+    /// </summary>
+    /// <typeparam name="T">generic type</typeparam>
+    /// <param name="func">The function delegate.</param>
+    protected void add<T>(Func<T, string> func)
+    {
+      Type type = typeof(T);
+      _dict[type] = func;
+    }
+
+    /// <summary>
     /// Function delegate for generic type a custom primitive type to obtain string representation. Type-safe variant.
     /// </summary>
     /// <typeparam name="T">generic type</typeparam>
@@ -109,17 +120,6 @@ namespace Oahu.Aux.Diagnostics
       {
         return null;
       }
-    }
-
-    /// <summary>
-    /// Sets the specified function for the given type.
-    /// </summary>
-    /// <typeparam name="T">generic type</typeparam>
-    /// <param name="func">The function delegate.</param>
-    protected void add<T>(Func<T, string> func)
-    {
-      Type type = typeof(T);
-      _dict[type] = func;
     }
   }
 

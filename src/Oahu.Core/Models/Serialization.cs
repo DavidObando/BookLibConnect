@@ -9,11 +9,6 @@ namespace Oahu.Audible.Json
   {
     private static JsonSerializerOptions Options { get; } = JsonExtensions.Options;
 
-    public string Serialize()
-    {
-      return JsonSerializer.Serialize(this, typeof(T), Options);
-    }
-
     public static T Deserialize(string json)
     {
       try
@@ -25,6 +20,11 @@ namespace Oahu.Audible.Json
         Logging.Log(1, typeof(Serialization<T>), () => exc.Summary());
         return default;
       }
+    }
+
+    public string Serialize()
+    {
+      return JsonSerializer.Serialize(this, typeof(T), Options);
     }
   }
 }

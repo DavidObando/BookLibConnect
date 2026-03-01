@@ -6,7 +6,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Oahu.Aux.Win32
 {
-  unsafe public class WinFileIO : IDisposable
+  public unsafe class WinFileIO : IDisposable
   {
     // This class provides the capability to utilize the ReadFile and Writefile windows IO functions.  These functions
     // are the most efficient way to perform file I/O from C# or even C++.  The constructor with the buffer and buffer
@@ -45,41 +45,6 @@ namespace Oahu.Aux.Win32
     private SafeHandle handle;          // Handle to the file to be read from or written to
     private void* pBuffer;              // Pointer to the buffer used to perform I/O.
 
-    // Define the Windows system functions that are called by this class via COM Interop:
-    [System.Runtime.InteropServices.DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
-    static extern unsafe SafeFileHandle CreateFile
-    (
-       string FileName,          // file name
-       uint DesiredAccess,       // access mode
-       uint ShareMode,           // share mode
-       uint SecurityAttributes,  // Security Attributes
-       uint CreationDisposition, // how to create
-       uint FlagsAndAttributes,  // file attributes
-       int hTemplateFile);         // handle to template file
-
-    [System.Runtime.InteropServices.DllImport("kernel32", SetLastError = true)]
-    static extern unsafe bool ReadFile
-    (
-       SafeHandle handle,         // handle to file
-       void* pBuffer,            // data buffer
-       int NumberOfBytesToRead,  // number of bytes to read
-       int* pNumberOfBytesRead,  // number of bytes read
-       int Overlapped);            // overlapped buffer which is used for async I/O.  Not used here.
-
-    [System.Runtime.InteropServices.DllImport("kernel32", SetLastError = true)]
-    static extern unsafe bool WriteFile
-    (
-      SafeHandle handle,               // handle to file
-      void* pBuffer,             // data buffer
-      int NumberOfBytesToWrite,  // Number of bytes to write.
-      int* pNumberOfBytesWritten, // Number of bytes that were written..
-      int Overlapped);                     // Overlapped buffer which is used for async I/O.  Not used here.
-
-    [System.Runtime.InteropServices.DllImport("kernel32", SetLastError = true)]
-    static extern unsafe bool CloseHandle
-    (
-       System.IntPtr hObject);     // handle to object
-
     public WinFileIO()
     {
     }
@@ -91,11 +56,10 @@ namespace Oahu.Aux.Win32
       PinBuffer(Buffer);
     }
 
-    protected void Dispose(bool disposing)
+    ~WinFileIO()
     {
-      // This function frees up the unmanaged resources of this class.
-      Close();
-      UnpinBuffer();
+      // Finalizer gets called by the garbage collector if the user did not call Dispose.
+      Dispose(false);
     }
 
     public void Dispose()
@@ -105,12 +69,6 @@ namespace Oahu.Aux.Win32
 
       // Tell the GC not to finalize since clean up has already been done.
       GC.SuppressFinalize(this);
-    }
-
-    ~WinFileIO()
-    {
-      // Finalizer gets called by the garbage collector if the user did not call Dispose.
-      Dispose(false);
     }
 
     public void PinBuffer(Array Buffer)
@@ -197,7 +155,7 @@ namespace Oahu.Aux.Win32
       byte* pBuf = (byte*)pBuffer;
 
       // Do until there are no more bytes to read or the buffer is full.
-      for (;;)
+      for (; ;)
       {
         if (!ReadFile(handle, pBuf, BlockSize, &BytesReadInBlock, 0))
         {
@@ -307,5 +265,47 @@ namespace Oahu.Aux.Win32
 
       return false;
     }
+
+    protected void Dispose(bool disposing)
+    {
+      // This function frees up the unmanaged resources of this class.
+      Close();
+      UnpinBuffer();
+    }
+
+    // Define the Windows system functions that are called by this class via COM Interop:
+    [System.Runtime.InteropServices.DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
+    static extern unsafe SafeFileHandle CreateFile
+    (
+       string FileName,          // file name
+       uint DesiredAccess,       // access mode
+       uint ShareMode,           // share mode
+       uint SecurityAttributes,  // Security Attributes
+       uint CreationDisposition, // how to create
+       uint FlagsAndAttributes,  // file attributes
+       int hTemplateFile);         // handle to template file
+
+    [System.Runtime.InteropServices.DllImport("kernel32", SetLastError = true)]
+    static extern unsafe bool ReadFile
+    (
+       SafeHandle handle,         // handle to file
+       void* pBuffer,            // data buffer
+       int NumberOfBytesToRead,  // number of bytes to read
+       int* pNumberOfBytesRead,  // number of bytes read
+       int Overlapped);            // overlapped buffer which is used for async I/O.  Not used here.
+
+    [System.Runtime.InteropServices.DllImport("kernel32", SetLastError = true)]
+    static extern unsafe bool WriteFile
+    (
+      SafeHandle handle,               // handle to file
+      void* pBuffer,             // data buffer
+      int NumberOfBytesToWrite,  // Number of bytes to write.
+      int* pNumberOfBytesWritten, // Number of bytes that were written..
+      int Overlapped);                     // Overlapped buffer which is used for async I/O.  Not used here.
+
+    [System.Runtime.InteropServices.DllImport("kernel32", SetLastError = true)]
+    static extern unsafe bool CloseHandle
+    (
+       System.IntPtr hObject);     // handle to object
   }
 }

@@ -31,12 +31,15 @@ namespace Oahu.Decrypt.FrameFilters
     {
       TOutput filteredData = PerformFiltering(input);
       if (Linked is null)
+      {
 #if DEBUG
         // Allow unlinked for testing purposes
         return;
 #else
-				throw new System.InvalidOperationException($"A FrameTransformBase<TInput, TOutput> must be linked to a FrameFilterBase<TOutput>");
+        throw new System.InvalidOperationException($"A FrameTransformBase<TInput, TOutput> must be linked to a FrameFilterBase<TOutput>");
 #endif
+      }
+
       await Linked.AddInputAsync(filteredData);
     }
 

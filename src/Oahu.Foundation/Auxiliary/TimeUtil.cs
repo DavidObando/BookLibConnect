@@ -4,18 +4,7 @@ namespace Oahu.Aux
 {
   public static class TimeUtil
   {
-    private readonly static DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-
-    private static double dateTimeToDouble(DateTime dt)
-    {
-      if (dt == default)
-      {
-        return 0;
-      }
-
-      TimeSpan ts = dt.Subtract(EPOCH);
-      return ts.TotalSeconds;
-    }
+    private static readonly DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
     public static int DateTimeToUnix32(DateTime dt) => (int)dateTimeToDouble(dt);
 
@@ -52,6 +41,17 @@ namespace Oahu.Aux
 
       DateTime dt = EPOCH.AddMilliseconds(timestampMsec);
       return dt;
+    }
+
+    private static double dateTimeToDouble(DateTime dt)
+    {
+      if (dt == default)
+      {
+        return 0;
+      }
+
+      TimeSpan ts = dt.Subtract(EPOCH);
+      return ts.TotalSeconds;
     }
   }
 }

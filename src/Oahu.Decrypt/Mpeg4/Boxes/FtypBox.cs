@@ -1,12 +1,31 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes
 {
   public class FtypBox : Box
   {
+    public FtypBox(Stream file, BoxHeader header) : base(header, null)
+    {
+      long endPos = header.FilePosition + header.TotalBoxSize;
+
+      MajorBrand = file.ReadType();
+      MajorVersion = file.ReadInt32BE();
+
+      while (file.Position < endPos)
+      {
+        CompatibleBrands.Add(file.ReadType());
+      }
+    }
+
+    private FtypBox(BoxHeader header, string majorBrand, int majorVersion) : base(header, null)
+    {
+      MajorBrand = majorBrand;
+      MajorVersion = majorVersion;
+    }
+
     public override long RenderSize => base.RenderSize + 8 + CompatibleBrands.Count * 4;
 
     public string MajorBrand { get; set; }
@@ -21,25 +40,6 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
       return majorBrand.Length == 4
           ? new FtypBox(new BoxHeader(16, "ftyp"), majorBrand, majorVersion)
           : throw new ArgumentException("Major brand must be 4 chars long.", nameof(majorBrand));
-    }
-
-    private FtypBox(BoxHeader header, string majorBrand, int majorVersion) : base(header, null)
-    {
-      MajorBrand = majorBrand;
-      MajorVersion = majorVersion;
-    }
-
-    public FtypBox(Stream file, BoxHeader header) : base(header, null)
-    {
-      long endPos = header.FilePosition + header.TotalBoxSize;
-
-      MajorBrand = file.ReadType();
-      MajorVersion = file.ReadInt32BE();
-
-      while (file.Position < endPos)
-      {
-        CompatibleBrands.Add(file.ReadType());
-      }
     }
 
     protected override void Render(Stream file)

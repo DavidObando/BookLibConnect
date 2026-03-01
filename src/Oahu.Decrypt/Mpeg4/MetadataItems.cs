@@ -1,6 +1,6 @@
-﻿using Oahu.Decrypt.Mpeg4.Boxes;
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Boxes;
 
 namespace Oahu.Decrypt.Mpeg4;
 
@@ -28,12 +28,12 @@ public class MetadataItems
   public const string TAG_NAME_TRACK_NUMBER = "trkn";
   public const string TAG_NAME_DISK_NUMBER = "disk";
 
-  public AppleListBox AppleListBox { get; }
-
   public MetadataItems(AppleListBox appleListBox)
   {
     AppleListBox = appleListBox;
   }
+
+  public AppleListBox AppleListBox { get; }
 
   public string? FirstAuthor => Artist?.Split(';')?[0];
 
@@ -42,8 +42,6 @@ public class MetadataItems
   public string? BookCopyright => GetCopyrights() is { } copyrights && copyrights.Length > 0 ? copyrights[0] : default;
 
   public string? RecordingCopyright => GetCopyrights() is { } copyrights && copyrights.Length > 1 ? copyrights[1] : default;
-
-  private string[]? GetCopyrights() => Copyright?.Replace("&#169;", "©")?.Split(';');
 
   public string? Title { get => AppleListBox.GetTagString(TAG_NAME_TITLE); set => AppleListBox.EditOrAddTag(TAG_NAME_TITLE, value); }
 
@@ -89,6 +87,36 @@ public class MetadataItems
 
   public DiskNumber? DiskNumber { get => AppleListBox.GetTagData<DiskNumber>(TAG_NAME_DISK_NUMBER); set => AppleListBox.EditOrAddTag(TAG_NAME_DISK_NUMBER, value); }
 
+  public static MetadataItems? FromFile(string mp4File)
+  {
+    using var file = File.Open(mp4File, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+    BoxHeader header;
+    do
+    {
+      header = new BoxHeader(file);
+
+      if (header.Type is "moov")
+      {
+        continue;
+      }
+      else if (header.Type is "udta")
+      {
+        break;
+      }
+      else
+      {
+        file.Position += header.TotalBoxSize - header.HeaderSize;
+      }
+    }
+    while (file.Position < file.Length);
+
+    return header?.Type is "udta" && new UdtaBox(file, header, null)?.GetChild<MetaBox>()?.GetChild<AppleListBox>() is { } ilst ? new MetadataItems(ilst)
+        : null;
+  }
+
+  private string[]? GetCopyrights() => Copyright?.Replace("&#169;", "©")?.Split(';');
+
   private void SetCoverArt(byte[]? coverArtBytes)
   {
     if (coverArtBytes is null)
@@ -123,33 +151,5 @@ public class MetadataItems
 
       AppleListBox.EditOrAddTag(TAG_NAME_COVER, coverArtBytes, dataType);
     }
-  }
-
-  public static MetadataItems? FromFile(string mp4File)
-  {
-    using var file = File.Open(mp4File, FileMode.Open, FileAccess.Read, FileShare.Read);
-
-    BoxHeader header;
-    do
-    {
-      header = new BoxHeader(file);
-
-      if (header.Type is "moov")
-      {
-        continue;
-      }
-      else if (header.Type is "udta")
-      {
-        break;
-      }
-      else
-      {
-        file.Position += header.TotalBoxSize - header.HeaderSize;
-      }
-    }
-    while (file.Position < file.Length);
-
-    return header?.Type is "udta" && new UdtaBox(file, header, null)?.GetChild<MetaBox>()?.GetChild<AppleListBox>() is { } ilst ? new MetadataItems(ilst)
-        : null;
   }
 }

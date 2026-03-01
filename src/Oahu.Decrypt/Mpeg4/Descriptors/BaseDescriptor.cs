@@ -7,14 +7,6 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors;
 
 public abstract class BaseDescriptor
 {
-  public DescriptorHeader Header { get; }
-
-  public List<BaseDescriptor> Children { get; } = new List<BaseDescriptor>();
-
-  public uint RenderSize => 1 + (uint)Header.GetEncodedSizeLength(InternalSize) + (uint)InternalSize;
-
-  public virtual int InternalSize => (int)Children.Sum(c => c.RenderSize);
-
   public BaseDescriptor(Stream file, DescriptorHeader header)
   {
     Header = header;
@@ -24,6 +16,14 @@ public abstract class BaseDescriptor
   {
     Header = new DescriptorHeader(tagId);
   }
+
+  public DescriptorHeader Header { get; }
+
+  public List<BaseDescriptor> Children { get; } = new List<BaseDescriptor>();
+
+  public uint RenderSize => 1 + (uint)Header.GetEncodedSizeLength(InternalSize) + (uint)InternalSize;
+
+  public virtual int InternalSize => (int)Children.Sum(c => c.RenderSize);
 
   public abstract void Render(Stream file);
 
@@ -47,6 +47,18 @@ public abstract class BaseDescriptor
     return Children.OfType<T>();
   }
 
+  public void Save(Stream file)
+  {
+    file.WriteByte(Header.TagID);
+    ExpandableClass.EncodeSize(file, InternalSize, Header.GetEncodedSizeLength(InternalSize));
+    Render(file);
+
+    foreach (BaseDescriptor child in Children)
+    {
+      child.Save(file);
+    }
+  }
+
   protected void LoadChildren(Stream file)
   {
     while (file.Position < Header.FilePosition + Header.TotalBoxSize)
@@ -59,18 +71,6 @@ public abstract class BaseDescriptor
       }
 
       Children.Add(child);
-    }
-  }
-
-  public void Save(Stream file)
-  {
-    file.WriteByte(Header.TagID);
-    ExpandableClass.EncodeSize(file, InternalSize, Header.GetEncodedSizeLength(InternalSize));
-    Render(file);
-
-    foreach (BaseDescriptor child in Children)
-    {
-      child.Save(file);
     }
   }
 }

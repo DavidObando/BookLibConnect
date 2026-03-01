@@ -1,19 +1,11 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class PsshBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + 16 + sizeof(int) + InitData.Length + ExtraData.Length;
-
-  public Guid ProtectionSystemId { get; }
-
-  public byte[] InitData { get; }
-
-  public byte[] ExtraData { get; }
-
   public PsshBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     ProtectionSystemId = new Guid(file.ReadBlock(16), bigEndian: true);
@@ -23,6 +15,14 @@ public class PsshBox : FullBox
     var remaining = (int)(header.TotalBoxSize - header.HeaderSize - 4 - 16 - sizeof(int) - initDataSize);
     ExtraData = file.ReadBlock(remaining);
   }
+
+  public override long RenderSize => base.RenderSize + 16 + sizeof(int) + InitData.Length + ExtraData.Length;
+
+  public Guid ProtectionSystemId { get; }
+
+  public byte[] InitData { get; }
+
+  public byte[] ExtraData { get; }
 
   protected override void Render(Stream file)
   {

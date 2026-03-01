@@ -8,8 +8,8 @@ namespace Oahu.Aux
   /// <typeparam name="T">Type of class to be instantiated as a singleton.</typeparam>
   public class Singleton<T> where T : class, new()
   {
-    private static T __t;
     private static readonly object __lockable;
+    private static T __t;
 
     /// <summary>
     /// Static ctor. Initializes the <see cref="Singleton{T}"/> class, but does not yet create the instance.

@@ -1,4 +1,3 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
@@ -6,33 +5,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class SttsBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + 4 + EntryCount * 2 * 4;
-
-  public int EntryCount => Samples.Count;
-
-  public List<SampleEntry> Samples { get; } = new List<SampleEntry>();
-
-  public static SttsBox CreateBlank(IBox parent)
-  {
-    int size = 4 + 12 /* empty Box size*/;
-    BoxHeader header = new BoxHeader((uint)size, "stts");
-
-    SttsBox sttsBox = new SttsBox([0, 0, 0, 0], header, parent);
-
-    parent.Children.Add(sttsBox);
-    return sttsBox;
-  }
-
-  private SttsBox(byte[] versionFlags, BoxHeader header, IBox? parent)
-      : base(versionFlags, header, parent)
-  {
-  }
-
   public SttsBox(Stream file, BoxHeader header, IBox? parent)
       : base(file, header, parent)
   {
@@ -50,7 +28,29 @@ public class SttsBox : FullBox
     }
   }
 
+  private SttsBox(byte[] versionFlags, BoxHeader header, IBox? parent)
+      : base(versionFlags, header, parent)
+  {
+  }
+
+  public override long RenderSize => base.RenderSize + 4 + EntryCount * 2 * 4;
+
+  public int EntryCount => Samples.Count;
+
+  public List<SampleEntry> Samples { get; } = new List<SampleEntry>();
+
   public uint SampleTimeCount => (uint)Samples.Sum(s => s.FrameCount);
+
+  public static SttsBox CreateBlank(IBox parent)
+  {
+    int size = 4 + 12 /* empty Box size*/;
+    BoxHeader header = new BoxHeader((uint)size, "stts");
+
+    SttsBox sttsBox = new SttsBox([0, 0, 0, 0], header, parent);
+
+    parent.Children.Add(sttsBox);
+    return sttsBox;
+  }
 
   public IEnumerable<uint> EnumerateFrameDeltas(uint startAt = 0)
   {

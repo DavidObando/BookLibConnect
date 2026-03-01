@@ -1,24 +1,16 @@
-﻿using Oahu.Decrypt.Mpeg4.Boxes;
-using Oahu.Decrypt.Mpeg4.Util;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Oahu.Decrypt.Mpeg4.Boxes;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.FrameFilters.Audio
 {
   public class Mp4aWriter : IDisposable
   {
-    public Stream OutputFile { get; }
-
     public readonly MoovBox Moov;
-
-    private long LastSamplesPerChunk = -1;
-    private uint SamplesPerChunk = 0;
-    private uint CurrentChunk = 0;
-    private bool Closed;
-    private bool Closing;
 
     private readonly long mdatStart;
     private readonly SttsBox Stts;
@@ -32,8 +24,16 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     private readonly List<ushort> AudioSampleSizes = new();
     private readonly List<int> TextSampleSizes = new();
     private readonly object lockObj = new();
+    private readonly List<string> chapterTitles = new();
+
+    private long LastSamplesPerChunk = -1;
+    private uint SamplesPerChunk = 0;
+    private uint CurrentChunk = 0;
+    private bool Closed;
+    private bool Closing;
     private uint CurrentFrameDuration;
     private uint FrameDurationCount;
+    private bool disposed = false;
 
     public Mp4aWriter(Stream outputFile, FtypBox ftyp, MoovBox moov)
     {
@@ -95,35 +95,12 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       SetTimeScale((uint)asc.SamplingFrequency);
     }
 
-    private void SetTimeScale(uint timeScale)
+    ~Mp4aWriter()
     {
-      Debug.Assert(timeScale <= ushort.MaxValue);
-      AudioSampleEntry.SampleRate = (ushort)timeScale;
-      Moov.AudioTrack.Mdia.Mdhd.Timescale = timeScale;
-      if (Moov.TextTrack is not null)
-      {
-        Moov.TextTrack.Mdia.Mdhd.Timescale = Moov.AudioTrack.Mdia.Mdhd.Timescale;
-      }
+      Dispose(disposing: false);
     }
 
-    private void SetDuration(ulong duration)
-    {
-      Moov.Mvhd.Duration = duration * Moov.Mvhd.Timescale / Moov.AudioTrack.Mdia.Mdhd.Timescale;
-
-      Moov.AudioTrack.Mdia.Mdhd.Duration = duration;
-      Moov.AudioTrack.Tkhd.Duration = Moov.Mvhd.Duration;
-
-      if (Moov.TextTrack is not null)
-      {
-        Moov.TextTrack.Mdia.Mdhd.Duration = Moov.AudioTrack.Mdia.Mdhd.Duration;
-        Moov.TextTrack.Tkhd.Duration = Moov.Mvhd.Duration;
-      }
-    }
-
-    protected virtual void SaveMoov()
-    {
-      Moov.Save(OutputFile);
-    }
+    public Stream OutputFile { get; }
 
     public void Close()
     {
@@ -205,49 +182,11 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       Closed = true;
     }
 
-    private static (uint maxOneSecondBitrate, uint avgBitrate) CalculateBitrate(double timeScale, ulong duration, IStszBox stsz, SttsBox stts)
+    public void Dispose()
     {
-      // Calculate the actual average bitrate because aaxc file is wrong.
-      long audioBits = stsz.TotalSize * 8;
-      uint avgBitrate = (uint)(audioBits * timeScale / duration);
-
-      // Expand the stts sample table to one sample duration per frame.
-      // Audio frame sizes are always small (on the order of 1000), so cast to ushort
-      // to save on memory.
-      var frameDeltas = stts.EnumerateFrameDeltas().Select(d => (ushort)d).ToArray();
-
-      if (stts.SampleTimeCount != stsz.SampleCount || stts.SampleTimeCount != frameDeltas.Length)
-      {
-        throw new InvalidOperationException($"The number of sample deltas ({stts.SampleTimeCount}) doesn't match the number of sample sizes ({stsz.SampleCount}).");
-      }
-
-      long currentWindowSampleSpan = 0;
-      long windowSizeInBytes = 0;
-      double maxOneSecondBitrate = 0;
-
-      for (int i = 0, beginIndex = 0; i < stsz.SampleCount; i++)
-      {
-        while (currentWindowSampleSpan > timeScale)
-        {
-          double bitrate = windowSizeInBytes * 8 * timeScale / currentWindowSampleSpan;
-          if (bitrate > maxOneSecondBitrate)
-          {
-            maxOneSecondBitrate = bitrate;
-          }
-
-          windowSizeInBytes -= stsz.GetSizeAtIndex(beginIndex);
-          currentWindowSampleSpan -= frameDeltas[beginIndex];
-          beginIndex++;
-        }
-
-        windowSizeInBytes += stsz.GetSizeAtIndex(i);
-        currentWindowSampleSpan += frameDeltas[i];
-      }
-
-      return ((uint)Math.Round(maxOneSecondBitrate), avgBitrate);
+      Dispose(disposing: true);
+      GC.SuppressFinalize(this);
     }
-
-    private readonly List<string> chapterTitles = new();
 
     public void WriteChapter(ChapterEntry entry)
     {
@@ -273,33 +212,6 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       TextChunks.Add(OutputFile.Position);
 
       OutputFile.Write(entry.FrameData.Span);
-    }
-
-    private void WriteChapterMetadata(IEnumerable<string> chapterTitles)
-    {
-      if (Moov.TextTrack is null)
-      {
-        return;
-      }
-
-      AppleListBox? chapterNames =
-          Moov.TextTrack
-          ?.GetChild<UdtaBox>()
-          ?.GetChild<MetaBox>()
-          ?.GetChild<AppleListBox>();
-
-      if (chapterNames is null)
-      {
-        return;
-      }
-
-      chapterNames.Children.Clear();
-
-      foreach (var title in chapterTitles)
-      {
-        chapterNames.AddTag("©nam", title);
-        chapterNames.AddTag("©cmt", title);
-      }
     }
 
     public void RemoveTextTrack()
@@ -398,6 +310,53 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       }
 
       OutputFile.Write(frame);
+    }
+
+    protected virtual void SaveMoov()
+    {
+      Moov.Save(OutputFile);
+    }
+
+    private static (uint maxOneSecondBitrate, uint avgBitrate) CalculateBitrate(double timeScale, ulong duration, IStszBox stsz, SttsBox stts)
+    {
+      // Calculate the actual average bitrate because aaxc file is wrong.
+      long audioBits = stsz.TotalSize * 8;
+      uint avgBitrate = (uint)(audioBits * timeScale / duration);
+
+      // Expand the stts sample table to one sample duration per frame.
+      // Audio frame sizes are always small (on the order of 1000), so cast to ushort
+      // to save on memory.
+      var frameDeltas = stts.EnumerateFrameDeltas().Select(d => (ushort)d).ToArray();
+
+      if (stts.SampleTimeCount != stsz.SampleCount || stts.SampleTimeCount != frameDeltas.Length)
+      {
+        throw new InvalidOperationException($"The number of sample deltas ({stts.SampleTimeCount}) doesn't match the number of sample sizes ({stsz.SampleCount}).");
+      }
+
+      long currentWindowSampleSpan = 0;
+      long windowSizeInBytes = 0;
+      double maxOneSecondBitrate = 0;
+
+      for (int i = 0, beginIndex = 0; i < stsz.SampleCount; i++)
+      {
+        while (currentWindowSampleSpan > timeScale)
+        {
+          double bitrate = windowSizeInBytes * 8 * timeScale / currentWindowSampleSpan;
+          if (bitrate > maxOneSecondBitrate)
+          {
+            maxOneSecondBitrate = bitrate;
+          }
+
+          windowSizeInBytes -= stsz.GetSizeAtIndex(beginIndex);
+          currentWindowSampleSpan -= frameDeltas[beginIndex];
+          beginIndex++;
+        }
+
+        windowSizeInBytes += stsz.GetSizeAtIndex(i);
+        currentWindowSampleSpan += frameDeltas[i];
+      }
+
+      return ((uint)Math.Round(maxOneSecondBitrate), avgBitrate);
     }
 
     private static MoovBox MakeBlankMoov(MoovBox moov)
@@ -507,18 +466,56 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       return newMoov;
     }
 
-    #region IDisposable
-    private bool disposed = false;
-
-    public void Dispose()
+    private void SetTimeScale(uint timeScale)
     {
-      Dispose(disposing: true);
-      GC.SuppressFinalize(this);
+      Debug.Assert(timeScale <= ushort.MaxValue);
+      AudioSampleEntry.SampleRate = (ushort)timeScale;
+      Moov.AudioTrack.Mdia.Mdhd.Timescale = timeScale;
+      if (Moov.TextTrack is not null)
+      {
+        Moov.TextTrack.Mdia.Mdhd.Timescale = Moov.AudioTrack.Mdia.Mdhd.Timescale;
+      }
     }
 
-    ~Mp4aWriter()
+    private void SetDuration(ulong duration)
     {
-      Dispose(disposing: false);
+      Moov.Mvhd.Duration = duration * Moov.Mvhd.Timescale / Moov.AudioTrack.Mdia.Mdhd.Timescale;
+
+      Moov.AudioTrack.Mdia.Mdhd.Duration = duration;
+      Moov.AudioTrack.Tkhd.Duration = Moov.Mvhd.Duration;
+
+      if (Moov.TextTrack is not null)
+      {
+        Moov.TextTrack.Mdia.Mdhd.Duration = Moov.AudioTrack.Mdia.Mdhd.Duration;
+        Moov.TextTrack.Tkhd.Duration = Moov.Mvhd.Duration;
+      }
+    }
+
+    private void WriteChapterMetadata(IEnumerable<string> chapterTitles)
+    {
+      if (Moov.TextTrack is null)
+      {
+        return;
+      }
+
+      AppleListBox? chapterNames =
+          Moov.TextTrack
+          ?.GetChild<UdtaBox>()
+          ?.GetChild<MetaBox>()
+          ?.GetChild<AppleListBox>();
+
+      if (chapterNames is null)
+      {
+        return;
+      }
+
+      chapterNames.Children.Clear();
+
+      foreach (var title in chapterTitles)
+      {
+        chapterNames.AddTag("©nam", title);
+        chapterNames.AddTag("©cmt", title);
+      }
     }
 
     private void Dispose(bool disposing)
@@ -533,6 +530,5 @@ namespace Oahu.Decrypt.FrameFilters.Audio
         disposed = true;
       }
     }
-    #endregion
   }
 }

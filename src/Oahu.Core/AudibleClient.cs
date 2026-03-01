@@ -16,15 +16,22 @@ namespace Oahu.Core
     private IAudibleApi _audibleApi;
     private IHardwareIdProvider _hardwareIdProvider;
 
-    private AudibleLogin AudibleLogin { get; }
+    public AudibleClient(ConfigSettings configSettings, IAuthorizeSettings authSettings, IHardwareIdProvider hardwareIdProvider = null, string dbDir = null)
+    {
+      Log(3, this);
 
-    private Authorize Authorize { get; }
+      _hardwareIdProvider = hardwareIdProvider;
+      ConfigSettings = configSettings;
+      if (ConfigSettings is not null)
+      {
+        ConfigSettings.ChangedSettings += settings_ChangedSettings;
+      }
 
-    private BookLibrary BookLibrary { get; }
-
-    private ProfileBundle Profile { get; set; }
-
-    private IAuthorizeSettings AuthorizeSettings { get; }
+      AuthorizeSettings = authSettings;
+      BookLibrary = new BookLibrary(dbDir);
+      Authorize = new Authorize(getConfigurationToken, authSettings);
+      AudibleLogin = new AudibleLogin();
+    }
 
     public IProfileKey ProfileKey => Profile?.Key;
 
@@ -61,22 +68,15 @@ namespace Oahu.Core
 
     internal AudibleApi FullApi => _audibleApi as AudibleApi;
 
-    public AudibleClient(ConfigSettings configSettings, IAuthorizeSettings authSettings, IHardwareIdProvider hardwareIdProvider = null, string dbDir = null)
-    {
-      Log(3, this);
+    private AudibleLogin AudibleLogin { get; }
 
-      _hardwareIdProvider = hardwareIdProvider;
-      ConfigSettings = configSettings;
-      if (ConfigSettings is not null)
-      {
-        ConfigSettings.ChangedSettings += settings_ChangedSettings;
-      }
+    private Authorize Authorize { get; }
 
-      AuthorizeSettings = authSettings;
-      BookLibrary = new BookLibrary(dbDir);
-      Authorize = new Authorize(getConfigurationToken, authSettings);
-      AudibleLogin = new AudibleLogin();
-    }
+    private BookLibrary BookLibrary { get; }
+
+    private ProfileBundle Profile { get; set; }
+
+    private IAuthorizeSettings AuthorizeSettings { get; }
 
     public async Task<RegisterResult> ConfigFromExternalLoginAsync(
       ERegion region,

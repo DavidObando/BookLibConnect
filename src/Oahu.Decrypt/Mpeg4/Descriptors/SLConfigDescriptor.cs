@@ -1,15 +1,11 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Descriptors;
 
 internal class SLConfigDescriptor : BaseDescriptor
 {
   private readonly byte[] Blob;
-
-  public int Predefined { get; set; }
-
-  public override int InternalSize => base.InternalSize + 1 + Blob.Length;
 
   public SLConfigDescriptor(Stream file, DescriptorHeader header) : base(file, header)
   {
@@ -22,6 +18,10 @@ internal class SLConfigDescriptor : BaseDescriptor
     Predefined = predefined;
     Blob = blob;
   }
+
+  public int Predefined { get; set; }
+
+  public override int InternalSize => base.InternalSize + 1 + Blob.Length;
 
   public static SLConfigDescriptor CreateMp4()
       => new SLConfigDescriptor(2, []);

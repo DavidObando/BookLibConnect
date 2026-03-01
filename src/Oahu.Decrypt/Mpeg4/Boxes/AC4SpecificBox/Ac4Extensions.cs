@@ -4,6 +4,8 @@ namespace Oahu.Decrypt.Mpeg4.Boxes.AC4SpecificBox;
 
 public static class Ac4Extensions
 {
+  static readonly byte[] num_channels_per_group = [2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 1, 1, 1, 2, 1, 1, 2, 2, 2];
+
   public static int? SampleRate(this ac4_dsi_v1? ac4_Dsi_V1) =>
       ac4_Dsi_V1 is null ? null
       : ac4_Dsi_V1.fs_index == 0 ? 44100
@@ -71,6 +73,4 @@ public static class Ac4Extensions
 
     return channelCount;
   }
-
-  static readonly byte[] num_channels_per_group = [2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 1, 1, 1, 2, 1, 1, 2, 2, 2];
 }

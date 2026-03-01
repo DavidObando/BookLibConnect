@@ -6,31 +6,31 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.EntityFrameworkCore;
 using Oahu.Aux;
 using Oahu.Aux.Extensions;
 using Oahu.BooksDatabase;
 using Oahu.BooksDatabase.ex;
 using Oahu.Core.ex;
-
-using Microsoft.EntityFrameworkCore;
-
 using static Oahu.Aux.Logging;
-
 using R = Oahu.Core.Properties.Resources;
 
 namespace Oahu.Core
 {
   class BookLibrary : IBookLibrary
   {
-    const int PAGE_SIZE = 200;
-
     public readonly string _dbDir = null;
     public readonly string IMG_DIR = Path.Combine(ApplEnv.LocalApplDirectory, "img");
 
     public readonly Dictionary<ProfileId, IEnumerable<Book>> _bookCache =
       new Dictionary<ProfileId, IEnumerable<Book>>();
 
+    const int PAGE_SIZE = 200;
+    const string REGEX_SERIES = @"(\d+)(\.(\d+))?";
+    static readonly IEnumerable<string> __extensions = new string[] { ".m3u", ".mp3", ".m4a", ".m4b" };
+    static readonly Regex _regexSeries = new Regex(REGEX_SERIES, RegexOptions.Compiled);
+    private static bool __checkUpdateAnswered;
+    private static bool? __checkUpdateAnswer;
     private SynchronizationContext _syncContext;
 
     public BookLibrary(string dbDir = null)
@@ -236,25 +236,6 @@ namespace Oahu.Core
     public void SetAccountAlias(AccountAliasContext ctxt) =>
       setAccountAlias(ctxt.LocalId, ctxt.Alias);
 
-    private void setAccountAlias(int id, string alias)
-    {
-      using var _ = new LogGuard(3, this, () => $"id = {id}, alias = \"{alias}\"");
-      if (alias.IsNullOrWhiteSpace())
-      {
-        return;
-      }
-
-      using var dbContext = new BookDbContextLazyLoad(_dbDir);
-      var account = dbContext.Accounts.FirstOrDefault(a => a.Id == id);
-      if (account is null)
-      {
-        return;
-      }
-
-      account.Alias = alias;
-      dbContext.SaveChanges();
-    }
-
     public void SaveFileNameSuffix(Conversion conversion, string suffix)
     {
       // run in main thread, to channel DbContext.SaveChanges() invocations
@@ -435,9 +416,6 @@ namespace Oahu.Core
       }
     }
 
-    private static bool __checkUpdateAnswered;
-    private static bool? __checkUpdateAnswer;
-
     public void CheckUpdateFilesAndState(
       ProfileId profileId,
       IDownloadSettings downloadSettings,
@@ -504,203 +482,63 @@ namespace Oahu.Core
       }
     }
 
-    private void checkRemoved(Conversion conv, Action<IConversion> callback)
+    // internal instead of private for testing only
+    internal static void addChapters(BookDbContext dbContext, Oahu.Audible.Json.ContentLicense license, Conversion conversion)
     {
-      var book = conv.Book;
-      if (book?.Deleted is null)
+      var source = license?.content_metadata?.chapter_info;
+      if (source is null)
       {
         return;
       }
 
-      bool removed = book.Deleted.Value;
-      if (removed)
+      var product = conversion.BookCommon;
+
+      ChapterInfo chapterInfo = new ChapterInfo();
+      dbContext.ChapterInfos.Add(chapterInfo);
+      if (product is Book book)
       {
-        if (conv.State > EConversionState.unknown && conv.State < EConversionState.local_locked)
+        dbContext.Entry(book).Reference(b => b.ChapterInfo).Load();
+        if (book.ChapterInfo is not null)
         {
-          updateState(conv, EConversionState.unknown);
-          callback(conv);
-          Log(3, this, () => $"removed: {conv}");
+          dbContext.Remove(book.ChapterInfo);
         }
 
-        foreach (var comp in book.Components)
-        {
-          var cconv = comp.Conversion;
-          if (cconv.State > EConversionState.unknown && cconv.State < EConversionState.local_locked)
-          {
-            updateState(cconv, EConversionState.unknown);
-            callback(cconv);
-            Log(3, this, () => $"removed: {cconv}");
-          }
-        }
+        book.ChapterInfo = chapterInfo;
       }
-      else
+      else if (product is Component comp)
       {
-        if (conv.State == EConversionState.unknown)
+        dbContext.Entry(comp).Reference(b => b.ChapterInfo).Load();
+        if (comp.ChapterInfo is not null)
         {
-          updateState(conv, EConversionState.remote);
-          callback(conv);
-          Log(3, this, () => $"re-added: {conv}");
+          dbContext.Remove(comp.ChapterInfo);
         }
 
-        foreach (var comp in book.Components)
+        comp.ChapterInfo = chapterInfo;
+      }
+
+      chapterInfo.BrandIntroDurationMs = source.brandIntroDurationMs ?? 0;
+      chapterInfo.BrandOutroDurationMs = source.brandOutroDurationMs ?? 0;
+      chapterInfo.IsAccurate = source.is_accurate;
+      chapterInfo.RuntimeLengthMs = source.runtime_length_ms ?? 0;
+
+      if (source.chapters.IsNullOrEmpty())
+      {
+        return;
+      }
+
+      foreach (var ch in source.chapters)
+      {
+        Chapter chapter = new Chapter();
+        dbContext.Chapters.Add(chapter);
+        chapterInfo.Chapters.Add(chapter);
+
+        setChapter(ch, chapter);
+
+        if (!ch.chapters.IsNullOrEmpty())
         {
-          var cconv = comp.Conversion;
-          if (cconv.State == EConversionState.unknown)
-          {
-            updateState(cconv, EConversionState.remote);
-            callback(cconv);
-            Log(3, this, () => $"re-added: {cconv}");
-          }
+          addChapters(dbContext, ch, chapter);
         }
       }
-    }
-
-    private bool checkLocalLocked(Conversion conv, Action<IConversion> callback, string downloadDirectory) =>
-      checkFile(conv, R.EncryptedFileExt, callback, downloadDirectory,
-        EConversionState.remote, ECheckFile.deleteIfMissing | ECheckFile.relocatable);
-
-    private bool checkLocalUnlocked(Conversion conv, Action<IConversion> callback, string downloadDirectory)
-    {
-      return checkLocal(conv, callback, downloadDirectory);
-    }
-
-    private bool checkLocal(
-      Conversion conv,
-      Action<IConversion> callback,
-      string downloadDirectory,
-      EConversionState? transientfallback = null)
-    {
-      bool succ = checkFile(conv, R.DecryptedFileExt, callback, downloadDirectory,
-        EConversionState.local_locked, ECheckFile.relocatable, transientfallback);
-      if (!succ)
-      {
-        succ = checkFile(conv, R.EncryptedFileExt, callback, downloadDirectory,
-          EConversionState.remote, ECheckFile.deleteIfMissing | ECheckFile.relocatable, transientfallback);
-      }
-
-      return succ;
-    }
-
-    private bool checkExported(
-      Conversion conv, Action<IConversion> callback,
-      string downloadDirectory, string exportDirectory)
-    {
-      bool succ = checkFile(conv, R.ExportedFileExt, callback, exportDirectory,
-        EConversionState.local_unlocked, ECheckFile.none, EConversionState.converted_unknown);
-      if (!succ)
-      {
-        succ = checkLocal(conv, callback, downloadDirectory, EConversionState.converted_unknown);
-      }
-
-      return succ;
-    }
-
-    static readonly IEnumerable<string> __extensions = new string[] { ".m3u", ".mp3", ".m4a", ".m4b" };
-
-    private bool checkConverted(Conversion conv, Action<IConversion> callback, string downloadDirectory)
-    {
-      bool succ = checkConvertedFiles(conv, callback);
-      if (!succ)
-      {
-        succ = checkLocal(conv, callback, downloadDirectory, EConversionState.converted_unknown);
-      }
-
-      return succ;
-    }
-
-    private bool checkConvertedFiles(Conversion conv, Action<IConversion> callback)
-    {
-      string dir = conv.DestDirectory.AsUncIfLong();
-      bool exists = false;
-      if (Directory.Exists(dir))
-      {
-        string[] files = Directory.GetFiles(dir);
-        exists = files
-          .Select(f => Path.GetExtension(f).ToLower())
-          .Where(e => __extensions.Contains(e))
-          .Any();
-      }
-
-      if (exists)
-      {
-        return true;
-      }
-      else
-      {
-        Log(3, this, () => $"not found: \"{conv.DownloadFileName.GetDownloadFileNameWithoutExtension()}\"");
-        conv.State = EConversionState.converted_unknown;
-        callback?.Invoke(conv);
-        return false;
-      }
-    }
-
-    private bool checkFile(
-      Conversion conv,
-      string ext,
-      Action<IConversion> callback,
-      string downloadDirectory,
-      EConversionState fallback,
-      ECheckFile flags,
-      EConversionState? transientfallback = null)
-    {
-      if (flags.HasFlag(ECheckFile.relocatable))
-      {
-        if (downloadDirectory is null)
-        {
-          return false;
-        }
-
-        string path = (conv.DownloadFileName + ext).AsUncIfLong();
-        if (File.Exists(path))
-        {
-          return true;
-        }
-
-        if (conv.DownloadFileName is not null)
-        {
-          string filename = conv.DownloadFileName.GetDownloadFileNameWithoutExtension();
-          string pathStub = Path.Combine(downloadDirectory, filename);
-          path = (pathStub + ext).AsUncIfLong();
-
-          if (File.Exists(path))
-          {
-            conv.DownloadFileName = pathStub;
-            return true;
-          }
-        }
-      }
-      else
-      {
-        string filename = conv.DownloadFileName.GetDownloadFileNameWithoutExtension();
-        string pathStub = Path.Combine(downloadDirectory, filename);
-        string path = (pathStub + ext).AsUncIfLong();
-        if (File.Exists(path))
-        {
-          return true;
-        }
-      }
-
-      Log(3, this, () => $"not found \"{ext}\": \"{conv.DownloadFileName.GetDownloadFileNameWithoutExtension()}\"");
-
-      if (flags.HasFlag(ECheckFile.deleteIfMissing))
-      {
-        conv.DownloadFileName = null;
-      }
-
-      if (transientfallback.HasValue)
-      {
-        var tmp = conv.Copy();
-        tmp.State = transientfallback.Value;
-        callback?.Invoke(tmp);
-      }
-
-      updateState(conv, fallback);
-      if (!transientfallback.HasValue)
-      {
-        callback?.Invoke(conv);
-      }
-
-      return false;
     }
 
     private static void updateState(Conversion conversion, EConversionState state, Conversion original = null)
@@ -766,65 +604,6 @@ namespace Oahu.Core
       return aq;
     }
 
-    // internal instead of private for testing only
-    internal static void addChapters(BookDbContext dbContext, Oahu.Audible.Json.ContentLicense license, Conversion conversion)
-    {
-      var source = license?.content_metadata?.chapter_info;
-      if (source is null)
-      {
-        return;
-      }
-
-      var product = conversion.BookCommon;
-
-      ChapterInfo chapterInfo = new ChapterInfo();
-      dbContext.ChapterInfos.Add(chapterInfo);
-      if (product is Book book)
-      {
-        dbContext.Entry(book).Reference(b => b.ChapterInfo).Load();
-        if (book.ChapterInfo is not null)
-        {
-          dbContext.Remove(book.ChapterInfo);
-        }
-
-        book.ChapterInfo = chapterInfo;
-      }
-      else if (product is Component comp)
-      {
-        dbContext.Entry(comp).Reference(b => b.ChapterInfo).Load();
-        if (comp.ChapterInfo is not null)
-        {
-          dbContext.Remove(comp.ChapterInfo);
-        }
-
-        comp.ChapterInfo = chapterInfo;
-      }
-
-      chapterInfo.BrandIntroDurationMs = source.brandIntroDurationMs ?? 0;
-      chapterInfo.BrandOutroDurationMs = source.brandOutroDurationMs ?? 0;
-      chapterInfo.IsAccurate = source.is_accurate;
-      chapterInfo.RuntimeLengthMs = source.runtime_length_ms ?? 0;
-
-      if (source.chapters.IsNullOrEmpty())
-      {
-        return;
-      }
-
-      foreach (var ch in source.chapters)
-      {
-        Chapter chapter = new Chapter();
-        dbContext.Chapters.Add(chapter);
-        chapterInfo.Chapters.Add(chapter);
-
-        setChapter(ch, chapter);
-
-        if (!ch.chapters.IsNullOrEmpty())
-        {
-          addChapters(dbContext, ch, chapter);
-        }
-      }
-    }
-
     private static void setChapter(Oahu.Audible.Json.Chapter src, Chapter chapter)
     {
       chapter.LengthMs = src.length_ms ?? 0;
@@ -847,212 +626,6 @@ namespace Oahu.Core
         {
           addChapters(dbContext, ch, chapter);
         }
-      }
-    }
-
-    private void addRemBooks(List<Oahu.Audible.Json.Product> libProducts, ProfileId profileId, bool resync)
-    {
-      lock (_bookCache)
-      {
-        _bookCache.Remove(profileId);
-      }
-
-      using var dbContext = new BookDbContextLazyLoad(_dbDir);
-
-      var bcl = new BookCompositeLists(
-        dbContext.Books.Select(b => b.Asin).ToList(),
-        dbContext.Conversions.ToList(),
-        dbContext.Components.ToList(),
-        dbContext.Series.ToList(),
-        dbContext.SeriesBooks.ToList(),
-        dbContext.Authors.ToList(),
-        dbContext.Narrators.ToList(),
-        dbContext.Genres.ToList(),
-        dbContext.Ladders.ToList(),
-        dbContext.Rungs.ToList(),
-        dbContext.Codecs.ToList());
-
-      int page = 0;
-      int remaining = libProducts.Count;
-      while (remaining > 0)
-      {
-        int count = Math.Min(remaining, PAGE_SIZE);
-        int start = page * PAGE_SIZE;
-        page++;
-        remaining -= count;
-        var subrange = libProducts.GetRange(start, count);
-        addPageBooks(dbContext, bcl, subrange, profileId, resync);
-      }
-
-      if (resync)
-      {
-        removeBooks(dbContext, bcl, libProducts, profileId);
-      }
-    }
-
-    private DateTime sinceLatestPurchaseDate(ProfileId profileId, bool resync)
-    {
-      DateTime dt = new DateTime(1970, 1, 1);
-      if (resync)
-      {
-        return dt;
-      }
-
-      using var dbContext = new BookDbContextLazyLoad(_dbDir);
-
-      var latest = dbContext.Books
-          .Where(b => b.PurchaseDate.HasValue &&
-            b.Conversion.AccountId == profileId.AccountId &&
-            b.Conversion.Region == profileId.Region)
-          .Select(b => b.PurchaseDate.Value)
-          .OrderBy(b => b)
-          .LastOrDefault();
-      if (latest != default)
-      {
-        dt = latest + TimeSpan.FromMilliseconds(1);
-      }
-
-      return dt;
-    }
-
-    private void cleanupDuplicateAuthors()
-    {
-      using var dbContext = new BookDbContextLazyLoad(_dbDir);
-
-      var authors = dbContext.Authors;
-
-      var duplicates = authors
-        .ToList()
-        .GroupBy(x => x.Name)
-        .Where(g => g.Count() > 1)
-        .ToList();
-
-      const int PseudoKeyLength = 7;
-      foreach (var d in duplicates)
-      {
-        var asinAuthor = d.FirstOrDefault(d => d.Asin.Length > PseudoKeyLength);
-        if (asinAuthor is null)
-        {
-          continue;
-        }
-
-        foreach (var author in d)
-        {
-          if (author == asinAuthor)
-          {
-            continue;
-          }
-
-          foreach (var book in author.Books)
-          {
-            book.Authors.Remove(author);
-            book.Authors.Add(asinAuthor);
-          }
-
-          authors.Remove(author);
-        }
-      }
-
-      dbContext.SaveChanges();
-    }
-
-    private void addPageBooks(BookDbContextLazyLoad dbContext, BookCompositeLists bcl, IEnumerable<Oahu.Audible.Json.Product> products, ProfileId profileId, bool resync)
-    {
-      try
-      {
-        using var _ = new LogGuard(3, this, () => $"#items={products.Count()}");
-
-        foreach (var product in products)
-        {
-          try
-          {
-            if (readd(bcl, product, profileId, resync))
-            {
-              continue;
-            }
-
-            Book book = addBook(dbContext, product);
-
-            addComponents(book, bcl.Components, product.relationships);
-
-            addConversions(book, bcl.Conversions, profileId);
-
-            addSeries(book, bcl.Series, bcl.SeriesBooks, product.relationships);
-
-            addPersons(dbContext, book, bcl.Authors, product.authors, b => b.Authors);
-            addPersons(dbContext, book, bcl.Narrators, product.narrators, b => b.Narrators);
-
-            addGenres(book, bcl.Genres, bcl.Ladders, bcl.Rungs, product.category_ladders);
-
-            addCodecs(book, bcl.Codecs, product.available_codecs);
-
-            Log(3, this, () => $"added: {book}");
-          }
-          catch (Exception exc)
-          {
-            Log(1, this, () =>
-              $"asin={product.asin}, \"{product.title}\", throwing{Environment.NewLine}" +
-              $"{exc.Summary()})");
-            throw;
-          }
-        }
-
-        dbContext.SaveChanges();
-      }
-      catch (DbUpdateException exc)
-      {
-        Log(1, this, () => exc.ToString());
-        throw;
-      }
-      catch (Exception exc)
-      {
-        Log(1, this, () => exc.Summary());
-        throw;
-      }
-    }
-
-    private bool readd(BookCompositeLists bcl, Oahu.Audible.Json.Product product, ProfileId profileId, bool resync)
-    {
-      if (bcl.BookAsins.Contains(product.asin))
-      {
-        if (!resync)
-        {
-          return true;
-        }
-
-        var bk = bcl.Conversions
-          .FirstOrDefault(conv => string.Equals(conv.Book?.Asin, product.asin))?.Book;
-        if (!(bk?.Deleted ?? false))
-        {
-          return true;
-        }
-
-        bk.Deleted = false;
-        bk.Conversion.AccountId = profileId.AccountId;
-        bk.Conversion.Region = profileId.Region;
-        if (bk.Conversion.State < EConversionState.local_locked)
-        {
-          updateState(bk.Conversion, EConversionState.remote);
-        }
-
-        foreach (var comp in bk.Components)
-        {
-          if (comp.Conversion.State < EConversionState.local_locked)
-          {
-            updateState(comp.Conversion, EConversionState.remote);
-          }
-
-          comp.Conversion.AccountId = profileId.AccountId;
-          comp.Conversion.Region = profileId.Region;
-        }
-
-        Log(3, this, () => $"readded: {bk}");
-
-        return true;
-      }
-      else
-      {
-        return false;
       }
     }
 
@@ -1119,9 +692,6 @@ namespace Oahu.Core
         book.Components.Add(component);
       }
     }
-
-    const string REGEX_SERIES = @"(\d+)(\.(\d+))?";
-    static readonly Regex _regexSeries = new Regex(REGEX_SERIES, RegexOptions.Compiled);
 
     private static void addSeries(Book book, ICollection<Series> series, ICollection<SeriesBook> seriesBooks, IEnumerable<Oahu.Audible.Json.Relationship> itmRelations)
     {
@@ -1386,6 +956,428 @@ namespace Oahu.Core
         };
         component.Conversion = conversion;
         conversions.Add(conversion);
+      }
+    }
+
+    private void setAccountAlias(int id, string alias)
+    {
+      using var _ = new LogGuard(3, this, () => $"id = {id}, alias = \"{alias}\"");
+      if (alias.IsNullOrWhiteSpace())
+      {
+        return;
+      }
+
+      using var dbContext = new BookDbContextLazyLoad(_dbDir);
+      var account = dbContext.Accounts.FirstOrDefault(a => a.Id == id);
+      if (account is null)
+      {
+        return;
+      }
+
+      account.Alias = alias;
+      dbContext.SaveChanges();
+    }
+
+    private void checkRemoved(Conversion conv, Action<IConversion> callback)
+    {
+      var book = conv.Book;
+      if (book?.Deleted is null)
+      {
+        return;
+      }
+
+      bool removed = book.Deleted.Value;
+      if (removed)
+      {
+        if (conv.State > EConversionState.unknown && conv.State < EConversionState.local_locked)
+        {
+          updateState(conv, EConversionState.unknown);
+          callback(conv);
+          Log(3, this, () => $"removed: {conv}");
+        }
+
+        foreach (var comp in book.Components)
+        {
+          var cconv = comp.Conversion;
+          if (cconv.State > EConversionState.unknown && cconv.State < EConversionState.local_locked)
+          {
+            updateState(cconv, EConversionState.unknown);
+            callback(cconv);
+            Log(3, this, () => $"removed: {cconv}");
+          }
+        }
+      }
+      else
+      {
+        if (conv.State == EConversionState.unknown)
+        {
+          updateState(conv, EConversionState.remote);
+          callback(conv);
+          Log(3, this, () => $"re-added: {conv}");
+        }
+
+        foreach (var comp in book.Components)
+        {
+          var cconv = comp.Conversion;
+          if (cconv.State == EConversionState.unknown)
+          {
+            updateState(cconv, EConversionState.remote);
+            callback(cconv);
+            Log(3, this, () => $"re-added: {cconv}");
+          }
+        }
+      }
+    }
+
+    private bool checkLocalLocked(Conversion conv, Action<IConversion> callback, string downloadDirectory) =>
+      checkFile(conv, R.EncryptedFileExt, callback, downloadDirectory,
+        EConversionState.remote, ECheckFile.deleteIfMissing | ECheckFile.relocatable);
+
+    private bool checkLocalUnlocked(Conversion conv, Action<IConversion> callback, string downloadDirectory)
+    {
+      return checkLocal(conv, callback, downloadDirectory);
+    }
+
+    private bool checkLocal(
+      Conversion conv,
+      Action<IConversion> callback,
+      string downloadDirectory,
+      EConversionState? transientfallback = null)
+    {
+      bool succ = checkFile(conv, R.DecryptedFileExt, callback, downloadDirectory,
+        EConversionState.local_locked, ECheckFile.relocatable, transientfallback);
+      if (!succ)
+      {
+        succ = checkFile(conv, R.EncryptedFileExt, callback, downloadDirectory,
+          EConversionState.remote, ECheckFile.deleteIfMissing | ECheckFile.relocatable, transientfallback);
+      }
+
+      return succ;
+    }
+
+    private bool checkExported(
+      Conversion conv, Action<IConversion> callback,
+      string downloadDirectory, string exportDirectory)
+    {
+      bool succ = checkFile(conv, R.ExportedFileExt, callback, exportDirectory,
+        EConversionState.local_unlocked, ECheckFile.none, EConversionState.converted_unknown);
+      if (!succ)
+      {
+        succ = checkLocal(conv, callback, downloadDirectory, EConversionState.converted_unknown);
+      }
+
+      return succ;
+    }
+
+    private bool checkConverted(Conversion conv, Action<IConversion> callback, string downloadDirectory)
+    {
+      bool succ = checkConvertedFiles(conv, callback);
+      if (!succ)
+      {
+        succ = checkLocal(conv, callback, downloadDirectory, EConversionState.converted_unknown);
+      }
+
+      return succ;
+    }
+
+    private bool checkConvertedFiles(Conversion conv, Action<IConversion> callback)
+    {
+      string dir = conv.DestDirectory.AsUncIfLong();
+      bool exists = false;
+      if (Directory.Exists(dir))
+      {
+        string[] files = Directory.GetFiles(dir);
+        exists = files
+          .Select(f => Path.GetExtension(f).ToLower())
+          .Where(e => __extensions.Contains(e))
+          .Any();
+      }
+
+      if (exists)
+      {
+        return true;
+      }
+      else
+      {
+        Log(3, this, () => $"not found: \"{conv.DownloadFileName.GetDownloadFileNameWithoutExtension()}\"");
+        conv.State = EConversionState.converted_unknown;
+        callback?.Invoke(conv);
+        return false;
+      }
+    }
+
+    private bool checkFile(
+      Conversion conv,
+      string ext,
+      Action<IConversion> callback,
+      string downloadDirectory,
+      EConversionState fallback,
+      ECheckFile flags,
+      EConversionState? transientfallback = null)
+    {
+      if (flags.HasFlag(ECheckFile.relocatable))
+      {
+        if (downloadDirectory is null)
+        {
+          return false;
+        }
+
+        string path = (conv.DownloadFileName + ext).AsUncIfLong();
+        if (File.Exists(path))
+        {
+          return true;
+        }
+
+        if (conv.DownloadFileName is not null)
+        {
+          string filename = conv.DownloadFileName.GetDownloadFileNameWithoutExtension();
+          string pathStub = Path.Combine(downloadDirectory, filename);
+          path = (pathStub + ext).AsUncIfLong();
+
+          if (File.Exists(path))
+          {
+            conv.DownloadFileName = pathStub;
+            return true;
+          }
+        }
+      }
+      else
+      {
+        string filename = conv.DownloadFileName.GetDownloadFileNameWithoutExtension();
+        string pathStub = Path.Combine(downloadDirectory, filename);
+        string path = (pathStub + ext).AsUncIfLong();
+        if (File.Exists(path))
+        {
+          return true;
+        }
+      }
+
+      Log(3, this, () => $"not found \"{ext}\": \"{conv.DownloadFileName.GetDownloadFileNameWithoutExtension()}\"");
+
+      if (flags.HasFlag(ECheckFile.deleteIfMissing))
+      {
+        conv.DownloadFileName = null;
+      }
+
+      if (transientfallback.HasValue)
+      {
+        var tmp = conv.Copy();
+        tmp.State = transientfallback.Value;
+        callback?.Invoke(tmp);
+      }
+
+      updateState(conv, fallback);
+      if (!transientfallback.HasValue)
+      {
+        callback?.Invoke(conv);
+      }
+
+      return false;
+    }
+
+    private void addRemBooks(List<Oahu.Audible.Json.Product> libProducts, ProfileId profileId, bool resync)
+    {
+      lock (_bookCache)
+      {
+        _bookCache.Remove(profileId);
+      }
+
+      using var dbContext = new BookDbContextLazyLoad(_dbDir);
+
+      var bcl = new BookCompositeLists(
+        dbContext.Books.Select(b => b.Asin).ToList(),
+        dbContext.Conversions.ToList(),
+        dbContext.Components.ToList(),
+        dbContext.Series.ToList(),
+        dbContext.SeriesBooks.ToList(),
+        dbContext.Authors.ToList(),
+        dbContext.Narrators.ToList(),
+        dbContext.Genres.ToList(),
+        dbContext.Ladders.ToList(),
+        dbContext.Rungs.ToList(),
+        dbContext.Codecs.ToList());
+
+      int page = 0;
+      int remaining = libProducts.Count;
+      while (remaining > 0)
+      {
+        int count = Math.Min(remaining, PAGE_SIZE);
+        int start = page * PAGE_SIZE;
+        page++;
+        remaining -= count;
+        var subrange = libProducts.GetRange(start, count);
+        addPageBooks(dbContext, bcl, subrange, profileId, resync);
+      }
+
+      if (resync)
+      {
+        removeBooks(dbContext, bcl, libProducts, profileId);
+      }
+    }
+
+    private DateTime sinceLatestPurchaseDate(ProfileId profileId, bool resync)
+    {
+      DateTime dt = new DateTime(1970, 1, 1);
+      if (resync)
+      {
+        return dt;
+      }
+
+      using var dbContext = new BookDbContextLazyLoad(_dbDir);
+
+      var latest = dbContext.Books
+          .Where(b => b.PurchaseDate.HasValue &&
+            b.Conversion.AccountId == profileId.AccountId &&
+            b.Conversion.Region == profileId.Region)
+          .Select(b => b.PurchaseDate.Value)
+          .OrderBy(b => b)
+          .LastOrDefault();
+      if (latest != default)
+      {
+        dt = latest + TimeSpan.FromMilliseconds(1);
+      }
+
+      return dt;
+    }
+
+    private void cleanupDuplicateAuthors()
+    {
+      using var dbContext = new BookDbContextLazyLoad(_dbDir);
+
+      var authors = dbContext.Authors;
+
+      var duplicates = authors
+        .ToList()
+        .GroupBy(x => x.Name)
+        .Where(g => g.Count() > 1)
+        .ToList();
+
+      const int PseudoKeyLength = 7;
+      foreach (var d in duplicates)
+      {
+        var asinAuthor = d.FirstOrDefault(d => d.Asin.Length > PseudoKeyLength);
+        if (asinAuthor is null)
+        {
+          continue;
+        }
+
+        foreach (var author in d)
+        {
+          if (author == asinAuthor)
+          {
+            continue;
+          }
+
+          foreach (var book in author.Books)
+          {
+            book.Authors.Remove(author);
+            book.Authors.Add(asinAuthor);
+          }
+
+          authors.Remove(author);
+        }
+      }
+
+      dbContext.SaveChanges();
+    }
+
+    private void addPageBooks(BookDbContextLazyLoad dbContext, BookCompositeLists bcl, IEnumerable<Oahu.Audible.Json.Product> products, ProfileId profileId, bool resync)
+    {
+      try
+      {
+        using var _ = new LogGuard(3, this, () => $"#items={products.Count()}");
+
+        foreach (var product in products)
+        {
+          try
+          {
+            if (readd(bcl, product, profileId, resync))
+            {
+              continue;
+            }
+
+            Book book = addBook(dbContext, product);
+
+            addComponents(book, bcl.Components, product.relationships);
+
+            addConversions(book, bcl.Conversions, profileId);
+
+            addSeries(book, bcl.Series, bcl.SeriesBooks, product.relationships);
+
+            addPersons(dbContext, book, bcl.Authors, product.authors, b => b.Authors);
+            addPersons(dbContext, book, bcl.Narrators, product.narrators, b => b.Narrators);
+
+            addGenres(book, bcl.Genres, bcl.Ladders, bcl.Rungs, product.category_ladders);
+
+            addCodecs(book, bcl.Codecs, product.available_codecs);
+
+            Log(3, this, () => $"added: {book}");
+          }
+          catch (Exception exc)
+          {
+            Log(1, this, () =>
+              $"asin={product.asin}, \"{product.title}\", throwing{Environment.NewLine}" +
+              $"{exc.Summary()})");
+            throw;
+          }
+        }
+
+        dbContext.SaveChanges();
+      }
+      catch (DbUpdateException exc)
+      {
+        Log(1, this, () => exc.ToString());
+        throw;
+      }
+      catch (Exception exc)
+      {
+        Log(1, this, () => exc.Summary());
+        throw;
+      }
+    }
+
+    private bool readd(BookCompositeLists bcl, Oahu.Audible.Json.Product product, ProfileId profileId, bool resync)
+    {
+      if (bcl.BookAsins.Contains(product.asin))
+      {
+        if (!resync)
+        {
+          return true;
+        }
+
+        var bk = bcl.Conversions
+          .FirstOrDefault(conv => string.Equals(conv.Book?.Asin, product.asin))?.Book;
+        if (!(bk?.Deleted ?? false))
+        {
+          return true;
+        }
+
+        bk.Deleted = false;
+        bk.Conversion.AccountId = profileId.AccountId;
+        bk.Conversion.Region = profileId.Region;
+        if (bk.Conversion.State < EConversionState.local_locked)
+        {
+          updateState(bk.Conversion, EConversionState.remote);
+        }
+
+        foreach (var comp in bk.Components)
+        {
+          if (comp.Conversion.State < EConversionState.local_locked)
+          {
+            updateState(comp.Conversion, EConversionState.remote);
+          }
+
+          comp.Conversion.AccountId = profileId.AccountId;
+          comp.Conversion.Region = profileId.Region;
+        }
+
+        Log(3, this, () => $"readded: {bk}");
+
+        return true;
+      }
+      else
+      {
+        return false;
       }
     }
 

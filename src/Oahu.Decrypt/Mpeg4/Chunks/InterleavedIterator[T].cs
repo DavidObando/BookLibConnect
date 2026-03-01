@@ -1,9 +1,9 @@
-using Oahu.Decrypt.Mpeg4.Boxes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Oahu.Decrypt.Mpeg4.Boxes;
 
 namespace Oahu.Decrypt.Mpeg4.Chunks;
 
@@ -28,15 +28,15 @@ public static class EnumerableExtensions
 
   private class InterleavedIterator<T> : IEnumerable<T>
   {
-    private IEnumerable<T>[] Enumerables { get; }
-
-    private Comparer<T> Comparer { get; }
-
     public InterleavedIterator(IEnumerable<T>[] enumerables, Comparer<T> comparer)
     {
       Enumerables = enumerables;
       Comparer = comparer;
     }
+
+    private IEnumerable<T>[] Enumerables { get; }
+
+    private Comparer<T> Comparer { get; }
 
     public IEnumerator<T> GetEnumerator()
     {
@@ -56,6 +56,8 @@ public static class EnumerableExtensions
       }
     }
 
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
     private bool GetNextValue(IEnumerator<T>?[] enumerators, out int minIndex, [NotNullWhen(true)] out IEnumerator<T>? minValue)
     {
       minIndex = -1;
@@ -71,7 +73,5 @@ public static class EnumerableExtensions
 
       return minIndex != -1;
     }
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
   }
 }

@@ -5,19 +5,19 @@ namespace Oahu.Decrypt.FrameFilters.Audio
 {
   internal class LosslessFilter : FrameFinalBase<FrameEntry>
   {
-    public bool Closed { get; private set; }
-
-    protected override int InputBufferSize => 1000;
-
-    private long lastChunkIndex = -1;
     public readonly Mp4aWriter Mp4aWriter;
     private readonly ChapterQueue ChapterQueue;
+    private long lastChunkIndex = -1;
 
     public LosslessFilter(Stream outputStream, Mp4File mp4Audio, ChapterQueue chapterQueue)
     {
       Mp4aWriter = new Mp4aWriter(outputStream, mp4Audio.Ftyp, mp4Audio.Moov);
       ChapterQueue = chapterQueue;
     }
+
+    public bool Closed { get; private set; }
+
+    protected override int InputBufferSize => 1000;
 
     protected override Task FlushAsync()
     {
@@ -48,17 +48,6 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       return Task.CompletedTask;
     }
 
-    private void CloseWriter()
-    {
-      if (Closed)
-      {
-        return;
-      }
-
-      Mp4aWriter.Close();
-      Closed = true;
-    }
-
     protected override void Dispose(bool disposing)
     {
       if (disposing && !Disposed)
@@ -68,6 +57,17 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       }
 
       base.Dispose(disposing);
+    }
+
+    private void CloseWriter()
+    {
+      if (Closed)
+      {
+        return;
+      }
+
+      Mp4aWriter.Close();
+      Closed = true;
     }
   }
 }

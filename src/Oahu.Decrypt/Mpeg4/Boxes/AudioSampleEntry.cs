@@ -1,33 +1,13 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class AudioSampleEntry : SampleEntry
 {
-  public override long RenderSize => base.RenderSize + 20;
-
   private readonly byte[] reserved;
   private readonly byte[] reserved_2;
-
-  public ushort ChannelCount { get; set; }
-
-  public ushort SampleSize { get; }
-
-  public short PreDefined { get; }
-
-  public ushort SampleRate { get; set; }
-
   private readonly ushort SampleRate_loworder;
-
-  /// <summary>
-  /// Only AAC files have ESDS. EC-3 and AC-4 files do not.
-  /// </summary>
-  public EsdsBox? Esds => GetChild<EsdsBox>();
-
-  public Dec3Box? Dec3 => GetChild<Dec3Box>();
-
-  public Dac4Box? Dac4 => GetChild<Dac4Box>();
 
   public AudioSampleEntry(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
@@ -40,6 +20,25 @@ public class AudioSampleEntry : SampleEntry
     SampleRate_loworder = file.ReadUInt16BE();
     LoadChildren(file);
   }
+
+  public override long RenderSize => base.RenderSize + 20;
+
+  public ushort ChannelCount { get; set; }
+
+  public ushort SampleSize { get; }
+
+  public short PreDefined { get; }
+
+  public ushort SampleRate { get; set; }
+
+  /// <summary>
+  /// Only AAC files have ESDS. EC-3 and AC-4 files do not.
+  /// </summary>
+  public EsdsBox? Esds => GetChild<EsdsBox>();
+
+  public Dec3Box? Dec3 => GetChild<Dec3Box>();
+
+  public Dac4Box? Dac4 => GetChild<Dac4Box>();
 
   protected override void Render(Stream file)
   {

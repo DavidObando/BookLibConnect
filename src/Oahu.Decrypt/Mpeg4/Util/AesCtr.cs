@@ -11,6 +11,7 @@ public unsafe class AesCtr : IDisposable
   private readonly ICryptoTransform Encryptor;
   private readonly Aes Aes;
   private readonly byte[] encrypted_counter = new byte[AES_BLOCK_SIZE];
+  private bool isDisposed;
 
   public AesCtr(byte[] key)
   {
@@ -78,6 +79,12 @@ public unsafe class AesCtr : IDisposable
     }
   }
 
+  public void Dispose()
+  {
+    Dispose(true);
+    GC.SuppressFinalize(this);
+  }
+
   private static void IncrementBE(byte[] data)
   {
     int i = data.Length - 1;
@@ -87,14 +94,6 @@ public unsafe class AesCtr : IDisposable
     }
     while (data[i] == 0 && i-- > 0);
   }
-
-  public void Dispose()
-  {
-    Dispose(true);
-    GC.SuppressFinalize(this);
-  }
-
-  private bool isDisposed;
 
   private void Dispose(bool disposing)
   {

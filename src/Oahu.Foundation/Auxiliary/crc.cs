@@ -4,6 +4,20 @@ using System.Security.Cryptography;
 
 namespace Oahu.Aux
 {
+  namespace Extensions
+  {
+    public static class Crc32Extensions
+    {
+      public static uint Checksum32(this byte[] bytes)
+      {
+        return Crc32.Compute(bytes);
+      }
+
+      public static uint Checksum32(this string text) =>
+        text.GetBytes().Checksum32();
+    }
+  }
+
   /// <summary>
   /// Implements a 32-bit CRC hash algorithm compatible with Zip etc.
   /// https://github.com/damieng/DamienGKit/tree/master/CSharp/DamienG.Library/Security/Cryptography
@@ -42,23 +56,6 @@ namespace Oahu.Aux
       this.seed = hash = seed;
     }
 
-    public override void Initialize()
-    {
-      hash = seed;
-    }
-
-    protected override void HashCore(byte[] array, int ibStart, int cbSize)
-    {
-      hash = CalculateHash(table, hash, array, ibStart, cbSize);
-    }
-
-    protected override byte[] HashFinal()
-    {
-      var hashBuffer = UInt32ToBigEndianBytes(~hash);
-      HashValue = hashBuffer;
-      return hashBuffer;
-    }
-
     public override int HashSize
     {
       get { return 32; }
@@ -77,6 +74,23 @@ namespace Oahu.Aux
     public static UInt32 Compute(UInt32 polynomial, UInt32 seed, byte[] buffer)
     {
       return ~CalculateHash(InitializeTable(polynomial), seed, buffer, 0, buffer.Length);
+    }
+
+    public override void Initialize()
+    {
+      hash = seed;
+    }
+
+    protected override void HashCore(byte[] array, int ibStart, int cbSize)
+    {
+      hash = CalculateHash(table, hash, array, ibStart, cbSize);
+    }
+
+    protected override byte[] HashFinal()
+    {
+      var hashBuffer = UInt32ToBigEndianBytes(~hash);
+      HashValue = hashBuffer;
+      return hashBuffer;
     }
 
     static UInt32[] InitializeTable(UInt32 polynomial)
@@ -169,26 +183,14 @@ namespace Oahu.Aux
       this.seed = hash = seed;
     }
 
-    public override void Initialize()
-    {
-      hash = seed;
-    }
-
-    protected override void HashCore(byte[] array, int ibStart, int cbSize)
-    {
-      hash = CalculateHash(hash, table, array, ibStart, cbSize);
-    }
-
-    protected override byte[] HashFinal()
-    {
-      var hashBuffer = UInt64ToBigEndianBytes(hash);
-      HashValue = hashBuffer;
-      return hashBuffer;
-    }
-
     public override int HashSize
     {
       get { return 64; }
+    }
+
+    public override void Initialize()
+    {
+      hash = seed;
     }
 
     protected static UInt64 CalculateHash(UInt64 seed, UInt64[] table, IList<byte> buffer, int start, int size)
@@ -203,6 +205,42 @@ namespace Oahu.Aux
       }
 
       return hash;
+    }
+
+    protected static ulong[] CreateTable(ulong polynomial)
+    {
+      var createTable = new UInt64[256];
+      for (var i = 0; i < 256; ++i)
+      {
+        var entry = (UInt64)i;
+        for (var j = 0; j < 8; ++j)
+        {
+          if ((entry & 1) == 1)
+          {
+            entry = (entry >> 1) ^ polynomial;
+          }
+          else
+          {
+            entry >>= 1;
+          }
+        }
+
+        createTable[i] = entry;
+      }
+
+      return createTable;
+    }
+
+    protected override void HashCore(byte[] array, int ibStart, int cbSize)
+    {
+      hash = CalculateHash(hash, table, array, ibStart, cbSize);
+    }
+
+    protected override byte[] HashFinal()
+    {
+      var hashBuffer = UInt64ToBigEndianBytes(hash);
+      HashValue = hashBuffer;
+      return hashBuffer;
     }
 
     static byte[] UInt64ToBigEndianBytes(UInt64 value)
@@ -233,37 +271,13 @@ namespace Oahu.Aux
 
       return createTable;
     }
-
-    protected static ulong[] CreateTable(ulong polynomial)
-    {
-      var createTable = new UInt64[256];
-      for (var i = 0; i < 256; ++i)
-      {
-        var entry = (UInt64)i;
-        for (var j = 0; j < 8; ++j)
-        {
-          if ((entry & 1) == 1)
-          {
-            entry = (entry >> 1) ^ polynomial;
-          }
-          else
-          {
-            entry >>= 1;
-          }
-        }
-
-        createTable[i] = entry;
-      }
-
-      return createTable;
-    }
   }
 
   public class Crc64Iso : Crc64
   {
-    internal static UInt64[] Table;
-
     public const UInt64 Iso3309Polynomial = 0xD800000000000000;
+
+    internal static UInt64[] Table;
 
     public Crc64Iso()
         : base(Iso3309Polynomial)
@@ -288,20 +302,6 @@ namespace Oahu.Aux
       }
 
       return CalculateHash(seed, Table, buffer, 0, buffer.Length);
-    }
-  }
-
-  namespace Extensions
-  {
-    public static class Crc32Extensions
-    {
-      public static uint Checksum32(this byte[] bytes)
-      {
-        return Crc32.Compute(bytes);
-      }
-
-      public static uint Checksum32(this string text) =>
-        text.GetBytes().Checksum32();
     }
   }
 }

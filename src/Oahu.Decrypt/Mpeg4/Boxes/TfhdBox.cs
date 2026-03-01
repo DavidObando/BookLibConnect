@@ -1,10 +1,40 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class TfhdBox : FullBox
 {
+  public TfhdBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
+  {
+    TrackID = file.ReadUInt32BE();
+
+    if (base_data_offset_present)
+    {
+      BaseDataOffset = file.ReadInt64BE();
+    }
+
+    if (sample_description_index_present)
+    {
+      SampleDescriptionIndex = file.ReadUInt32BE();
+    }
+
+    if (default_sample_duration_present)
+    {
+      DefaultSampleDuration = file.ReadUInt32BE();
+    }
+
+    if (default_sample_size_present)
+    {
+      DefaultSampleSize = file.ReadUInt32BE();
+    }
+
+    if (default_sample_flags_present)
+    {
+      DefaultSampleFlags = file.ReadUInt32BE();
+    }
+  }
+
   public override long RenderSize => base.RenderSize + 4 + OptionalFieldsSize;
 
   public uint TrackID { get; }
@@ -39,36 +69,6 @@ public class TfhdBox : FullBox
   private bool default_sample_size_present => (Flags & 16) == 16;
 
   private bool default_sample_flags_present => (Flags & 32) == 32;
-
-  public TfhdBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
-  {
-    TrackID = file.ReadUInt32BE();
-
-    if (base_data_offset_present)
-    {
-      BaseDataOffset = file.ReadInt64BE();
-    }
-
-    if (sample_description_index_present)
-    {
-      SampleDescriptionIndex = file.ReadUInt32BE();
-    }
-
-    if (default_sample_duration_present)
-    {
-      DefaultSampleDuration = file.ReadUInt32BE();
-    }
-
-    if (default_sample_size_present)
-    {
-      DefaultSampleSize = file.ReadUInt32BE();
-    }
-
-    if (default_sample_flags_present)
-    {
-      DefaultSampleFlags = file.ReadUInt32BE();
-    }
-  }
 
   protected override void Render(Stream file)
   {

@@ -1,5 +1,5 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes.EC3SpecificBox;
 
@@ -14,32 +14,39 @@ public class Ec3IndependentSubstream
   /// Table 4.1: Sample rate codes
   /// </summary>
   public byte fscod;
+
   /// <summary>
   /// ETSI TS 102 366 4.4.2.1 bsid - Bit stream identification
   /// </summary>
   public byte bsid;
+
   /// <summary>
   /// ETSI TS 102 366 F.6.2.7 asvc - is a main audio service
   /// Value must be 16 for E-AC-3 (E.1.1 Indication of Enhanced AC-3 bit stream syntax)
   /// </summary>
   public bool asvc;
+
   /// <summary>
   /// ETSI TS 102 366 4.4.2.2 bsmod - Bit stream mode - 3 bits
   /// Table 4.2: Bit stream mode
   /// </summary>
   public byte bsmod;
+
   /// <summary>
   /// ETSI TS 102 366 4.4.2.3 acmod - Audio coding mode
   /// </summary>
   public AudioCodingMode acmod;
+
   /// <summary>
   /// ETSI TS 102 366 4.4.2.7 lfeon - Low frequency effects channel on
   /// </summary>
   public bool lfeon;
+
   /// <summary>
   /// ETSI TS 102 366 F.6.2.12 num_dep_sub
   /// </summary>
   public byte num_dep_sub;
+
   /// <summary>
   /// ETSI TS 102 366 F.6.2.13 chan_loc - channel locations
   /// </summary>

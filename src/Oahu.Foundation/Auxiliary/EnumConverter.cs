@@ -12,9 +12,15 @@ namespace Oahu.Aux
   public class EnumConverter<TEnum> : TypeConverter
     where TEnum : struct, Enum
   {
-    protected IList<TEnum> Values { get; }
-
     private ResourceManager _resourceManager;
+    Dictionary<string, TEnum> _reverseLookup;
+
+    public EnumConverter()
+    {
+      Values = GetValues<TEnum>().ToArray();
+    }
+
+    protected IList<TEnum> Values { get; }
 
     protected ResourceManager ResourceManager
     {
@@ -24,13 +30,6 @@ namespace Oahu.Aux
         _resourceManager = value;
         initReverseLookup();
       }
-    }
-
-    Dictionary<string, TEnum> _reverseLookup;
-
-    public EnumConverter()
-    {
-      Values = GetValues<TEnum>().ToArray();
     }
 
     public override bool GetStandardValuesSupported(ITypeDescriptorContext context) => true;

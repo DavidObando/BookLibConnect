@@ -13,6 +13,7 @@ namespace Oahu.Aux
     const string FALSE = "No";
 
     private ResourceManager _resourceManager;
+    Dictionary<string, bool> _reverseLookup;
 
     protected ResourceManager ResourceManager
     {
@@ -23,8 +24,6 @@ namespace Oahu.Aux
         initReverseLookup();
       }
     }
-
-    Dictionary<string, bool> _reverseLookup;
 
     public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
     {

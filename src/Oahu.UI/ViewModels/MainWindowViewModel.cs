@@ -24,6 +24,12 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     [ObservableProperty]
     private SettingsViewModel _settings;
 
+    public MainWindowViewModel()
+    {
+      BookLibrary = new BookLibraryViewModel();
+      Conversion = new ConversionViewModel();
+    }
+
     public BookLibraryViewModel BookLibrary { get; }
 
     public ConversionViewModel Conversion { get; }
@@ -33,12 +39,6 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     public IProfileAliasKey CurrentProfile { get; set; }
 
     public IAudibleApi Api { get; set; }
-
-    public MainWindowViewModel()
-    {
-      BookLibrary = new BookLibraryViewModel();
-      Conversion = new ConversionViewModel();
-    }
 
     public void SetBusy(bool busy, string message = null)
     {

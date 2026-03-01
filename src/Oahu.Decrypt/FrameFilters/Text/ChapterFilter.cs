@@ -9,14 +9,14 @@ namespace Oahu.Decrypt.FrameFilters.Text
 
     protected override int InputBufferSize => 1;
 
-    protected override Task FlushAsync() => Task.CompletedTask;
-
-    protected override Task PerformFilteringAsync(FrameEntry input) => Task.CompletedTask;
-
     public override Task AddInputAsync(FrameEntry input)
     {
       ChapterRead?.Invoke(this, input);
       return Task.CompletedTask;
     }
+
+    protected override Task FlushAsync() => Task.CompletedTask;
+
+    protected override Task PerformFilteringAsync(FrameEntry input) => Task.CompletedTask;
   }
 }

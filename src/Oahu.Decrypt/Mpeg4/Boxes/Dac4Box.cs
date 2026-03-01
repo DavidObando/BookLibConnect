@@ -1,6 +1,6 @@
+using System.IO;
 using Oahu.Decrypt.Mpeg4.Boxes.AC4SpecificBox;
 using Oahu.Decrypt.Mpeg4.Util;
-using System.IO;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
@@ -9,17 +9,9 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 /// </summary>
 public class Dac4Box : Box
 {
-  public override long RenderSize => base.RenderSize + Ac4Data.Length;
-
-  private readonly byte[] Ac4Data;
-
   public ac4_dsi_v1? Ac4DsiV1;
 
-  public uint? AverageBitrate { get; }
-
-  public int? SampleRate { get; }
-
-  public int? NumberOfChannels { get; }
+  private readonly byte[] Ac4Data;
 
   public Dac4Box(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
   {
@@ -38,6 +30,14 @@ public class Dac4Box : Box
     AverageBitrate = Ac4DsiV1.AverageBitrate();
     NumberOfChannels = Ac4DsiV1.Channels()?.ChannelCount();
   }
+
+  public override long RenderSize => base.RenderSize + Ac4Data.Length;
+
+  public uint? AverageBitrate { get; }
+
+  public int? SampleRate { get; }
+
+  public int? NumberOfChannels { get; }
 
   protected override void Render(Stream file)
   {

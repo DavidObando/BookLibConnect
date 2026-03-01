@@ -5,12 +5,6 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 
 public class Id3Tag : Frame
 {
-  public override int Size => Children.Sum(f => f.Size + f.Header.HeaderSize) + EmptyFrame.GetEmptyFrameSize(Version);
-
-  private Id3Header Id3Header { get; }
-
-  public override ushort Version => Id3Header.Version;
-
   private Id3Tag(Stream file, Id3Header header) : base(header, null!)
   {
     var endPosition = file.Position + Header.Size;
@@ -23,11 +17,11 @@ public class Id3Tag : Frame
     LoadChildren(file, endPosition);
   }
 
-  public void Save(Stream file)
-  {
-    Save(file, Id3Header.Version);
-    new EmptyFrame(this).Save(file, Id3Header.Version);
-  }
+  public override int Size => Children.Sum(f => f.Size + f.Header.HeaderSize) + EmptyFrame.GetEmptyFrameSize(Version);
+
+  public override ushort Version => Id3Header.Version;
+
+  private Id3Header Id3Header { get; }
 
   public static Id3Tag? Create(Stream file)
   {
@@ -45,6 +39,12 @@ public class Id3Tag : Frame
     {
       return null;
     }
+  }
+
+  public void Save(Stream file)
+  {
+    Save(file, Id3Header.Version);
+    new EmptyFrame(this).Save(file, Id3Header.Version);
   }
 
   public void Add(Frame frame) => Children.Add(frame);

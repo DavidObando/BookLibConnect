@@ -1,7 +1,7 @@
-﻿using Oahu.Decrypt.Mpeg4;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Oahu.Decrypt.Mpeg4;
 
 namespace Oahu.Decrypt.FrameFilters.Audio
 {
@@ -77,6 +77,16 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       return Task.CompletedTask;
     }
 
+    protected override void Dispose(bool disposing)
+    {
+      if (disposing && !Disposed)
+      {
+        splitChapters?.Dispose();
+      }
+
+      base.Dispose(disposing);
+    }
+
     private bool GetNextChapter()
     {
       if (!splitChapters.MoveNext())
@@ -92,15 +102,5 @@ namespace Oahu.Decrypt.FrameFilters.Audio
     }
 
     private long timeToSample(TimeSpan time) => (long)Math.Round(time.TotalSeconds * (int)InputSampleRate);
-
-    protected override void Dispose(bool disposing)
-    {
-      if (disposing && !Disposed)
-      {
-        splitChapters?.Dispose();
-      }
-
-      base.Dispose(disposing);
-    }
   }
 }

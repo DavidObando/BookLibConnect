@@ -8,9 +8,13 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 
 public abstract class Frame
 {
-  public Header Header { get; }
+  public Frame(Header header, Frame parent)
+  {
+    Header = header;
+    Parent = parent;
+  }
 
-  protected Frame Parent { get; }
+  public Header Header { get; }
 
   public virtual int Size => Children.Sum(b => b.Size);
 
@@ -18,40 +22,7 @@ public abstract class Frame
 
   public virtual ushort Version => Parent.Version;
 
-  public Frame(Header header, Frame parent)
-  {
-    Header = header;
-    Parent = parent;
-  }
-
-  public virtual void Save(Stream file, ushort version)
-  {
-    Header.Render(file, Size, version);
-
-    Render(file);
-
-    foreach (var child in Children)
-    {
-      child.Save(file, version);
-    }
-  }
-
-  public override string ToString() => Header.ToString();
-
-  protected void LoadChildren(Stream file, long endPosition)
-  {
-    var origPosition = file.Position;
-
-    while (file.Position < endPosition
-        && origPosition == file.Position
-        && TagFactory.CreateTag(file, this, out var lengthRead) is Frame child and not EmptyFrame)
-    {
-      origPosition += lengthRead;
-      Children.Add(child);
-    }
-
-    Header.SeekForwardToPosition(file, endPosition);
-  }
+  protected Frame Parent { get; }
 
   public static string ReadSizeString(Stream file, bool unicode, int bytes)
   {
@@ -88,8 +59,6 @@ public abstract class Frame
       return Encoding.ASCII.GetString(lst.ToArray());
     }
   }
-
-  public abstract void Render(Stream file);
 
   public static bool IsUnicode(string str) => Encoding.UTF8.GetByteCount(str) != str.Length;
 
@@ -141,5 +110,36 @@ public abstract class Frame
 
       return bts;
     }
+  }
+
+  public virtual void Save(Stream file, ushort version)
+  {
+    Header.Render(file, Size, version);
+
+    Render(file);
+
+    foreach (var child in Children)
+    {
+      child.Save(file, version);
+    }
+  }
+
+  public override string ToString() => Header.ToString();
+
+  public abstract void Render(Stream file);
+
+  protected void LoadChildren(Stream file, long endPosition)
+  {
+    var origPosition = file.Position;
+
+    while (file.Position < endPosition
+        && origPosition == file.Position
+        && TagFactory.CreateTag(file, this, out var lengthRead) is Frame child and not EmptyFrame)
+    {
+      origPosition += lengthRead;
+      Children.Add(child);
+    }
+
+    Header.SeekForwardToPosition(file, endPosition);
   }
 }

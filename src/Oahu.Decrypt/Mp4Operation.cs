@@ -8,6 +8,25 @@ namespace Oahu.Decrypt
 {
   public class Mp4Operation
   {
+    private readonly CancellationTokenSource _cancellationSource = new();
+    private readonly Func<CancellationTokenSource, Task> _startAction;
+    private readonly Action<Task>? _continuationAction;
+    private ConversionProgressEventArgs? _lastArgs;
+    private Task? _continuation;
+    private Task? _readerTask;
+
+    internal Mp4Operation(Func<CancellationTokenSource, Task> startAction, Mp4File? mp4File, Action<Task> continuationTask)
+        : this(startAction, mp4File)
+    {
+      _continuationAction = continuationTask;
+    }
+
+    protected Mp4Operation(Func<CancellationTokenSource, Task> startAction, Mp4File? mp4File)
+    {
+      _startAction = startAction;
+      Mp4File = mp4File;
+    }
+
     public event EventHandler<ConversionProgressEventArgs>? ConversionProgressUpdate;
 
     public bool IsCompleted => Continuation?.IsCompleted is true;
@@ -30,24 +49,8 @@ namespace Oahu.Decrypt
 
     protected virtual Task Continuation => _continuation ?? Task.CompletedTask;
 
-    private readonly CancellationTokenSource _cancellationSource = new();
-    private readonly Func<CancellationTokenSource, Task> _startAction;
-    private readonly Action<Task>? _continuationAction;
-    private ConversionProgressEventArgs? _lastArgs;
-    private Task? _continuation;
-    private Task? _readerTask;
-
-    internal Mp4Operation(Func<CancellationTokenSource, Task> startAction, Mp4File? mp4File, Action<Task> continuationTask)
-        : this(startAction, mp4File)
-    {
-      _continuationAction = continuationTask;
-    }
-
-    protected Mp4Operation(Func<CancellationTokenSource, Task> startAction, Mp4File? mp4File)
-    {
-      _startAction = startAction;
-      Mp4File = mp4File;
-    }
+    public static Mp4Operation FromCompleted(Mp4File? mp4File)
+        => new Mp4Operation(c => Task.CompletedTask, mp4File, _ => { });
 
     /// <summary>Cancel the operation</summary>
     public Task CancelAsync()
@@ -64,6 +67,18 @@ namespace Oahu.Decrypt
         _readerTask = Task.Run(() => _startAction(_cancellationSource));
         SetContinuation(_readerTask);
       }
+    }
+
+    public ConfiguredTaskAwaitable.ConfiguredTaskAwaiter GetAwaiter()
+    {
+      Start();
+      return Continuation.ConfigureAwait(false).GetAwaiter();
+    }
+
+    internal void OnProgressUpdate(ConversionProgressEventArgs args)
+    {
+      _lastArgs = args;
+      ConversionProgressUpdate?.Invoke(this, args);
     }
 
     protected virtual void SetContinuation(Task readerTask)
@@ -92,20 +107,5 @@ namespace Oahu.Decrypt
       },
       TaskContinuationOptions.ExecuteSynchronously);
     }
-
-    public ConfiguredTaskAwaitable.ConfiguredTaskAwaiter GetAwaiter()
-    {
-      Start();
-      return Continuation.ConfigureAwait(false).GetAwaiter();
-    }
-
-    internal void OnProgressUpdate(ConversionProgressEventArgs args)
-    {
-      _lastArgs = args;
-      ConversionProgressUpdate?.Invoke(this, args);
-    }
-
-    public static Mp4Operation FromCompleted(Mp4File? mp4File)
-        => new Mp4Operation(c => Task.CompletedTask, mp4File, _ => { });
   }
 }

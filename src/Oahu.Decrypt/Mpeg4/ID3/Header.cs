@@ -11,8 +11,6 @@ public abstract class Header
 
   public abstract int HeaderSize { get; }
 
-  public abstract void Render(Stream stream, int renderSize, ushort version);
-
   public static ushort ReadUInt16BE(Stream stream)
   {
     Span<byte> word = stackalloc byte[2];
@@ -47,6 +45,8 @@ public abstract class Header
 
   public static void WriteUInt16BE(Stream stream, uint value)
       => stream.Write([(byte)(value >> 8), (byte)value]);
+
+  public abstract void Render(Stream stream, int renderSize, ushort version);
 
   public override string ToString() => Identifier is "\0\0\0\0" ? @"\0\0\0\0" : Identifier is "\0\0\0" ? @"\0\0\0" : Identifier;
 

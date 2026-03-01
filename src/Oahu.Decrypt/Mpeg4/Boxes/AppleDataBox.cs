@@ -1,13 +1,29 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 public class AppleDataBox : Box
 {
+  public AppleDataBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
+  {
+    DataType = (AppleDataType)file.ReadUInt32BE();
+    Flags = file.ReadUInt32BE();
+    long length = RemainingBoxLength(file);
+    Data = file.ReadBlock((int)length);
+  }
+
+  private AppleDataBox(BoxHeader header, IBox parent, byte[] data, AppleDataType type)
+      : base(header, parent)
+  {
+    DataType = type;
+    Flags = 0;
+    Data = data;
+  }
+
   public override long RenderSize => base.RenderSize + 8 + Data.Length;
 
   public AppleDataType DataType { get; }
@@ -22,16 +38,6 @@ public class AppleDataBox : Box
       : DataType is AppleDataType.Utf_16 ? $"[UTF-16]: '{Encoding.Unicode.GetString(Data)}'"
       : $"[{DataType}]: {Data.Length} bytes";
 
-  public string ReadAsString()
-  {
-    return DataType switch
-    {
-      AppleDataType.Utf_8 => Encoding.UTF8.GetString(Data),
-      AppleDataType.Utf_16 => Encoding.Unicode.GetString(Data),
-      _ => throw new InvalidDataException($"Cannot read AppleDataBox of type {DataType} as string."),
-    };
-  }
-
   public static AppleDataBox Create(IBox parent, byte[] data, AppleDataType type)
   {
     int size = data.Length + 8 /* empty Box size*/;
@@ -43,20 +49,14 @@ public class AppleDataBox : Box
     return dataBox;
   }
 
-  private AppleDataBox(BoxHeader header, IBox parent, byte[] data, AppleDataType type)
-      : base(header, parent)
+  public string ReadAsString()
   {
-    DataType = type;
-    Flags = 0;
-    Data = data;
-  }
-
-  public AppleDataBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
-  {
-    DataType = (AppleDataType)file.ReadUInt32BE();
-    Flags = file.ReadUInt32BE();
-    long length = RemainingBoxLength(file);
-    Data = file.ReadBlock((int)length);
+    return DataType switch
+    {
+      AppleDataType.Utf_8 => Encoding.UTF8.GetString(Data),
+      AppleDataType.Utf_16 => Encoding.Unicode.GetString(Data),
+      _ => throw new InvalidDataException($"Cannot read AppleDataBox of type {DataType} as string."),
+    };
   }
 
   protected override void Render(Stream file)

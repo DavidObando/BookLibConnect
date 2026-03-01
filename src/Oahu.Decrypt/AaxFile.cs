@@ -1,19 +1,19 @@
-﻿using Oahu.Decrypt.FrameFilters;
-using Oahu.Decrypt.FrameFilters.Audio;
-using Oahu.Decrypt.Mpeg4.Boxes;
-using Oahu.Decrypt.Mpeg4.Util;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Oahu.Decrypt.FrameFilters;
+using Oahu.Decrypt.FrameFilters.Audio;
+using Oahu.Decrypt.Mpeg4.Boxes;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt
 {
   public sealed class AaxFile : Mp4File
   {
-    public byte[]? Key { get; private set; }
-
-    public byte[]? IV { get; private set; }
+    // Constant key
+    // https://github.com/FFmpeg/FFmpeg/blob/master/libavformat/mov.c
+    private static readonly byte[] audible_fixed_key = [0x77, 0x21, 0x4d, 0x4b, 0x19, 0x6a, 0x87, 0xcd, 0x52, 0x00, 0x45, 0xfd, 0x20, 0xa5, 0x1d, 0x67];
 
     public AaxFile(Stream file, long fileSize, bool additionalFixups = true) : base(file, fileSize)
     {
@@ -24,7 +24,6 @@ namespace Oahu.Decrypt
 
       if (AudioSampleEntry.Esds is EsdsBox esds)
       {
-
         // This is the flag that, if set, prevents cover art from loading on android.
         esds.ES_Descriptor.DecoderConfig.AudioSpecificConfig.DependsOnCoreCoder = false;
       }
@@ -61,6 +60,10 @@ namespace Oahu.Decrypt
     public AaxFile(string fileName, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read) : this(File.Open(fileName, FileMode.Open, access, share))
     {
     }
+
+    public byte[]? Key { get; private set; }
+
+    public byte[]? IV { get; private set; }
 
     public override FrameTransformBase<FrameEntry, FrameEntry> GetAudioFrameFilter()
     {
@@ -145,10 +148,6 @@ namespace Oahu.Decrypt
 
       SetDecryptionKey(file_key, ByteUtil.CloneBytes(file_iv, 0, 16));
     }
-
-    // Constant key
-    // https://github.com/FFmpeg/FFmpeg/blob/master/libavformat/mov.c
-    private static readonly byte[] audible_fixed_key = [0x77, 0x21, 0x4d, 0x4b, 0x19, 0x6a, 0x87, 0xcd, 0x52, 0x00, 0x45, 0xfd, 0x20, 0xa5, 0x1d, 0x67];
 
     public void SetDecryptionKey(string audible_key, string audible_iv)
     {

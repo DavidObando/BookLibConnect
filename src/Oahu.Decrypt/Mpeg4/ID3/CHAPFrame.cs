@@ -14,18 +14,6 @@ public enum ChapterFlags
 
 public class CHAPFrame : Frame
 {
-  public override int Size => Encoding.ASCII.GetByteCount(ChapterID) + 1 + 4 * 4 + Children.Sum(c => c.Size + 10);
-
-  public string ChapterID { get; set; }
-
-  public TimeSpan StartTime { get; set; }
-
-  public TimeSpan EndTime { get; set; }
-
-  public uint ByteStart { get; set; }
-
-  public uint ByteEnd { get; set; }
-
   public CHAPFrame(Frame parent, TimeSpan startTime, TimeSpan endTime, int chNum, string title, string? subtitle = null, string? subtitle2 = null)
       : base(new FrameHeader("CHAP", 0, parent.Version), parent)
   {
@@ -56,6 +44,18 @@ public class CHAPFrame : Frame
     ByteEnd = Header.ReadUInt32BE(file);
     LoadChildren(file, endPosition);
   }
+
+  public override int Size => Encoding.ASCII.GetByteCount(ChapterID) + 1 + 4 * 4 + Children.Sum(c => c.Size + 10);
+
+  public string ChapterID { get; set; }
+
+  public TimeSpan StartTime { get; set; }
+
+  public TimeSpan EndTime { get; set; }
+
+  public uint ByteStart { get; set; }
+
+  public uint ByteEnd { get; set; }
 
   public override void Render(Stream file)
   {

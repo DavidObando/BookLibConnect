@@ -8,8 +8,19 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 public class AppleTagBox : Box
 {
+  public AppleTagBox(Stream file, BoxHeader header, IBox parent) : base(header, parent)
+  {
+    LoadChildren(file);
+  }
+
+  protected AppleTagBox(BoxHeader header, IBox? parent) : base(header, parent)
+  {
+  }
+
   [DebuggerHidden]
   public virtual string TagName => Header.Type;
+
+  public AppleDataBox Data => GetChildOrThrow<AppleDataBox>();
 
   private string DebuggerDisplay => $"[AppleTag]: {TagName}";
 
@@ -29,17 +40,6 @@ public class AppleTagBox : Box
     parent.Children.Add(tagBox);
     return tagBox;
   }
-
-  protected AppleTagBox(BoxHeader header, IBox? parent) : base(header, parent)
-  {
-  }
-
-  public AppleTagBox(Stream file, BoxHeader header, IBox parent) : base(header, parent)
-  {
-    LoadChildren(file);
-  }
-
-  public AppleDataBox Data => GetChildOrThrow<AppleDataBox>();
 
   protected override void Render(Stream file)
   {

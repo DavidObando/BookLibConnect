@@ -1,10 +1,10 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
@@ -17,29 +17,6 @@ public readonly record struct ChunkFrames
 
 public class StscBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + 4 + EntryCount * 3 * 4;
-
-  public int EntryCount => Samples.Count;
-
-  public List<StscChunkEntry> Samples { get; }
-
-  public static StscBox CreateBlank(IBox parent)
-  {
-    int size = 4 + 12 /* empty Box size*/;
-    BoxHeader header = new BoxHeader((uint)size, "stsc");
-
-    StscBox stscBox = new StscBox([0, 0, 0, 0], header, parent);
-
-    parent.Children.Add(stscBox);
-    return stscBox;
-  }
-
-  private StscBox(byte[] versionFlags, BoxHeader header, IBox parent)
-      : base(versionFlags, header, parent)
-  {
-    Samples = [];
-  }
-
   /// <summary>
   ///
   /// </summary>
@@ -61,6 +38,29 @@ public class StscBox : FullBox
       Span<uint> uints = MemoryMarshal.Cast<StscChunkEntry, uint>(samples);
       BinaryPrimitives.ReverseEndianness(uints, uints);
     }
+  }
+
+  private StscBox(byte[] versionFlags, BoxHeader header, IBox parent)
+      : base(versionFlags, header, parent)
+  {
+    Samples = [];
+  }
+
+  public override long RenderSize => base.RenderSize + 4 + EntryCount * 3 * 4;
+
+  public int EntryCount => Samples.Count;
+
+  public List<StscChunkEntry> Samples { get; }
+
+  public static StscBox CreateBlank(IBox parent)
+  {
+    int size = 4 + 12 /* empty Box size*/;
+    BoxHeader header = new BoxHeader((uint)size, "stsc");
+
+    StscBox stscBox = new StscBox([0, 0, 0, 0], header, parent);
+
+    parent.Children.Add(stscBox);
+    return stscBox;
   }
 
   /// <summary>

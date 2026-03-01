@@ -11,10 +11,7 @@ namespace Oahu.Aux
     private readonly int _managedThreadId;
 
     #endregion Private Fields
-    #region Private Props
-    private bool Affine =>
-      _managedThreadId == Thread.CurrentThread.ManagedThreadId;
-    #endregion Private Props
+
     #region ctor
 
     public AffineSynchronizationContext()
@@ -22,7 +19,14 @@ namespace Oahu.Aux
       _sync = SynchronizationContext.Current;
       _managedThreadId = Thread.CurrentThread.ManagedThreadId;
     }
+
     #endregion ctor
+
+    #region Private Props
+
+    private bool Affine =>
+      _managedThreadId == Thread.CurrentThread.ManagedThreadId;
+    #endregion Private Props
 
     #region Public Methods
     #region Asynchronous Send Methods With Return Value

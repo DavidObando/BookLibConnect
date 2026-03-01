@@ -4,6 +4,15 @@ namespace Oahu.Decrypt
 {
   public class ConversionProgressEventArgs : EventArgs
   {
+    internal ConversionProgressEventArgs(TimeSpan startTime, TimeSpan endTime, TimeSpan processPosition, double processSpeed)
+    {
+      StartTime = startTime;
+      EndTime = endTime;
+      ProcessPosition = processPosition;
+      ProcessSpeed = processSpeed;
+      FractionCompleted = (processPosition - startTime) / (endTime - startTime);
+    }
+
     public TimeSpan ProcessPosition { get; }
 
     public TimeSpan StartTime { get; }
@@ -13,14 +22,5 @@ namespace Oahu.Decrypt
     public double ProcessSpeed { get; }
 
     public double FractionCompleted { get; }
-
-    internal ConversionProgressEventArgs(TimeSpan startTime, TimeSpan endTime, TimeSpan processPosition, double processSpeed)
-    {
-      StartTime = startTime;
-      EndTime = endTime;
-      ProcessPosition = processPosition;
-      ProcessSpeed = processSpeed;
-      FractionCompleted = (processPosition - startTime) / (endTime - startTime);
-    }
   }
 }

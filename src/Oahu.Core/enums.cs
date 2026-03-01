@@ -11,14 +11,6 @@ namespace Oahu.Core
     title_author
   }
 
-  [Flags]
-  enum ECheckFile
-  {
-    none = 0,
-    deleteIfMissing = 1,
-    relocatable = 2
-  }
-
   public enum EBookLibInteract
   {
     none,
@@ -35,5 +27,13 @@ namespace Oahu.Core
     succ,
     deregistrationFailed,
     removeProfileFailed,
+  }
+
+  [Flags]
+  enum ECheckFile
+  {
+    none = 0,
+    deleteIfMissing = 1,
+    relocatable = 2
   }
 }

@@ -18,6 +18,13 @@ namespace Oahu.Aux
 
     // readonly IChainPunctuation _punct;
     private ResourceManager _resourceManager;
+    Dictionary<string, TEnum> _reverseLookup;
+
+    public EnumChainConverter()
+    {
+      // _punct = Singleton<TPunct>.Instance;
+      _values = GetValues<TEnum>().ToArray();
+    }
 
     protected ResourceManager ResourceManager
     {
@@ -27,14 +34,6 @@ namespace Oahu.Aux
         _resourceManager = value;
         initReverseLookup();
       }
-    }
-
-    Dictionary<string, TEnum> _reverseLookup;
-
-    public EnumChainConverter()
-    {
-      // _punct = Singleton<TPunct>.Instance;
-      _values = GetValues<TEnum>().ToArray();
     }
 
     public override bool GetStandardValuesSupported(ITypeDescriptorContext context) => true;

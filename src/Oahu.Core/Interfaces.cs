@@ -8,65 +8,6 @@ using Oahu.CommonTypes;
 
 namespace Oahu.Core
 {
-  interface IProfile
-  {
-    uint Id { get; }
-
-    bool PreAmazon { get; }
-
-    ERegion Region { get; }
-
-    IAuthorization Authorization { get; }
-
-    ICustomerInfo CustomerInfo { get; }
-
-    IDeviceInfo DeviceInfo { get; }
-
-    ITokenBearer Token { get; }
-
-    IEnumerable<KeyValuePair<string, string>> Cookies { get; }
-
-    string PrivateKey { get; }
-
-    string AdpToken { get; }
-
-    string StoreAuthentCookie { get; }
-
-    void Refresh(TokenBearer token);
-  }
-
-  interface IAuthorization
-  {
-    string AuthorizationCode { get; }
-
-    string CodeVerifier { get; }
-  }
-
-  interface ITokenBearer
-  {
-    string RefreshToken { get; }
-
-    string AccessToken { get; }
-
-    DateTime Expiration { get; }
-  }
-
-  interface IDeviceInfo
-  {
-    string Type { get; }
-
-    string Name { get; }
-
-    string Serial { get; set; }
-  }
-
-  interface ICustomerInfo
-  {
-    string Name { get; }
-
-    string AccountId { get; }
-  }
-
   public interface IProfileKey
   {
     uint Id { get; }
@@ -150,5 +91,64 @@ namespace Oahu.Core
       IExportSettings exportSettings,
       Action<IConversion> callbackRefConversion,
       IInteractionCallback<InteractionMessage<BookLibInteract>, bool?> interactCallback);
+  }
+
+  interface IProfile
+  {
+    uint Id { get; }
+
+    bool PreAmazon { get; }
+
+    ERegion Region { get; }
+
+    IAuthorization Authorization { get; }
+
+    ICustomerInfo CustomerInfo { get; }
+
+    IDeviceInfo DeviceInfo { get; }
+
+    ITokenBearer Token { get; }
+
+    IEnumerable<KeyValuePair<string, string>> Cookies { get; }
+
+    string PrivateKey { get; }
+
+    string AdpToken { get; }
+
+    string StoreAuthentCookie { get; }
+
+    void Refresh(TokenBearer token);
+  }
+
+  interface IAuthorization
+  {
+    string AuthorizationCode { get; }
+
+    string CodeVerifier { get; }
+  }
+
+  interface ITokenBearer
+  {
+    string RefreshToken { get; }
+
+    string AccessToken { get; }
+
+    DateTime Expiration { get; }
+  }
+
+  interface IDeviceInfo
+  {
+    string Type { get; }
+
+    string Name { get; }
+
+    string Serial { get; set; }
+  }
+
+  interface ICustomerInfo
+  {
+    string Name { get; }
+
+    string AccountId { get; }
   }
 }

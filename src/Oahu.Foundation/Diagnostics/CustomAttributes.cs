@@ -25,10 +25,10 @@ namespace Oahu.Aux.Diagnostics
   [AttributeUsage(AttributeTargets.Property)]
   public class ToStringAttribute : Attribute
   {
-    static readonly Dictionary<Type, ToStringConverter> __converters = new Dictionary<Type, ToStringConverter>();
-
     public readonly ToStringConverter Converter;
     public readonly string Format;
+
+    static readonly Dictionary<Type, ToStringConverter> __converters = new Dictionary<Type, ToStringConverter>();
 
     public ToStringAttribute([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type type, string format = null)
     {

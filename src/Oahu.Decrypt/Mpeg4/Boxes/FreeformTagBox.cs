@@ -7,14 +7,23 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 public class FreeformTagBox : AppleTagBox
 {
+  public FreeformTagBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
+  {
+    LoadChildren(file);
+  }
+
+  protected FreeformTagBox(BoxHeader header, IBox? parent) : base(header, parent)
+  {
+  }
+
   public MeanBox? Mean => GetChild<MeanBox>();
 
   public NameBox? Name => GetChild<NameBox>();
 
+  public override string TagName => $"{Mean?.ReverseDnsDomain}:{Name?.Name}'";
+
   [DebuggerHidden]
   private string DebuggerDisplay => $"----:{TagName}";
-
-  public override string TagName => $"{Mean?.ReverseDnsDomain}:{Name?.Name}'";
 
   public static FreeformTagBox Create(AppleListBox? parent, string domain, string tagName, byte[] data, AppleDataType dataType)
   {
@@ -27,14 +36,5 @@ public class FreeformTagBox : AppleTagBox
 
     parent?.Children.Add(tagBox);
     return tagBox;
-  }
-
-  protected FreeformTagBox(BoxHeader header, IBox? parent) : base(header, parent)
-  {
-  }
-
-  public FreeformTagBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
-  {
-    LoadChildren(file);
   }
 }

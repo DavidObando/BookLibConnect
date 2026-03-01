@@ -33,13 +33,6 @@ public class AppleListBox : Box
   {
   }
 
-  public static AppleListBox CreateEmpty(IBox parent)
-  {
-    var ilist = new AppleListBox(parent);
-    parent.Children.Add(ilist);
-    return ilist;
-  }
-
   public IEnumerable<string> TagNames => Tags.Select(t => t.Header.Type);
 
   public IEnumerable<string> FreeformTagNames => FreeformTags.Select(t => t.TagName);
@@ -48,8 +41,11 @@ public class AppleListBox : Box
 
   public IEnumerable<FreeformTagBox> FreeformTags => GetChildren<FreeformTagBox>();
 
-  protected override void Render(Stream file)
+  public static AppleListBox CreateEmpty(IBox parent)
   {
+    var ilist = new AppleListBox(parent);
+    parent.Children.Add(ilist);
+    return ilist;
   }
 
   public void AddTag(string name, string data)
@@ -162,6 +158,37 @@ public class AppleListBox : Box
     }
   }
 
+  public string? GetTagString(string name)
+      => GetTagString(GetTagBox(name));
+
+  public string? GetFreeformTagString(string domain, string name)
+      => GetTagString(GetFreeformTagBox(domain, name));
+
+  public TData? GetTagData<TData>(string name) where TData : IAppleData<TData>
+      => GetTagBox(name)?.Data is not { } dataBox ? default
+      : dataBox.DataType is not AppleDataType.ContainsData ? throw new InvalidDataException($"Apple data type {dataBox.DataType} is not compatible with {nameof(IAppleData<TData>)}")
+      : dataBox.Data.Length != TData.SizeInBytes ? throw new InvalidDataException($"Tag data size ({dataBox.Data.Length}) differs from {nameof(IAppleData<TData>)} size ({TData.SizeInBytes})")
+      : TData.Create(dataBox.Data);
+
+  public AppleTagBox? GetTagBox(string name)
+      => Tags.FirstOrDefault(t => t.Header.Type == name);
+
+  public AppleTagBox? GetFreeformTagBox(string domain, string name)
+      => Tags.OfType<FreeformTagBox>().FirstOrDefault(t => t.Mean?.ReverseDnsDomain == domain && t.Name?.Name == name);
+
+  protected override void Render(Stream file)
+  {
+  }
+
+  private static string? GetTagString(AppleTagBox? tagBox)
+      => tagBox?.Data is not { } dataBox ? null
+      : dataBox.DataType switch
+      {
+        AppleDataType.Utf_8 => Encoding.UTF8.GetString(dataBox.Data),
+        AppleDataType.Utf_16 => Encoding.Unicode.GetString(dataBox.Data),
+        _ => throw new InvalidDataException($"Apple data type {dataBox.DataType} is not a string type"),
+      };
+
   private void EditExistingTag(AppleTagBox tagBox, byte[]? data, AppleDataType type)
   {
     if (data is null)
@@ -175,31 +202,4 @@ public class AppleListBox : Box
           : throw new InvalidDataException($"Existing tag data type {dataBox.DataType} differs from new edited type {type}");
     }
   }
-
-  public string? GetTagString(string name)
-      => GetTagString(GetTagBox(name));
-
-  public string? GetFreeformTagString(string domain, string name)
-      => GetTagString(GetFreeformTagBox(domain, name));
-
-  private static string? GetTagString(AppleTagBox? tagBox)
-      => tagBox?.Data is not { } dataBox ? null
-      : dataBox.DataType switch
-      {
-        AppleDataType.Utf_8 => Encoding.UTF8.GetString(dataBox.Data),
-        AppleDataType.Utf_16 => Encoding.Unicode.GetString(dataBox.Data),
-        _ => throw new InvalidDataException($"Apple data type {dataBox.DataType} is not a string type"),
-      };
-
-  public TData? GetTagData<TData>(string name) where TData : IAppleData<TData>
-      => GetTagBox(name)?.Data is not { } dataBox ? default
-      : dataBox.DataType is not AppleDataType.ContainsData ? throw new InvalidDataException($"Apple data type {dataBox.DataType} is not compatible with {nameof(IAppleData<TData>)}")
-      : dataBox.Data.Length != TData.SizeInBytes ? throw new InvalidDataException($"Tag data size ({dataBox.Data.Length}) differs from {nameof(IAppleData<TData>)} size ({TData.SizeInBytes})")
-      : TData.Create(dataBox.Data);
-
-  public AppleTagBox? GetTagBox(string name)
-      => Tags.FirstOrDefault(t => t.Header.Type == name);
-
-  public AppleTagBox? GetFreeformTagBox(string domain, string name)
-      => Tags.OfType<FreeformTagBox>().FirstOrDefault(t => t.Mean?.ReverseDnsDomain == domain && t.Name?.Name == name);
 }

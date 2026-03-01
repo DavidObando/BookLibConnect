@@ -9,11 +9,11 @@ namespace Oahu.App.Avalonia
   /// </summary>
   public class SimpleCancellation : ICancellation
   {
-    public CancellationToken CancellationToken { get; }
-
     public SimpleCancellation(CancellationToken token)
     {
       CancellationToken = token;
     }
+
+    public CancellationToken CancellationToken { get; }
   }
 }

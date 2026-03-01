@@ -49,18 +49,18 @@
     Granted
   }
 
-  internal enum EPseudoAsinId
-  {
-    none,
-    author,
-    narrator
-  }
-
   public enum EDownloadQuality
   {
     Low,
     Normal,
     High,
     Extreme
+  }
+
+  internal enum EPseudoAsinId
+  {
+    none,
+    author,
+    narrator
   }
 }

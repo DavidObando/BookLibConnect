@@ -18,6 +18,14 @@ namespace Oahu.App.Avalonia
       _owner = owner;
     }
 
+    private enum MessageBoxButtons
+    {
+      Ok,
+      OkCancel,
+      YesNo,
+      YesNoCancel
+    }
+
     public bool? Interact(T value)
     {
       bool? result = null;
@@ -65,14 +73,6 @@ namespace Oahu.App.Avalonia
         ECallbackType.errorQuestion or ECallbackType.errorQuestion3 => true,
         _ => true
       };
-    }
-
-    private enum MessageBoxButtons
-    {
-      Ok,
-      OkCancel,
-      YesNo,
-      YesNoCancel
     }
   }
 }

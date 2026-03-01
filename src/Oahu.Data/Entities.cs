@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using Oahu.Aux.Extensions;
-using Oahu.CommonTypes;
 using Oahu.BooksDatabase.ex;
+using Oahu.CommonTypes;
 
 namespace Oahu.BooksDatabase
 {
@@ -154,8 +154,6 @@ namespace Oahu.BooksDatabase
 
     public string LicenseIv { get; set; }
 
-    internal int BookId { get; set; }
-
     public virtual Conversion Conversion { get; set; }
 
     public virtual Book Book { get; set; }
@@ -179,6 +177,8 @@ namespace Oahu.BooksDatabase
 
     [NotMapped]
     public DateTime? PurchaseDate => Meta?.PurchaseDate;
+
+    internal int BookId { get; set; }
 
     private IBookMeta Meta => Book;
 
@@ -204,10 +204,6 @@ namespace Oahu.BooksDatabase
 
   public class SeriesBook
   {
-    internal int SeriesId { get; set; }
-
-    internal int BookId { get; set; }
-
     public int BookNumber { get; set; }
 
     public int? SubNumber { get; set; }
@@ -236,12 +232,22 @@ namespace Oahu.BooksDatabase
       }
     }
 
+    internal int SeriesId { get; set; }
+
+    internal int BookId { get; set; }
+
     public override string ToString() =>
       $"{Series.Title} [{SeqString}]";
   }
 
   public class Conversion : IConversion, IBookMeta
   {
+    public Conversion()
+    {
+    }
+
+    public Conversion(int id) => Id = id;
+
     public int Id { get; internal set; }
 
     public EConversionState State { get; set; }
@@ -343,12 +349,6 @@ namespace Oahu.BooksDatabase
     [NotMapped]
     public IBookCommon BookCommon => Book is null ? Component : Book;
 
-    public Conversion()
-    {
-    }
-
-    public Conversion(int id) => Id = id;
-
     public override string ToString()
     {
       var sb = new StringBuilder();
@@ -378,24 +378,24 @@ namespace Oahu.BooksDatabase
 
   public class Genre
   {
-    internal int Id { get; set; }
-
     public long ExternalId { get; set; }
 
     public string Name { get; set; }
 
     public virtual ICollection<Book> Books { get; } = new List<Book>();
 
+    internal int Id { get; set; }
+
     public override string ToString() => $"{ExternalId}: \"{Name}\"";
   }
 
   public class Ladder
   {
-    internal int Id { get; set; }
-
     public virtual ICollection<Rung> Rungs { get; } = new List<Rung>();
 
     public virtual ICollection<Book> Books { get; } = new List<Book>();
+
+    internal int Id { get; set; }
 
     public override string ToString() =>
       Rungs.Select(r => r.Genre.Name).Combine(" - ");
@@ -416,19 +416,17 @@ namespace Oahu.BooksDatabase
 
   public class Codec
   {
-    internal int Id { get; set; }
-
     public ECodec Name { get; set; }
 
     public virtual ICollection<Book> Books { get; } = new List<Book>();
+
+    internal int Id { get; set; }
 
     public override string ToString() => $"{Id}: {Name}";
   }
 
   public class ChapterInfo
   {
-    internal int Id { get; set; }
-
     public int BrandIntroDurationMs { get; set; }
 
     public int BrandOutroDurationMs { get; set; }
@@ -436,10 +434,6 @@ namespace Oahu.BooksDatabase
     public int RuntimeLengthMs { get; set; }
 
     public bool? IsAccurate { get; set; }
-
-    internal int? BookId { get; set; }
-
-    internal int? ComponentId { get; set; }
 
     public virtual Book Book { get; set; }
 
@@ -450,30 +444,18 @@ namespace Oahu.BooksDatabase
     [NotMapped]
     public IBookMeta BookMeta => Book is null ? Component : Book;
 
+    internal int Id { get; set; }
+
+    internal int? BookId { get; set; }
+
+    internal int? ComponentId { get; set; }
+
     public override string ToString() =>
       $"{Component.Title}: #chapters={Chapters.Count}, accurate={IsAccurate}";
   }
 
   public class Chapter
   {
-    internal int Id { get; set; }
-
-    public int LengthMs { get; set; }
-
-    public int StartOffsetMs { get; set; }
-
-    public string Title { get; set; }
-
-    internal int? ChapterInfoId { get; set; }
-
-    public virtual ChapterInfo ChapterInfo { get; set; }
-
-    public virtual ICollection<Chapter> Chapters { get; } = new List<Chapter>();
-
-    internal int? ParentChapterId { get; set; }
-
-    public virtual Chapter ParentChapter { get; set; }
-
     public Chapter()
     {
     }
@@ -484,6 +466,24 @@ namespace Oahu.BooksDatabase
       StartOffsetMs = other.StartOffsetMs;
       Title = other.Title;
     }
+
+    public int LengthMs { get; set; }
+
+    public int StartOffsetMs { get; set; }
+
+    public string Title { get; set; }
+
+    public virtual ChapterInfo ChapterInfo { get; set; }
+
+    public virtual ICollection<Chapter> Chapters { get; } = new List<Chapter>();
+
+    public virtual Chapter ParentChapter { get; set; }
+
+    internal int Id { get; set; }
+
+    internal int? ChapterInfoId { get; set; }
+
+    internal int? ParentChapterId { get; set; }
 
     public override string ToString() =>
       $"{Title}: offs={TimeSpan.FromMilliseconds(StartOffsetMs)}, len={TimeSpan.FromMilliseconds(LengthMs)}, #children={Chapters?.Count}";

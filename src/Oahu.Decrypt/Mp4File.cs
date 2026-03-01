@@ -1,3 +1,7 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Oahu.Decrypt.Chunks;
 using Oahu.Decrypt.FrameFilters;
 using Oahu.Decrypt.FrameFilters.Audio;
@@ -5,10 +9,6 @@ using Oahu.Decrypt.FrameFilters.Text;
 using Oahu.Decrypt.Mpeg4;
 using Oahu.Decrypt.Mpeg4.Boxes;
 using Oahu.Decrypt.Mpeg4.Util;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Oahu.Decrypt
 {
@@ -39,10 +39,6 @@ namespace Oahu.Decrypt
 
   public class Mp4File : Oahu.Decrypt.Mpeg4.Mpeg4File
   {
-    public FileType FileType { get; }
-
-    public SampleRate SampleRate => (SampleRate)TimeScale;
-
     public Mp4File(Stream file, long fileSize) : base(file, fileSize)
     {
       FileType = Ftyp.CompatibleBrands.Any(b => b == "dash")
@@ -64,8 +60,9 @@ namespace Oahu.Decrypt
     {
     }
 
-    public virtual FrameTransformBase<FrameEntry, FrameEntry> GetAudioFrameFilter()
-        => new AacValidateFilter();
+    public FileType FileType { get; }
+
+    public SampleRate SampleRate => (SampleRate)TimeScale;
 
     public static Mp4Operation RelocateMoovAsync(string mp4FilePath)
     {
@@ -74,6 +71,9 @@ namespace Oahu.Decrypt
       tracker.ProgressUpdated += (_, _) => moovMover.OnProgressUpdate(new ConversionProgressEventArgs(TimeSpan.Zero, tracker.TotalDuration, tracker.Position, tracker.Speed));
       return moovMover;
     }
+
+    public virtual FrameTransformBase<FrameEntry, FrameEntry> GetAudioFrameFilter()
+        => new AacValidateFilter();
 
     /// <summary>
     /// Save all metadata changes to the input stream. Stream must be readable, writable, and seekable.
@@ -184,11 +184,6 @@ namespace Oahu.Decrypt
       return ProcessAudio(TimeSpan.Zero, TimeSpan.MaxValue, continuation, (Moov.TextTrack, chapterFilter));
     }
 
-    protected virtual IChunkReader CreateChunkReader(Stream inputStream, TimeSpan startTime, TimeSpan endTime)
-        => new ChunkReader(inputStream, startTime, endTime);
-
-    private static TimeSpan Min(TimeSpan t1, TimeSpan t2) => t1 > t2 ? t2 : t1;
-
     public virtual Mp4Operation ProcessAudio(TimeSpan startTime, TimeSpan endTime, Action<Task> continuation, params (TrakBox track, FrameFilterBase<FrameEntry> filter)[] filters)
     {
       IChunkReader reader = CreateChunkReader(InputStream, startTime, Min(Duration, endTime));
@@ -212,5 +207,10 @@ namespace Oahu.Decrypt
       reader.OnProgressUpdateDelegate = operation.OnProgressUpdate;
       return operation;
     }
+
+    protected virtual IChunkReader CreateChunkReader(Stream inputStream, TimeSpan startTime, TimeSpan endTime)
+        => new ChunkReader(inputStream, startTime, endTime);
+
+    private static TimeSpan Min(TimeSpan t1, TimeSpan t2) => t1 > t2 ? t2 : t1;
   }
 }

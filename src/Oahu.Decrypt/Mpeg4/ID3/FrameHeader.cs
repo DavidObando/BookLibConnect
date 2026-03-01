@@ -6,6 +6,14 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 
 public class FrameHeader : Header
 {
+  public FrameHeader(string frameID, ushort flags, ushort version, int size = 0)
+  {
+    Version = version;
+    Identifier = frameID;
+    Flags = new Flags(flags);
+    Size = size;
+  }
+
   public override string Identifier { get; }
 
   public Flags Flags { get; }
@@ -35,14 +43,6 @@ public class FrameHeader : Header
 
       return new FrameHeader(frameID, ReadUInt16BE(file), version, size);
     }
-  }
-
-  public FrameHeader(string frameID, ushort flags, ushort version, int size = 0)
-  {
-    Version = version;
-    Identifier = frameID;
-    Flags = new Flags(flags);
-    Size = size;
   }
 
   public override void Render(Stream stream, int renderSize, ushort version)

@@ -11,43 +11,9 @@ namespace Oahu.Aux
 {
   public class Logging
   {
-    #region Nested Classes
-
-    class LogMessage
-    {
-      public DateTime DateTime { get; private set; }
-
-      public int ThreadId { get; private set; }
-
-      public string Context { get; private set; }
-
-      public string Message { get; private set; }
-
-      public LogMessage(string message) : this(null, message)
-      {
-      }
-
-      public LogMessage(string context, string message) : this(DateTime.Now, Thread.CurrentThread.ManagedThreadId, context, message)
-      {
-      }
-
-      public LogMessage(DateTime timestamp, int threadId, string context, string message)
-      {
-        DateTime = timestamp;
-        ThreadId = threadId;
-        Context = context;
-        Message = message;
-      }
-    }
-
-    #endregion Nested Classes
-    #region singleton
-    private static Logging Instance { get; } = new Logging();
-
-    #endregion singleton
-    #region Private Fields
-    const string EXT = ".log";
     public const long DefaultFileSize = 20 * 1024 * 1024;
+
+    const string EXT = ".log";
 
     private readonly object _lockable = new object();
     private bool _instantFlush;
@@ -64,8 +30,8 @@ namespace Oahu.Aux
     private uint _linecount;
     private bool _logfileLocationOutputDone;
 
-    #endregion Private Fields
-    #region Public Properties
+    // cannot instatiate from outside class
+    private Logging() => setFileNameStub();
 
     public static int Level
     {
@@ -91,21 +57,11 @@ namespace Oahu.Aux
       set => Instance._prettyTypeNameLevel = value;
     }
 
-    #endregion Public Properties
-    #region Private Properties
+    private static Logging Instance { get; } = new Logging();
 
     private static long FileSize => DefaultFileSize;
 
     private TextWriter Writer => _logStreamWriter;
-
-    #endregion Private Properties
-    #region ctor
-
-    // cannot instatiate from outside class
-    private Logging() => setFileNameStub();
-
-    #endregion ctor
-    #region Public Methods
 
     public static void Log(uint level, object caller, [CallerMemberName] string method = null) => Instance.log0(level, caller, method);
 
@@ -120,11 +76,22 @@ namespace Oahu.Aux
     public static void Log(uint level, Type caller, Func<string> getWhat, [CallerMemberName] string method = null) => Instance.log(level, caller, getWhat, method);
 
     // public static void Log (uint level, string msg) => Log (level, null, msg);
-
     // public static void Log (uint level, string context, string msg) => Instance.log (level, context, msg);
-    #endregion Public Methods
+    private static string context(object caller, string method) => context(caller.GetType(), method);
 
-    #region Private Methods
+    // private static string context (string method) => $"???.{method}";
+    private static string context(Type caller, string method)
+    {
+      string typename = caller.PrettyName((int)PrettyTypeNameLevel, FullClassNames);
+      return $"{typename}.{method}";
+    }
+
+    private static string format(LogMessage msg)
+    {
+      string ctx = string.IsNullOrWhiteSpace(msg.Context) ? string.Empty : $"[{msg.Context}] ";
+      string s = $"{msg.DateTime:HH:mm:ss.fff} {msg.ThreadId:0000} {ctx}{msg.Message}";
+      return s;
+    }
 
     private void setLevel(int value)
     {
@@ -196,15 +163,6 @@ namespace Oahu.Aux
     private void log(string msg) => log(null, msg);
 
     private void log(string context, string msg) => handleWrite(new LogMessage(context, msg));
-
-    private static string context(object caller, string method) => context(caller.GetType(), method);
-
-    // private static string context (string method) => $"???.{method}";
-    private static string context(Type caller, string method)
-    {
-      string typename = caller.PrettyName((int)PrettyTypeNameLevel, FullClassNames);
-      return $"{typename}.{method}";
-    }
 
     private void handleWrite(LogMessage logMessage)
     {
@@ -396,13 +354,6 @@ namespace Oahu.Aux
       }
     }
 
-    private static string format(LogMessage msg)
-    {
-      string ctx = string.IsNullOrWhiteSpace(msg.Context) ? string.Empty : $"[{msg.Context}] ";
-      string s = $"{msg.DateTime:HH:mm:ss.fff} {msg.ThreadId:0000} {ctx}{msg.Message}";
-      return s;
-    }
-
     private void setFileNameStub()
     {
       _filecount = 0;
@@ -410,7 +361,31 @@ namespace Oahu.Aux
       _filestub = Path.Combine(LogDirectory, ApplName);
     }
 
-    #endregion Private Methods
+    class LogMessage
+    {
+      public LogMessage(string message) : this(null, message)
+      {
+      }
 
+      public LogMessage(string context, string message) : this(DateTime.Now, Thread.CurrentThread.ManagedThreadId, context, message)
+      {
+      }
+
+      public LogMessage(DateTime timestamp, int threadId, string context, string message)
+      {
+        DateTime = timestamp;
+        ThreadId = threadId;
+        Context = context;
+        Message = message;
+      }
+
+      public DateTime DateTime { get; private set; }
+
+      public int ThreadId { get; private set; }
+
+      public string Context { get; private set; }
+
+      public string Message { get; private set; }
+    }
   }
 }

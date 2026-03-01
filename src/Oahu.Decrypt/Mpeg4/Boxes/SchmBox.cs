@@ -1,22 +1,12 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class SchmBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + 8 + ((Flags & 1) == 1 && SchemeUri is string uri ? Encoding.UTF8.GetByteCount(uri) + (HasNullTerminator ? 1 : 0) : 0);
-
-  public bool HasNullTerminator { get; set; }
-
-  public SchemeType Type { get; }
-
-  public uint SchemeVersion { get; }
-
-  public string? SchemeUri { get; }
-
   public SchmBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     long endPos = Header.FilePosition + Header.TotalBoxSize;
@@ -44,6 +34,25 @@ public class SchmBox : FullBox
     }
   }
 
+  public enum SchemeType : uint
+  {
+    Unknown,
+    Cenc = 0x63656e63,
+    Cbc1 = 0x63626331,
+    Cens = 0x63656e73,
+    Cbcs = 0x63626373
+  }
+
+  public override long RenderSize => base.RenderSize + 8 + ((Flags & 1) == 1 && SchemeUri is string uri ? Encoding.UTF8.GetByteCount(uri) + (HasNullTerminator ? 1 : 0) : 0);
+
+  public bool HasNullTerminator { get; set; }
+
+  public SchemeType Type { get; }
+
+  public uint SchemeVersion { get; }
+
+  public string? SchemeUri { get; }
+
   protected override void Render(Stream file)
   {
     base.Render(file);
@@ -57,14 +66,5 @@ public class SchmBox : FullBox
         file.WriteByte(0);
       }
     }
-  }
-
-  public enum SchemeType : uint
-  {
-    Unknown,
-    Cenc = 0x63656e63,
-    Cbc1 = 0x63626331,
-    Cens = 0x63656e73,
-    Cbcs = 0x63626373
   }
 }

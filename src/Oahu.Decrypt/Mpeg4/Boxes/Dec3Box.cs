@@ -1,8 +1,8 @@
-﻿using Oahu.Decrypt.Mpeg4.Boxes.EC3SpecificBox;
-using Oahu.Decrypt.Mpeg4.Util;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Oahu.Decrypt.Mpeg4.Boxes.EC3SpecificBox;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
@@ -11,32 +11,7 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 /// </summary>
 public class Dec3Box : Box
 {
-  public override long RenderSize => base.RenderSize + Ec3Data.Length;
-
   private readonly byte[] Ec3Data;
-  /// <summary>
-  /// ETSI TS 102 366 F.6.2.2 data_rate * 1024
-  /// </summary>
-  public uint AverageBitrate { get; }
-
-  public int SampleRate { get; }
-
-  public int NumberOfChannels { get; }
-
-  public Ec3IndependentSubstream[] IndependentSubstream { get; }
-
-  public bool IsAtmos => flag_ec3_extension_type_a.HasValue;
-  /// <summary>
-  /// Signaling Dolby Digital Plus bitstreams with Dolby Atmos content in an ISO base media format file
-  /// Having a value indicates that audio is Dolby Atmos
-  /// whether complexity_index_type_a is available in the E-AC-3 descriptor.
-  /// </summary>
-  public bool? flag_ec3_extension_type_a { get; }
-  /// <summary>
-  ///  Dolby Digital Plus bitstream structure
-  ///  takes a value of 1 to 16 that indicates the decoding complexity of the Dolby Atmos bitstream
-  /// </summary>
-  public byte? complexity_index_type_a { get; }
 
   public Dec3Box(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
   {
@@ -73,6 +48,34 @@ public class Dec3Box : Box
       complexity_index_type_a = (byte)reader.Read(8);
     }
   }
+
+  public override long RenderSize => base.RenderSize + Ec3Data.Length;
+
+  /// <summary>
+  /// ETSI TS 102 366 F.6.2.2 data_rate * 1024
+  /// </summary>
+  public uint AverageBitrate { get; }
+
+  public int SampleRate { get; }
+
+  public int NumberOfChannels { get; }
+
+  public Ec3IndependentSubstream[] IndependentSubstream { get; }
+
+  public bool IsAtmos => flag_ec3_extension_type_a.HasValue;
+
+  /// <summary>
+  /// Signaling Dolby Digital Plus bitstreams with Dolby Atmos content in an ISO base media format file
+  /// Having a value indicates that audio is Dolby Atmos
+  /// whether complexity_index_type_a is available in the E-AC-3 descriptor.
+  /// </summary>
+  public bool? flag_ec3_extension_type_a { get; }
+
+  /// <summary>
+  ///  Dolby Digital Plus bitstream structure
+  ///  takes a value of 1 to 16 that indicates the decoding complexity of the Dolby Atmos bitstream
+  /// </summary>
+  public byte? complexity_index_type_a { get; }
 
   protected override void Render(Stream file)
   {

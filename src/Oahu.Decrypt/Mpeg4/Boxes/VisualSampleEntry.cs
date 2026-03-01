@@ -1,41 +1,15 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class VisualSampleEntry : SampleEntry
 {
-  public override long RenderSize => base.RenderSize +
-      pre_defined1.Length +
-      reserved.Length +
-      pre_defined2.Length +
-      sizeof(ushort) * 4 +
-      sizeof(uint) * 2 +
-      reserved2.Length +
-      pre_defined3.Length +
-      32;
-
   private readonly byte[] pre_defined1;
   private readonly byte[] reserved;
   private readonly byte[] pre_defined2;
-
-  public ushort Width { get; }
-
-  public ushort Height { get; }
-
-  public uint HorizontalResolution { get; }
-
-  public uint VerticalResolution { get; }
-
   private readonly byte[] reserved2;
-
-  public ushort FrameCount { get; }
-
-  public string CompressorName { get; }
-
-  public ushort Depth { get; }
-
   private readonly byte[] pre_defined3;
 
   public VisualSampleEntry(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
@@ -61,6 +35,30 @@ public class VisualSampleEntry : SampleEntry
     Depth = file.ReadUInt16BE();
     pre_defined3 = file.ReadBlock(2);
   }
+
+  public override long RenderSize => base.RenderSize +
+      pre_defined1.Length +
+      reserved.Length +
+      pre_defined2.Length +
+      sizeof(ushort) * 4 +
+      sizeof(uint) * 2 +
+      reserved2.Length +
+      pre_defined3.Length +
+      32;
+
+  public ushort Width { get; }
+
+  public ushort Height { get; }
+
+  public uint HorizontalResolution { get; }
+
+  public uint VerticalResolution { get; }
+
+  public ushort FrameCount { get; }
+
+  public string CompressorName { get; }
+
+  public ushort Depth { get; }
 
   protected override void Render(Stream file)
   {

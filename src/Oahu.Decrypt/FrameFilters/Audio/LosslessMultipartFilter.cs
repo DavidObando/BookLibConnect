@@ -1,20 +1,16 @@
-using Oahu.Decrypt.Mpeg4;
-using Oahu.Decrypt.Mpeg4.Boxes;
 using System;
 using System.IO;
+using Oahu.Decrypt.Mpeg4;
+using Oahu.Decrypt.Mpeg4.Boxes;
 
 namespace Oahu.Decrypt.FrameFilters.Audio
 {
   internal sealed class LosslessMultipartFilter : MultipartFilterBase<FrameEntry, NewSplitCallback>
   {
-    public bool CurrentWriterOpen { get; private set; }
-
-    protected override int InputBufferSize => 1000;
-
-    private Mp4aWriter? Mp4writer;
     private readonly FtypBox ftyp;
     private readonly MoovBox moov;
     private readonly Action<NewSplitCallback> newFileCallback;
+    private Mp4aWriter? Mp4writer;
 
     public LosslessMultipartFilter(ChapterInfo splitChapters, FtypBox ftyp, MoovBox moov, Action<NewSplitCallback> newFileCallback)
         : base(splitChapters, (SampleRate)moov.AudioTrack.Mdia.Mdhd.Timescale, moov.AudioTrack.Mdia.Minf.Stbl.Stsd.AudioSampleEntry?.ChannelCount == 2)
@@ -23,6 +19,10 @@ namespace Oahu.Decrypt.FrameFilters.Audio
       this.moov = moov;
       this.newFileCallback = newFileCallback;
     }
+
+    public bool CurrentWriterOpen { get; private set; }
+
+    protected override int InputBufferSize => 1000;
 
     protected override void CloseCurrentWriter()
     {

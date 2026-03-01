@@ -1,5 +1,5 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
@@ -14,14 +14,6 @@ public interface ISaioBox : IBox
 
 public class SaioBox : FullBox, ISaioBox
 {
-  public override long RenderSize => base.RenderSize + ((Flags & 1) == 1 ? 8 : 0) + 4 + (Version == 0 ? (offsets_32?.Length ?? 0) * 4 : (offsets_64?.Length ?? 0) * 8);
-
-  public uint AuxInfoType { get; }
-
-  public uint AuxInfoTypeParameter { get; }
-
-  public int EntryCount { get; }
-
   private readonly uint[]? offsets_32;
   private readonly long[]? offsets_64;
 
@@ -51,6 +43,14 @@ public class SaioBox : FullBox, ISaioBox
       }
     }
   }
+
+  public override long RenderSize => base.RenderSize + ((Flags & 1) == 1 ? 8 : 0) + 4 + (Version == 0 ? (offsets_32?.Length ?? 0) * 4 : (offsets_64?.Length ?? 0) * 8);
+
+  public uint AuxInfoType { get; }
+
+  public uint AuxInfoTypeParameter { get; }
+
+  public int EntryCount { get; }
 
   protected override void Render(Stream file)
   {

@@ -6,6 +6,13 @@ namespace Oahu.Core
 {
   public class AccountAliasContext
   {
+    public AccountAliasContext(int localId, string customerName, IEnumerable<uint> hashes)
+    {
+      LocalId = localId;
+      CustomerName = customerName;
+      Hashes = hashes;
+    }
+
     public int LocalId { get; }
 
     public string CustomerName { get; }
@@ -13,21 +20,10 @@ namespace Oahu.Core
     public IEnumerable<uint> Hashes { get; }
 
     public string Alias { get; set; }
-
-    public AccountAliasContext(int localId, string customerName, IEnumerable<uint> hashes)
-    {
-      LocalId = localId;
-      CustomerName = customerName;
-      Hashes = hashes;
-    }
   }
 
   public class ProfileAliasKey : IEquatable<IProfileAliasKey>, IProfileAliasKey
   {
-    public string AccountAlias { get; set; }
-
-    public ERegion Region { get; set; }
-
     public ProfileAliasKey()
     {
     }
@@ -41,6 +37,10 @@ namespace Oahu.Core
       Region = region;
       AccountAlias = accountAlias;
     }
+
+    public string AccountAlias { get; set; }
+
+    public ERegion Region { get; set; }
 
     public override string ToString() => $"{AccountAlias}; {Region}";
 

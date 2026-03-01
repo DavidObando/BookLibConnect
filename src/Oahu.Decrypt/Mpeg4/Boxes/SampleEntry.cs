@@ -1,17 +1,13 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.Diagnostics;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 public abstract class SampleEntry : Box
 {
-  public override long RenderSize => base.RenderSize + 8;
-
   private readonly byte[] Reserved;
-
-  public ushort DataReferenceIndex { get; }
 
   public SampleEntry(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
   {
@@ -19,11 +15,9 @@ public abstract class SampleEntry : Box
     DataReferenceIndex = file.ReadUInt16BE();
   }
 
-  protected override void Render(Stream file)
-  {
-    file.Write(Reserved);
-    file.WriteUInt16BE(DataReferenceIndex);
-  }
+  public override long RenderSize => base.RenderSize + 8;
+
+  public ushort DataReferenceIndex { get; }
 
   [DebuggerHidden]
   private string DebuggerDisplay => $"[{Header.Type}] - " + Header.Type switch
@@ -39,4 +33,10 @@ public abstract class SampleEntry : Box
     "ac-4" => "AC4SampleEntry",
     _ => $"[UNKNOWN]"
   };
+
+  protected override void Render(Stream file)
+  {
+    file.Write(Reserved);
+    file.WriteUInt16BE(DataReferenceIndex);
+  }
 }

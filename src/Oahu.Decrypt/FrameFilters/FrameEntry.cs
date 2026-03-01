@@ -1,5 +1,5 @@
-using Oahu.Decrypt.Mpeg4.Chunks;
 using System;
+using Oahu.Decrypt.Mpeg4.Chunks;
 
 namespace Oahu.Decrypt.FrameFilters;
 

@@ -1,11 +1,11 @@
-﻿using Oahu.Decrypt.Mpeg4.Util;
-using System;
+﻿using System;
 using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
@@ -14,10 +14,6 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 /// </summary>
 public class ChunkOffsetList : ICollection<long>
 {
-  public int Count => chunkOffsets32.Count + (chunkOffsets64?.Count ?? 0);
-
-  public bool IsReadOnly => false;
-
   private readonly List<uint> chunkOffsets32;
   private List<long>? chunkOffsets64;
 
@@ -29,6 +25,91 @@ public class ChunkOffsetList : ICollection<long>
   private ChunkOffsetList(int capacity)
   {
     chunkOffsets32 = new List<uint>(capacity);
+  }
+
+  public int Count => chunkOffsets32.Count + (chunkOffsets64?.Count ?? 0);
+
+  public bool IsReadOnly => false;
+
+  /// <summary>
+  /// Reads 32-bit chunk offsets from the given stream, fixes overflows into 64-bit offsets, and sorts the offsets.
+  /// </summary>
+  public static ChunkOffsetList Read32(Stream file, uint entryCount)
+  {
+    ChunkOffsetList list = new((int)entryCount);
+    CollectionsMarshal.SetCount(list.chunkOffsets32, (int)entryCount);
+    Span<uint> span = CollectionsMarshal.AsSpan(list.chunkOffsets32);
+    file.ReadExactly(MemoryMarshal.AsBytes(span));
+    if (BitConverter.IsLittleEndian)
+    {
+      BinaryPrimitives.ReverseEndianness(span, span);
+    }
+
+    long lastChunkOffset = 0;
+    for (int i = 0; i < list.chunkOffsets32.Count; i++)
+    {
+      long chunkOffset = list.chunkOffsets32[i];
+
+      // Seems some files incorrectly use stco box with offsets > uint.MAXVALUE (e.g. 50 Self Help Books).
+      // This causes the offsets to uint to overflow. Unfottnately, somtimes chapters are out of order and
+      // chunkOffset is supposed to be less than lastChunkOffset (e.g. Altered Carbon). To attempt to
+      // detect this, only assume it's an overflow if lastChunkOffset - chunkOffset > uint.MaxValue / 2
+      if (chunkOffset < lastChunkOffset && lastChunkOffset - chunkOffset > uint.MaxValue / 2)
+      {
+        if (list.chunkOffsets64 is null)
+        {
+          int count = list.chunkOffsets32.Count - i;
+          list.chunkOffsets64 = new List<long>(count);
+        }
+
+        chunkOffset += 1L << 32;
+        list.chunkOffsets32.RemoveAt(i--);
+        list.chunkOffsets64.Add(chunkOffset);
+      }
+
+      lastChunkOffset = chunkOffset;
+    }
+
+    list.chunkOffsets32.Sort();
+    list.chunkOffsets64?.Sort();
+    return list;
+  }
+
+  public static unsafe ChunkOffsetList Read64(Stream file, uint entryCount)
+  {
+    nint pLongs = Marshal.AllocHGlobal(sizeof(long) * (nint)entryCount);
+    try
+    {
+      Span<long> longsSpan = new(pLongs.ToPointer(), (int)entryCount);
+      file.ReadExactly(MemoryMarshal.AsBytes(longsSpan));
+      if (BitConverter.IsLittleEndian)
+      {
+        BinaryPrimitives.ReverseEndianness(longsSpan, longsSpan);
+      }
+
+      longsSpan.Sort();
+
+      int _32BitCount = FindLast32bit(longsSpan) + 1;
+
+      ChunkOffsetList list = new(_32BitCount);
+      CollectionsMarshal.SetCount(list.chunkOffsets32, _32BitCount);
+      Span<uint> span = CollectionsMarshal.AsSpan(list.chunkOffsets32);
+      for (int i = 0; i < _32BitCount; i++)
+      {
+        span[i] = (uint)longsSpan[i];
+      }
+
+      Span<long> remainder = longsSpan[_32BitCount..];
+      list.chunkOffsets64 = new List<long>(remainder.Length);
+      CollectionsMarshal.SetCount(list.chunkOffsets64, remainder.Length);
+      Span<long> span64 = CollectionsMarshal.AsSpan(list.chunkOffsets64);
+      remainder.CopyTo(span64);
+      return list;
+    }
+    finally
+    {
+      Marshal.FreeHGlobal(pLongs);
+    }
   }
 
   public void Clear()
@@ -123,113 +204,6 @@ public class ChunkOffsetList : ICollection<long>
     }
 
     throw new IndexOutOfRangeException($"Index {index} is out of range for chunk offsets.");
-  }
-
-  /// <summary>
-  /// Reads 32-bit chunk offsets from the given stream, fixes overflows into 64-bit offsets, and sorts the offsets.
-  /// </summary>
-  public static ChunkOffsetList Read32(Stream file, uint entryCount)
-  {
-    ChunkOffsetList list = new((int)entryCount);
-    CollectionsMarshal.SetCount(list.chunkOffsets32, (int)entryCount);
-    Span<uint> span = CollectionsMarshal.AsSpan(list.chunkOffsets32);
-    file.ReadExactly(MemoryMarshal.AsBytes(span));
-    if (BitConverter.IsLittleEndian)
-    {
-      BinaryPrimitives.ReverseEndianness(span, span);
-    }
-
-    long lastChunkOffset = 0;
-    for (int i = 0; i < list.chunkOffsets32.Count; i++)
-    {
-      long chunkOffset = list.chunkOffsets32[i];
-
-      // Seems some files incorrectly use stco box with offsets > uint.MAXVALUE (e.g. 50 Self Help Books).
-      // This causes the offsets to uint to overflow. Unfottnately, somtimes chapters are out of order and
-      // chunkOffset is supposed to be less than lastChunkOffset (e.g. Altered Carbon). To attempt to
-      // detect this, only assume it's an overflow if lastChunkOffset - chunkOffset > uint.MaxValue / 2
-      if (chunkOffset < lastChunkOffset && lastChunkOffset - chunkOffset > uint.MaxValue / 2)
-      {
-        if (list.chunkOffsets64 is null)
-        {
-          int count = list.chunkOffsets32.Count - i;
-          list.chunkOffsets64 = new List<long>(count);
-        }
-
-        chunkOffset += 1L << 32;
-        list.chunkOffsets32.RemoveAt(i--);
-        list.chunkOffsets64.Add(chunkOffset);
-      }
-
-      lastChunkOffset = chunkOffset;
-    }
-
-    list.chunkOffsets32.Sort();
-    list.chunkOffsets64?.Sort();
-    return list;
-  }
-
-  public unsafe static ChunkOffsetList Read64(Stream file, uint entryCount)
-  {
-    nint pLongs = Marshal.AllocHGlobal(sizeof(long) * (nint)entryCount);
-    try
-    {
-      Span<long> longsSpan = new(pLongs.ToPointer(), (int)entryCount);
-      file.ReadExactly(MemoryMarshal.AsBytes(longsSpan));
-      if (BitConverter.IsLittleEndian)
-      {
-        BinaryPrimitives.ReverseEndianness(longsSpan, longsSpan);
-      }
-
-      longsSpan.Sort();
-
-      int _32BitCount = FindLast32bit(longsSpan) + 1;
-
-      ChunkOffsetList list = new(_32BitCount);
-      CollectionsMarshal.SetCount(list.chunkOffsets32, _32BitCount);
-      Span<uint> span = CollectionsMarshal.AsSpan(list.chunkOffsets32);
-      for (int i = 0; i < _32BitCount; i++)
-      {
-        span[i] = (uint)longsSpan[i];
-      }
-
-      Span<long> remainder = longsSpan[_32BitCount..];
-      list.chunkOffsets64 = new List<long>(remainder.Length);
-      CollectionsMarshal.SetCount(list.chunkOffsets64, remainder.Length);
-      Span<long> span64 = CollectionsMarshal.AsSpan(list.chunkOffsets64);
-      remainder.CopyTo(span64);
-      return list;
-    }
-    finally
-    {
-      Marshal.FreeHGlobal(pLongs);
-    }
-  }
-
-  static int FindLast32bit(ReadOnlySpan<long> longsSpan)
-  {
-    int l = 0;
-    int r = longsSpan.Length - 1;
-
-    while (l <= r)
-    {
-      int mid = l + (r - l) / 2;
-      long midValue = longsSpan[mid];
-      if (midValue > uint.MaxValue)
-      {
-        r = mid - 1;
-      }
-      else if (midValue == uint.MaxValue || mid >= r || longsSpan[mid + 1] >= uint.MaxValue)
-      {
-        return mid;
-      }
-      else
-      {
-        l = mid + 1;
-      }
-    }
-
-    return -1;
   }
 
   public void Write32(Stream file)
@@ -344,8 +318,6 @@ public class ChunkOffsetList : ICollection<long>
 
   public IEnumerator<long> GetEnumerator() => chunkOffsets32.ConvertAll(i => (long)i).Concat(chunkOffsets64 ?? []).GetEnumerator();
 
-  IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
   public void CopyTo(long[] array, int arrayIndex)
   {
     for (int i = 0; i < chunkOffsets32.Count; i++, arrayIndex++)
@@ -360,5 +332,33 @@ public class ChunkOffsetList : ICollection<long>
         array[arrayIndex] = chunkOffsets64[i];
       }
     }
+  }
+
+  IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+  private static int FindLast32bit(ReadOnlySpan<long> longsSpan)
+  {
+    int l = 0;
+    int r = longsSpan.Length - 1;
+
+    while (l <= r)
+    {
+      int mid = l + (r - l) / 2;
+      long midValue = longsSpan[mid];
+      if (midValue > uint.MaxValue)
+      {
+        r = mid - 1;
+      }
+      else if (midValue == uint.MaxValue || mid >= r || longsSpan[mid + 1] >= uint.MaxValue)
+      {
+        return mid;
+      }
+      else
+      {
+        l = mid + 1;
+      }
+    }
+
+    return -1;
   }
 }

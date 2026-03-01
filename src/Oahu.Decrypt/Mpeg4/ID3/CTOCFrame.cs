@@ -7,16 +7,6 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 
 public class CTOCFrame : Frame
 {
-  public override int Size => Encoding.ASCII.GetByteCount(ElementID) + 3 + ChildElementIDs.Sum(c => Encoding.ASCII.GetByteCount(c) + 1) + Children.Sum(c => c.Size + c.Header.HeaderSize);
-
-  public string ElementID { get; private init; }
-
-  public ChapterFlags ChapterFlags { get; private init; }
-
-  public List<string> ChildElementIDs { get; } = new();
-
-  public void Add(CHAPFrame chapter) => ChildElementIDs.Add(chapter.ChapterID);
-
   public CTOCFrame(Frame parent, ChapterFlags chapterFlags, string elementId = "TOC1")
       : base(new FrameHeader("CTOC", 0, parent.Version), parent)
   {
@@ -38,6 +28,16 @@ public class CTOCFrame : Frame
 
     LoadChildren(file, endPosition);
   }
+
+  public override int Size => Encoding.ASCII.GetByteCount(ElementID) + 3 + ChildElementIDs.Sum(c => Encoding.ASCII.GetByteCount(c) + 1) + Children.Sum(c => c.Size + c.Header.HeaderSize);
+
+  public string ElementID { get; private init; }
+
+  public ChapterFlags ChapterFlags { get; private init; }
+
+  public List<string> ChildElementIDs { get; } = new();
+
+  public void Add(CHAPFrame chapter) => ChildElementIDs.Add(chapter.ChapterID);
 
   public override void Render(Stream file)
   {

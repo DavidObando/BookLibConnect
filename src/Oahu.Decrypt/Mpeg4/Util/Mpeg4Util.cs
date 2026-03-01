@@ -1,10 +1,10 @@
-﻿using Oahu.Decrypt.Mpeg4.Boxes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Oahu.Decrypt.Mpeg4.Boxes;
 
 namespace Oahu.Decrypt.Mpeg4.Util
 {
@@ -95,11 +95,11 @@ namespace Oahu.Decrypt.Mpeg4.Util
 
   public class ProgressTracker
   {
-    public event EventHandler? ProgressUpdated;
-
     private readonly DateTime StartTime = DateTime.UtcNow;
     private DateTime NextUpdate = default;
     private long movedBytes;
+
+    public event EventHandler? ProgressUpdated;
 
     public long MovedBytes
     {

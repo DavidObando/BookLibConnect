@@ -9,9 +9,9 @@ using Avalonia.Threading;
 using Oahu.Aux;
 using Oahu.Aux.Extensions;
 using Oahu.BooksDatabase;
+using Oahu.Common.Util;
 using Oahu.Core;
 using Oahu.Core.UI.Avalonia.ViewModels;
-using Oahu.Common.Util;
 using static Oahu.Aux.Logging;
 
 namespace Oahu.App.Avalonia

@@ -1,10 +1,10 @@
-﻿using Oahu.Decrypt.Mpeg4.Boxes;
-using System;
+﻿using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Oahu.Decrypt.Mpeg4.Boxes;
 
 namespace Oahu.Decrypt.Mpeg4.Util
 {

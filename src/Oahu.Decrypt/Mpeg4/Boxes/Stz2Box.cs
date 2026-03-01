@@ -1,31 +1,15 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class Stz2Box : FullBox, IStszBox
 {
-  public override long RenderSize => base.RenderSize + 8 + SampleCount * FieldSize / 8 + (FieldSize == 4 && SampleCount % 2 == 1 ? 1 : 0);
-
-  public int SampleCount => SampleSizes.Count;
-
-  public List<ushort> SampleSizes { get; protected init; }
-
-  public int MaxSize => SampleSizes.Max();
-
-  public long TotalSize => SampleSizes.Sum(s => (long)s);
-
-  public int GetSizeAtIndex(int index) => SampleSizes[index];
-
-  public long SumFirstNSizes(int firstN) => SampleSizes.Take(firstN).Sum(s => (long)s);
-
-  public int FieldSize { get; }
-
   public Stz2Box(Stream file, BoxHeader header, IBox? parent)
       : base(file, header, parent)
   {
@@ -78,6 +62,18 @@ public class Stz2Box : FullBox, IStszBox
     SampleSizes = sampleSizes;
   }
 
+  public override long RenderSize => base.RenderSize + 8 + SampleCount * FieldSize / 8 + (FieldSize == 4 && SampleCount % 2 == 1 ? 1 : 0);
+
+  public int SampleCount => SampleSizes.Count;
+
+  public List<ushort> SampleSizes { get; protected init; }
+
+  public int MaxSize => SampleSizes.Max();
+
+  public long TotalSize => SampleSizes.Sum(s => (long)s);
+
+  public int FieldSize { get; }
+
   public static Stz2Box CreateBlank(IBox parent, List<ushort> sampleSizes)
   {
     int size = 8 + 12 /* empty Box size*/;
@@ -88,6 +84,10 @@ public class Stz2Box : FullBox, IStszBox
     parent.Children.Add(stszBox);
     return stszBox;
   }
+
+  public int GetSizeAtIndex(int index) => SampleSizes[index];
+
+  public long SumFirstNSizes(int firstN) => SampleSizes.Take(firstN).Sum(s => (long)s);
 
   protected override void Render(Stream file)
   {

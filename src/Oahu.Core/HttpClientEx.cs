@@ -6,11 +6,11 @@ namespace Oahu.Core
 {
   class HttpClientEx : HttpClient
   {
-    public CookieContainer CookieContainer { get; } = new CookieContainer();
-
     private HttpClientEx(HttpMessageHandler handler) : base(handler)
     {
     }
+
+    public CookieContainer CookieContainer { get; } = new CookieContainer();
 
     public static HttpClientEx Create(Uri baseUri)
     {

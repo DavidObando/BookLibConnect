@@ -1,6 +1,6 @@
-﻿using Oahu.Decrypt.Mpeg4.Util;
-using System;
+﻿using System;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Descriptors;
 
@@ -23,28 +23,14 @@ public interface IASC
 // and only parses data through the dependsOnCoreCoder flag in GASpecificConfig (Subpart 4)
 public class AudioSpecificConfig : BaseDescriptor, IASC
 {
-  private static readonly int[] ASC_SampleRates = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
-
+  public static readonly int[] ASC_SampleRates = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
   public static readonly int MinSampleRate = ASC_SampleRates[^1];
   public static readonly int MaxSampleRate = ASC_SampleRates[0];
 
-  private static readonly byte[] SupportedObjectTypes = [1, 2, 3, 4, 6, 7, 17, 19, 20, 21, 22, 23, 42];
   private const byte AOT_ESCAPE = 31;
+  private static readonly byte[] SupportedObjectTypes = [1, 2, 3, 4, 6, 7, 17, 19, 20, 21, 22, 23, 42];
 
   private int ascBlobLength = 0;
-
-  public override int InternalSize => base.InternalSize + ascBlobLength;
-
-  public byte[] AscBlob
-  {
-    get => GetAscBlob();
-    set
-    {
-      bitReader = LoadAscBlob(this, value);
-      ascBlobLength = value.Length;
-    }
-  }
-
   private BitReader bitReader;
 
   public AudioSpecificConfig(Stream file, DescriptorHeader header) : base(file, header)
@@ -63,6 +49,29 @@ public class AudioSpecificConfig : BaseDescriptor, IASC
     ascBlobLength = 2;
   }
 
+  public int AudioObjectType { get; set; }
+
+  public int SamplingFrequency { get; set; }
+
+  public int ChannelConfiguration { get; set; }
+
+  // GASpecificConfig in ISO/IEC 14496-3 Subpart 4 4.4.1 (pp 487)
+  public bool FrameLengthFlag { get; set; }
+
+  public bool DependsOnCoreCoder { get; set; }
+
+  public override int InternalSize => base.InternalSize + ascBlobLength;
+
+  public byte[] AscBlob
+  {
+    get => GetAscBlob();
+    set
+    {
+      bitReader = LoadAscBlob(this, value);
+      ascBlobLength = value.Length;
+    }
+  }
+
   public static AudioSpecificConfig CreateEmpty()
       => new();
 
@@ -71,6 +80,11 @@ public class AudioSpecificConfig : BaseDescriptor, IASC
     var internalAsc = new InternalAudioSpecificConfig();
     LoadAscBlob(internalAsc, ascBlob);
     return internalAsc;
+  }
+
+  public override void Render(Stream file)
+  {
+    file.Write(AscBlob);
   }
 
   private static BitReader LoadAscBlob(IASC asc, byte[] ascBlob)
@@ -96,11 +110,6 @@ public class AudioSpecificConfig : BaseDescriptor, IASC
     asc.FrameLengthFlag = bitReader.Read(1) != 0;
     asc.DependsOnCoreCoder = bitReader.Read(1) != 0;
     return bitReader;
-  }
-
-  public override void Render(Stream file)
-  {
-    file.Write(AscBlob);
   }
 
   private byte[] GetAscBlob()
@@ -139,17 +148,6 @@ public class AudioSpecificConfig : BaseDescriptor, IASC
     bitReader.Position = startPos;
     return writer.ToByteArray();
   }
-
-  public int AudioObjectType { get; set; }
-
-  public int SamplingFrequency { get; set; }
-
-  public int ChannelConfiguration { get; set; }
-
-  // GASpecificConfig in ISO/IEC 14496-3 Subpart 4 4.4.1 (pp 487)
-  public bool FrameLengthFlag { get; set; }
-
-  public bool DependsOnCoreCoder { get; set; }
 
   private class InternalAudioSpecificConfig : IASC
   {

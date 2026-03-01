@@ -1,21 +1,11 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class SaizBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + ((Flags & 1) == 1 ? 8 : 0) + 5 + (DefaultInfoSampleSize == 0 ? SampleInfoSizes.Length : 0);
-
-  public uint AuxInfoType { get; }
-
-  public uint AuxInfoTypeParameter { get; }
-
-  public byte DefaultInfoSampleSize { get; }
-
-  public byte[] SampleInfoSizes { get; }
-
   public SaizBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     if ((Flags & 1) == 1)
@@ -28,6 +18,16 @@ public class SaizBox : FullBox
     var sampleCount = file.ReadInt32BE();
     SampleInfoSizes = DefaultInfoSampleSize == 0 ? file.ReadBlock(sampleCount) : Array.Empty<byte>();
   }
+
+  public override long RenderSize => base.RenderSize + ((Flags & 1) == 1 ? 8 : 0) + 5 + (DefaultInfoSampleSize == 0 ? SampleInfoSizes.Length : 0);
+
+  public uint AuxInfoType { get; }
+
+  public uint AuxInfoTypeParameter { get; }
+
+  public byte DefaultInfoSampleSize { get; }
+
+  public byte[] SampleInfoSizes { get; }
 
   protected override void Render(Stream file)
   {

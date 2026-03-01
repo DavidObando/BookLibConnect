@@ -1,20 +1,12 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class AdrmBox : Box
 {
-  public override long RenderSize => base.RenderSize + beginBlob.Length + DrmBlob.Length + middleBlob.Length + Checksum.Length + endBlob.Length;
-
   private readonly byte[] beginBlob;
-
-  public byte[] DrmBlob { get; }
-
   private readonly byte[] middleBlob;
-
-  public byte[] Checksum { get; }
-
   private readonly byte[] endBlob;
 
   public AdrmBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
@@ -26,6 +18,12 @@ public class AdrmBox : Box
     long len = RemainingBoxLength(file);
     endBlob = file.ReadBlock((int)len);
   }
+
+  public override long RenderSize => base.RenderSize + beginBlob.Length + DrmBlob.Length + middleBlob.Length + Checksum.Length + endBlob.Length;
+
+  public byte[] DrmBlob { get; }
+
+  public byte[] Checksum { get; }
 
   protected override void Render(Stream file)
   {

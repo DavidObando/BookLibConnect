@@ -1,26 +1,26 @@
-﻿using Oahu.Decrypt.FrameFilters;
-using Oahu.Decrypt.Mpeg4;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using Oahu.Decrypt.FrameFilters;
+using Oahu.Decrypt.Mpeg4;
 
 namespace Oahu.Decrypt
 {
   public class ChapterEntry
   {
-    public Memory<byte> FrameData { get; init; }
-
-    public uint SamplesInFrame { get; init; }
-
-    public string Title { get; }
-
     public ChapterEntry(string title)
     {
       ArgumentNullException.ThrowIfNull(title, nameof(title));
       Title = title;
     }
+
+    public Memory<byte> FrameData { get; init; }
+
+    public uint SamplesInFrame { get; init; }
+
+    public string Title { get; }
   }
 
   /// <summary>
@@ -28,11 +28,11 @@ namespace Oahu.Decrypt
   /// </summary>
   public class ChapterQueue
   {
-    private int subtractNext = 0;
     private readonly double SampleScaleFactor;
     private readonly SampleRate OutputSampleRate;
     private readonly object lockObj = new();
     private readonly Queue<ChapterEntry> chapterEntries = new();
+    private int subtractNext = 0;
 
     public ChapterQueue(SampleRate inputRate, SampleRate outputRate)
     {

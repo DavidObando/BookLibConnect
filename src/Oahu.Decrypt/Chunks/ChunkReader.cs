@@ -1,38 +1,29 @@
-﻿using Oahu.Decrypt.FrameFilters;
-using Oahu.Decrypt.Mpeg4.Boxes;
-using Oahu.Decrypt.Mpeg4.Chunks;
-using Oahu.Decrypt.Mpeg4.Util;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Oahu.Decrypt.FrameFilters;
+using Oahu.Decrypt.Mpeg4.Boxes;
+using Oahu.Decrypt.Mpeg4.Chunks;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Chunks;
 
 public interface IChunkReader
 {
-  Task RunAsync(CancellationTokenSource cancellationSource);
-
   Action<ConversionProgressEventArgs>? OnProgressUpdateDelegate { get; set; }
+
+  Task RunAsync(CancellationTokenSource cancellationSource);
 
   void AddTrack(TrakBox track, FrameFilterBase<FrameEntry> filter);
 }
 
 internal class ChunkReader : IChunkReader
 {
-  protected record TrackEntry(uint TrackId, uint Timescale, FrameFilterBase<FrameEntry> FirstFilter, TrakBox TrakBox);
-
-  public Action<ConversionProgressEventArgs>? OnProgressUpdateDelegate { get; set; }
-
-  protected Dictionary<uint, TrackEntry> TrackEntries { get; } = new();
-
-  protected Stream InputStream { get; }
-
-  protected TimeSpan StartTime { get; }
-
-  protected TimeSpan EndTime { get; }
+  private DateTime beginProcess;
+  private DateTime nextUpdate;
 
   public ChunkReader(Stream inputStream, TimeSpan startTime, TimeSpan endTime)
   {
@@ -46,26 +37,15 @@ internal class ChunkReader : IChunkReader
     EndTime = endTime;
   }
 
-  protected virtual IEnumerable<ChunkEntry> EnumerateChunks()
-  {
-    return TrackEntries
-        .Values
-        .Select(e => e.TrakBox)
-        .InterleaveBy(t => t.ChunkEntries(), t => t.ChunkOffset)
-        .Where(ChunkHasFrameInRange);
+  public Action<ConversionProgressEventArgs>? OnProgressUpdateDelegate { get; set; }
 
-    bool ChunkHasFrameInRange(ChunkEntry value)
-    {
-      uint timeScale = GetTrackEntryFromId(value.TrackId).Timescale;
-      var minimumSample = StartTime.TotalSeconds * timeScale;
-      var maximumSample = EndTime.TotalSeconds * timeScale;
-      return value.FirstSample <= maximumSample && (value.FirstSample + value.FrameDurations.Sum(d => d)) >= minimumSample;
-    }
-  }
+  protected Dictionary<uint, TrackEntry> TrackEntries { get; } = new();
 
-  protected TrackEntry GetTrackEntryFromId(uint trackId)
-      => TrackEntries.TryGetValue(trackId, out var trackEntry) ? trackEntry
-      : throw new ArgumentOutOfRangeException(nameof(trackId), $"Track ID {trackId} is not present in this {nameof(ChunkReader)} instance.");
+  protected Stream InputStream { get; }
+
+  protected TimeSpan StartTime { get; }
+
+  protected TimeSpan EndTime { get; }
 
   public virtual void AddTrack(TrakBox track, FrameFilterBase<FrameEntry> filter)
   {
@@ -111,6 +91,27 @@ internal class ChunkReader : IChunkReader
     }
   }
 
+  protected virtual IEnumerable<ChunkEntry> EnumerateChunks()
+  {
+    return TrackEntries
+        .Values
+        .Select(e => e.TrakBox)
+        .InterleaveBy(t => t.ChunkEntries(), t => t.ChunkOffset)
+        .Where(ChunkHasFrameInRange);
+
+    bool ChunkHasFrameInRange(ChunkEntry value)
+    {
+      uint timeScale = GetTrackEntryFromId(value.TrackId).Timescale;
+      var minimumSample = StartTime.TotalSeconds * timeScale;
+      var maximumSample = EndTime.TotalSeconds * timeScale;
+      return value.FirstSample <= maximumSample && (value.FirstSample + value.FrameDurations.Sum(d => d)) >= minimumSample;
+    }
+  }
+
+  protected TrackEntry GetTrackEntryFromId(uint trackId)
+      => TrackEntries.TryGetValue(trackId, out var trackEntry) ? trackEntry
+      : throw new ArgumentOutOfRangeException(nameof(trackId), $"Track ID {trackId} is not present in this {nameof(ChunkReader)} instance.");
+
   protected virtual FrameEntry CreateFrameEntry(ChunkEntry chunk, int frameInChunk, uint frameDelta, Memory<byte> frameData)
       => new()
       {
@@ -152,9 +153,6 @@ internal class ChunkReader : IChunkReader
     }
   }
 
-  private DateTime beginProcess;
-  private DateTime nextUpdate;
-
   private void OnInitialProgress()
   {
     beginProcess = DateTime.UtcNow;
@@ -178,4 +176,6 @@ internal class ChunkReader : IChunkReader
       nextUpdate = DateTime.UtcNow.AddMilliseconds(100);
     }
   }
+
+  protected record TrackEntry(uint TrackId, uint Timescale, FrameFilterBase<FrameEntry> FirstFilter, TrakBox TrakBox);
 }

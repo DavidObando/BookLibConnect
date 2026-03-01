@@ -1,15 +1,26 @@
-﻿using Oahu.Decrypt.Mpeg4.Boxes;
-using Oahu.Decrypt.Mpeg4.Util;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Oahu.Decrypt.Mpeg4.Boxes;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Chunks;
 
 public class DashChunkEntryies : IEnumerable<ChunkEntry>
 {
+  public DashChunkEntryies(Stream inputStream, uint trakId, SidxBox sidx, MoofBox firstMoof, MdatBox firstMdat, long minimumSample, long maximumSample)
+  {
+    InputStream = inputStream;
+    TrackId = trakId;
+    Sidx = sidx;
+    FirstMoof = firstMoof;
+    FirstMdat = firstMdat;
+    MinimumSample = minimumSample;
+    MaximumSample = maximumSample;
+  }
+
   private Stream InputStream { get; }
 
   private uint TrackId { get; }
@@ -23,17 +34,6 @@ public class DashChunkEntryies : IEnumerable<ChunkEntry>
   private long MinimumSample { get; }
 
   private long MaximumSample { get; }
-
-  public DashChunkEntryies(Stream inputStream, uint trakId, SidxBox sidx, MoofBox firstMoof, MdatBox firstMdat, long minimumSample, long maximumSample)
-  {
-    InputStream = inputStream;
-    TrackId = trakId;
-    Sidx = sidx;
-    FirstMoof = firstMoof;
-    FirstMdat = firstMdat;
-    MinimumSample = minimumSample;
-    MaximumSample = maximumSample;
-  }
 
   public IEnumerator<ChunkEntry> GetEnumerator()
       => EnumerateChunks().GetEnumerator();

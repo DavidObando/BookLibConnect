@@ -4,12 +4,12 @@ using System.Management;
 /// <summary>
 /// https://ourcodeworld.com/articles/read/314/how-to-retrieve-the-motherboard-information-with-c-sharp-in-winforms
 /// </summary>
-static public class MotherboardInfo
+public static class MotherboardInfo
 {
   private static ManagementObjectSearcher baseboardSearcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_BaseBoard");
   private static ManagementObjectSearcher motherboardSearcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_MotherboardDevice");
 
-  static public string Availability
+  public static string Availability
   {
     get
     {
@@ -29,7 +29,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public bool HostingBoard
+  public static bool HostingBoard
   {
     get
     {
@@ -56,7 +56,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string InstallDate
+  public static string InstallDate
   {
     get
     {
@@ -76,7 +76,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string Manufacturer
+  public static string Manufacturer
   {
     get
     {
@@ -96,7 +96,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string Model
+  public static string Model
   {
     get
     {
@@ -116,7 +116,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string PartNumber
+  public static string PartNumber
   {
     get
     {
@@ -136,7 +136,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string PNPDeviceID
+  public static string PNPDeviceID
   {
     get
     {
@@ -156,7 +156,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string PrimaryBusType
+  public static string PrimaryBusType
   {
     get
     {
@@ -176,7 +176,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string Product
+  public static string Product
   {
     get
     {
@@ -196,7 +196,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public bool Removable
+  public static bool Removable
   {
     get
     {
@@ -223,7 +223,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public bool Replaceable
+  public static bool Replaceable
   {
     get
     {
@@ -250,7 +250,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string RevisionNumber
+  public static string RevisionNumber
   {
     get
     {
@@ -270,7 +270,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string SecondaryBusType
+  public static string SecondaryBusType
   {
     get
     {
@@ -290,7 +290,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string SerialNumber
+  public static string SerialNumber
   {
     get
     {
@@ -310,7 +310,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string Status
+  public static string Status
   {
     get
     {
@@ -330,7 +330,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string SystemName
+  public static string SystemName
   {
     get
     {
@@ -350,7 +350,7 @@ static public class MotherboardInfo
     }
   }
 
-  static public string Version
+  public static string Version
   {
     get
     {

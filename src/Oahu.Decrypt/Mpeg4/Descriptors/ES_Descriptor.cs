@@ -1,5 +1,5 @@
-﻿using Oahu.Decrypt.Mpeg4.Util;
-using System.IO;
+﻿using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Descriptors
 {
@@ -7,26 +7,12 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors
   // https://stackoverflow.com/a/61158659/3335599
   public class ES_Descriptor : BaseDescriptor
   {
-    public ushort ES_ID { get; }
-
     private readonly byte EsFlags;
-
-    private int StreamDependenceFlag => EsFlags >> 7;
-
-    private int URL_Flag => (EsFlags >> 6) & 1;
-
-    private int OCRstreamFlag => (EsFlags >> 5) & 1;
-
-    public int StreamPriority => EsFlags & 31;
 
     private readonly ushort DependsOn_ES_ID;
     private readonly byte URLlength;
     private readonly byte[]? URLstring;
     private readonly ushort OCR_ES_Id;
-
-    public DecoderConfigDescriptor DecoderConfig => GetChildOrThrow<DecoderConfigDescriptor>();
-
-    public override int InternalSize => base.InternalSize + GetLength();
 
     public ES_Descriptor(Stream file, DescriptorHeader header) : base(file, header)
     {
@@ -60,6 +46,20 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors
       EsFlags = 0;
     }
 
+    public ushort ES_ID { get; }
+
+    public int StreamPriority => EsFlags & 31;
+
+    public DecoderConfigDescriptor DecoderConfig => GetChildOrThrow<DecoderConfigDescriptor>();
+
+    public override int InternalSize => base.InternalSize + GetLength();
+
+    private int StreamDependenceFlag => EsFlags >> 7;
+
+    private int URL_Flag => (EsFlags >> 6) & 1;
+
+    private int OCRstreamFlag => (EsFlags >> 5) & 1;
+
     public static ES_Descriptor CreateAudio()
     {
       var descriptor = new ES_Descriptor();
@@ -68,27 +68,6 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors
       descriptor.Children.Add(decoder);
       descriptor.Children.Add(slConfig);
       return descriptor;
-    }
-
-    private int GetLength()
-    {
-      int length = 3;
-      if (StreamDependenceFlag == 1)
-      {
-        length += 2;
-      }
-
-      if (URL_Flag == 1)
-      {
-        length += 1 + URLlength;
-      }
-
-      if (OCRstreamFlag == 1)
-      {
-        length += 2;
-      }
-
-      return length;
     }
 
     public override void Render(Stream file)
@@ -110,6 +89,27 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors
       {
         file.WriteUInt16BE(OCR_ES_Id);
       }
+    }
+
+    private int GetLength()
+    {
+      int length = 3;
+      if (StreamDependenceFlag == 1)
+      {
+        length += 2;
+      }
+
+      if (URL_Flag == 1)
+      {
+        length += 1 + URLlength;
+      }
+
+      if (OCRstreamFlag == 1)
+      {
+        length += 2;
+      }
+
+      return length;
     }
   }
 }

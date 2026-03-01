@@ -8,35 +8,19 @@ public class Id3ExtendedHeader : Frame
   {
   }
 
-  public override void Render(Stream file)
-  {
-  }
-
   public static Id3ExtendedHeader Create(Stream file, Id3Tag parent)
   {
     var header = new ExtendedHeader(file, parent.Version);
     return new Id3ExtendedHeader(header, parent);
   }
+
+  public override void Render(Stream file)
+  {
+  }
 }
 
 public class ExtendedHeader : Header
 {
-  public override string Identifier { get; } = string.Empty;
-
-  public override int HeaderSize => GetExtendedFlagsSize();
-
-  public Flags ExtendedFlags { get; set; }
-
-  public uint SizeOfPadding { get; set; }
-
-  public bool TagIsUpdate { get; set; }
-
-  public byte TagRestrictions { get; set; }
-
-  public uint CRC32 { get; set; }
-
-  public int Version { get; }
-
   public ExtendedHeader(Stream file, int version)
   {
     Version = version;
@@ -76,38 +60,21 @@ public class ExtendedHeader : Header
     SeekForwardToPosition(file, originalPosition + headerSize);
   }
 
-  private int GetExtendedFlagsSize()
-  {
-    if (ExtendedFlags is null)
-    {
-      return 0;
-    }
+  public override string Identifier { get; } = string.Empty;
 
-    if (Version >= 0x400)
-    {
-      var size = 5 + ExtendedFlags.Size;
-      if (ExtendedFlags[1])
-      {
-        size++; // Tag is an update
-      }
+  public override int HeaderSize => GetExtendedFlagsSize();
 
-      if (ExtendedFlags[2])
-      {
-        size += 6; // CRC32
-      }
+  public Flags ExtendedFlags { get; set; }
 
-      if (ExtendedFlags[3])
-      {
-        size += 2; // Tag restrictions
-      }
+  public uint SizeOfPadding { get; set; }
 
-      return size;
-    }
-    else
-    {
-      return ExtendedFlags[0] ? 10 : 6; // Extended header size
-    }
-  }
+  public bool TagIsUpdate { get; set; }
+
+  public byte TagRestrictions { get; set; }
+
+  public uint CRC32 { get; set; }
+
+  public int Version { get; }
 
   public override void Render(Stream stream, int renderSize, ushort version)
   {
@@ -150,4 +117,37 @@ public class ExtendedHeader : Header
   }
 
   public override string ToString() => "ExtendedHeader";
+
+  private int GetExtendedFlagsSize()
+  {
+    if (ExtendedFlags is null)
+    {
+      return 0;
+    }
+
+    if (Version >= 0x400)
+    {
+      var size = 5 + ExtendedFlags.Size;
+      if (ExtendedFlags[1])
+      {
+        size++; // Tag is an update
+      }
+
+      if (ExtendedFlags[2])
+      {
+        size += 6; // CRC32
+      }
+
+      if (ExtendedFlags[3])
+      {
+        size += 2; // Tag restrictions
+      }
+
+      return size;
+    }
+    else
+    {
+      return ExtendedFlags[0] ? 10 : 6; // Extended header size
+    }
+  }
 }

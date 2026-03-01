@@ -3,8 +3,10 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 public interface IStszBox : IBox
 {
   int SampleCount { get; }
+
   /// <summary>The largest sample size in the box</summary>
   int MaxSize { get; }
+
   /// <summary>Sum of all sample sizes in the box</summary>
   long TotalSize { get; }
 

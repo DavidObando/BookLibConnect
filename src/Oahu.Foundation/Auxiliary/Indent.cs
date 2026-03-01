@@ -12,8 +12,6 @@ namespace Oahu.Aux
     int _indent;
     string _output = string.Empty;
 
-    public int Level { get; private set; }
-
     public Indent()
     {
     }
@@ -26,6 +24,8 @@ namespace Oahu.Aux
       this._offset = offset;
       buildString();
     }
+
+    public int Level { get; private set; }
 
     public void Acquire()
     {

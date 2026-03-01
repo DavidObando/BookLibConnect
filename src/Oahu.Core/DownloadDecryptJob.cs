@@ -17,18 +17,10 @@ namespace Oahu.Core
 {
   public class DownloadDecryptJob<T> : IDisposable where T : ICancellation
   {
-    private static int MaxDecrypts => 1; // Environment.ProcessorCount / 2;
-
     private readonly ConcurrentDictionary<(Conversion, int), ThreadProgressBase<ProgressMessage>> _threadProgress = new();
     private readonly ConcurrentBag<Task> _runningTasks = new();
     private readonly ConcurrentBag<Book> _booksForConversion = new();
     private readonly Semaphore _throttlingSemaphore = new(MaxDecrypts, MaxDecrypts);
-
-    private IAudibleApi AudibleApi { get; }
-
-    private IDownloadSettings Settings { get; }
-
-    private Action<Conversion> OnNewStateCallback { get; }
 
     public DownloadDecryptJob(
       IAudibleApi api,
@@ -39,6 +31,14 @@ namespace Oahu.Core
       Settings = settings;
       OnNewStateCallback = onNewStateCallback;
     }
+
+    private static int MaxDecrypts => 1; // Environment.ProcessorCount / 2;
+
+    private IAudibleApi AudibleApi { get; }
+
+    private IDownloadSettings Settings { get; }
+
+    private Action<Conversion> OnNewStateCallback { get; }
 
     public void Dispose() => _throttlingSemaphore?.Dispose();
 

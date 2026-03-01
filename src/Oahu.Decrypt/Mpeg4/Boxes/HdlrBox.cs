@@ -1,23 +1,13 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.IO;
 using System.Text;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class HdlrBox : FullBox
 {
-  public int NullTerminatorCount { get; set; }
-
-  public override long RenderSize => base.RenderSize + 20 + Encoding.UTF8.GetByteCount(HandlerName) + NullTerminatorCount;
-
-  public uint PreDefined { get; }
-
-  public string HandlerType { get; }
-
   private readonly byte[] Reserved;
-
-  public string HandlerName { get; set; }
 
   public HdlrBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
@@ -51,6 +41,16 @@ public class HdlrBox : FullBox
     HandlerName = name ?? "";
     NullTerminatorCount = 1;
   }
+
+  public int NullTerminatorCount { get; set; }
+
+  public override long RenderSize => base.RenderSize + 20 + Encoding.UTF8.GetByteCount(HandlerName) + NullTerminatorCount;
+
+  public uint PreDefined { get; }
+
+  public string HandlerType { get; }
+
+  public string HandlerName { get; set; }
 
   public static HdlrBox Create(string type, string? name, byte[] reservedData, IBox parent)
   {

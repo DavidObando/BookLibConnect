@@ -5,6 +5,13 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 
 public class Id3Header : Header
 {
+  internal Id3Header(ushort version, Stream file)
+  {
+    Version = version;
+    Flags = new((byte)file.ReadByte());
+    Size = UnSyncSafify(ReadUInt32BE(file));
+  }
+
   public override string Identifier => "ID3";
 
   public ushort Version { get; set; }
@@ -33,13 +40,6 @@ public class Id3Header : Header
     {
       return null;
     }
-  }
-
-  internal Id3Header(ushort version, Stream file)
-  {
-    Version = version;
-    Flags = new((byte)file.ReadByte());
-    Size = UnSyncSafify(ReadUInt32BE(file));
   }
 
   public override void Render(Stream stream, int renderSize, ushort version)

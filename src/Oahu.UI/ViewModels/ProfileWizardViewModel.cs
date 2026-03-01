@@ -16,10 +16,6 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 {
   public partial class ProfileWizardViewModel : ObservableObject
   {
-    public static StepVisibilityConverter StepConverter { get; } = new();
-
-    public static OneBasedConverter OneBasedConverter { get; } = new();
-
     private AudibleClient _client;
     private DownloadSettings _downloadSettings;
     private ExportSettings _exportSettings;
@@ -45,9 +41,6 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     // Step 0: Marketplace selection
     [ObservableProperty]
     private ERegion _selectedRegion = ERegion.us;
-
-    public IReadOnlyList<ERegion> AvailableRegions { get; } =
-      Enum.GetValues<ERegion>().ToList().AsReadOnly();
 
     [ObservableProperty]
     private bool _usePreAmazonAccount;
@@ -99,11 +92,11 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     [ObservableProperty]
     private bool _registrationSucceeded;
 
-    /// <summary>
-    /// The resulting profile key after successful registration.
-    /// Set by the wizard upon completion.
-    /// </summary>
-    public IProfileKeyEx ProfileKey { get; private set; }
+    public ProfileWizardViewModel()
+    {
+      CurrentStep = 0;
+      UpdateStepState();
+    }
 
     /// <summary>
     /// Event raised when the wizard completes (success or skip).
@@ -122,11 +115,18 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     /// </summary>
     public event Func<Task<string>> BrowseExportDirectoryRequested;
 
-    public ProfileWizardViewModel()
-    {
-      CurrentStep = 0;
-      UpdateStepState();
-    }
+    public static StepVisibilityConverter StepConverter { get; } = new();
+
+    public static OneBasedConverter OneBasedConverter { get; } = new();
+
+    public IReadOnlyList<ERegion> AvailableRegions { get; } =
+      Enum.GetValues<ERegion>().ToList().AsReadOnly();
+
+    /// <summary>
+    /// The resulting profile key after successful registration.
+    /// Set by the wizard upon completion.
+    /// </summary>
+    public IProfileKeyEx ProfileKey { get; private set; }
 
     public void SetClient(AudibleClient client)
     {

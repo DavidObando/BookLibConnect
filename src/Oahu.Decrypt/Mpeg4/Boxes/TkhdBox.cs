@@ -1,10 +1,22 @@
-﻿using Oahu.Decrypt.Mpeg4.Util;
-using System.IO;
+﻿using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class TkhdBox : HeaderBox
 {
+  public TkhdBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
+  {
+    _ = file.ReadUInt64BE(); // Reserved2
+    Layer = file.ReadInt16BE();
+    AlternateGroup = file.ReadInt16BE();
+    Volume = file.ReadInt16BE();
+    Reserved3 = file.ReadUInt16BE();
+    Matrix = file.ReadBlock(4 * 9);
+    Width = file.ReadUInt32BE();
+    Height = file.ReadUInt32BE();
+  }
+
   public override long RenderSize => base.RenderSize + 2 * 4 + 8 + 4 * 2 + Matrix.Length + 2 * 4;
 
   public uint TrackID { get; set; }
@@ -22,18 +34,6 @@ public class TkhdBox : HeaderBox
   public uint Width { get; }
 
   public uint Height { get; }
-
-  public TkhdBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
-  {
-    _ = file.ReadUInt64BE(); // Reserved2
-    Layer = file.ReadInt16BE();
-    AlternateGroup = file.ReadInt16BE();
-    Volume = file.ReadInt16BE();
-    Reserved3 = file.ReadUInt16BE();
-    Matrix = file.ReadBlock(4 * 9);
-    Width = file.ReadUInt32BE();
-    Height = file.ReadUInt32BE();
-  }
 
   protected override void Render(Stream file)
   {

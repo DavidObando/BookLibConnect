@@ -6,14 +6,13 @@ namespace Oahu.Decrypt.Mpeg4.Util;
 public class BitReader
 {
   private readonly byte[] bytes;
+  private int byteIndex = 0;
+  private int bitIndex = 0;
 
   public BitReader(byte[] data)
   {
     bytes = data;
   }
-
-  private int byteIndex = 0;
-  private int bitIndex = 0;
 
   public int Position
   {
@@ -90,10 +89,9 @@ public class BitWriter
 {
   private int byteIndex = 0;
   private int bitIndex = 0;
+  private byte[] bytes = [];
 
   public int Position => byteIndex * 8 + bitIndex;
-
-  private byte[] bytes = [];
 
   public byte[] ToByteArray() => bytes.ToArray();
 

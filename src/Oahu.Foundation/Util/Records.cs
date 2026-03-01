@@ -2,12 +2,6 @@
 
 namespace Oahu.Common.Util
 {
-  public record ProgressMessage(
-    int? ItemCount,
-    int? IncItem,
-    int? IncStepsPerCent,
-    int? IncStepsPerMille);
-
   public interface IPackageInfo
   {
     string AppName { get; }
@@ -20,6 +14,12 @@ namespace Oahu.Common.Util
 
     string Desc { get; }
   }
+
+  public record ProgressMessage(
+    int? ItemCount,
+    int? IncItem,
+    int? IncStepsPerCent,
+    int? IncStepsPerMille);
 
   public record UpdateInteractionMessage(EUpdateInteract Kind, IPackageInfo PckInfo);
 
@@ -40,12 +40,6 @@ namespace Oahu.Common.Util
 
   public record PackageInfoLocal : PackageInfo, IPackageInfo
   {
-    public new Version Version { get; init; }
-
-    public string SetupFile { get; init; }
-
-    public bool DefaultApp { get; init; }
-
     public PackageInfoLocal()
     {
     }
@@ -65,5 +59,11 @@ namespace Oahu.Common.Util
         return succ ? version : null;
       }
     }
+
+    public new Version Version { get; init; }
+
+    public string SetupFile { get; init; }
+
+    public bool DefaultApp { get; init; }
   }
 }

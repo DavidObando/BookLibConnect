@@ -4,14 +4,6 @@ namespace Oahu.Decrypt.Mpeg4.Descriptors;
 
 public class DescriptorHeader
 {
-  public long FilePosition { get; internal set; }
-
-  public int TotalBoxSize { get; }
-
-  public byte TagID { get; private set; }
-
-  public int HeaderSize { get; private set; }
-
   public DescriptorHeader(Stream file)
   {
     FilePosition = file.Position;
@@ -29,6 +21,14 @@ public class DescriptorHeader
     TagID = tagId;
     HeaderSize = 1;
   }
+
+  public long FilePosition { get; internal set; }
+
+  public int TotalBoxSize { get; }
+
+  public byte TagID { get; private set; }
+
+  public int HeaderSize { get; private set; }
 
   /// <summary>
   /// Get the size of the expandable class encoded length field.

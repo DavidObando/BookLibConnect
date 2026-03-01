@@ -9,10 +9,10 @@ namespace Oahu.Aux
   /// </summary>
   public class InteractionCallback<T, TResult> : IInteractionCallback<T, TResult>
   {
+    private static readonly SynchronizationContext DefaultContext = new SynchronizationContext();
+
     private readonly SynchronizationContext _synchronizationContext;
     private readonly Func<T, TResult> _handler;
-
-    private static readonly SynchronizationContext DefaultContext = new SynchronizationContext();
 
     public InteractionCallback(Func<T, TResult> handler)
     {
@@ -25,6 +25,8 @@ namespace Oahu.Aux
 
       _handler = handler;
     }
+
+    TResult IInteractionCallback<T, TResult>.Interact(T value) => onInteract(value);
 
     protected virtual TResult onInteract(T value)
     {
@@ -43,7 +45,5 @@ namespace Oahu.Aux
 
       return retval;
     }
-
-    TResult IInteractionCallback<T, TResult>.Interact(T value) => onInteract(value);
   }
 }

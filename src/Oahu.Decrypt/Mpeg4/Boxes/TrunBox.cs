@@ -1,36 +1,10 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class TrunBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + 4 + (data_offset_present ? 4 : 0) + (first_sample_flags_present ? 4 : 0) + SampleInfoSize * Samples.Length;
-
-  public int DataOffset { get; }
-
-  public uint FirstSampleFlags { get; }
-
-  public SampleInfo[] Samples { get; }
-
-  private bool data_offset_present => (Flags & 1) == 1;
-
-  private bool first_sample_flags_present => (Flags & 4) == 4;
-
-  public bool sample_duration_present => (Flags & 0x100) == 0x100;
-
-  public bool sample_size_present => (Flags & 0x200) == 0x200;
-
-  private bool sample_flags_present => (Flags & 0x400) == 0x400;
-
-  private bool sample_composition_time_offsets_present => (Flags & 0x800) == 0x800;
-
-  private int SampleInfoSize =>
-      (sample_duration_present ? 4 : 0) +
-      (sample_size_present ? 4 : 0) +
-      (sample_flags_present ? 4 : 0) +
-      (sample_composition_time_offsets_present ? 4 : 0);
-
   public TrunBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     uint sampleCount = file.ReadUInt32BE();
@@ -56,6 +30,32 @@ public class TrunBox : FullBox
       Samples[i] = new SampleInfo(sampleDuration, sampleSize, sampleFlags, sampleCompositionTimeOffset);
     }
   }
+
+  public override long RenderSize => base.RenderSize + 4 + (data_offset_present ? 4 : 0) + (first_sample_flags_present ? 4 : 0) + SampleInfoSize * Samples.Length;
+
+  public int DataOffset { get; }
+
+  public uint FirstSampleFlags { get; }
+
+  public SampleInfo[] Samples { get; }
+
+  public bool sample_duration_present => (Flags & 0x100) == 0x100;
+
+  public bool sample_size_present => (Flags & 0x200) == 0x200;
+
+  private bool data_offset_present => (Flags & 1) == 1;
+
+  private bool first_sample_flags_present => (Flags & 4) == 4;
+
+  private bool sample_flags_present => (Flags & 0x400) == 0x400;
+
+  private bool sample_composition_time_offsets_present => (Flags & 0x800) == 0x800;
+
+  private int SampleInfoSize =>
+      (sample_duration_present ? 4 : 0) +
+      (sample_size_present ? 4 : 0) +
+      (sample_flags_present ? 4 : 0) +
+      (sample_composition_time_offsets_present ? 4 : 0);
 
   protected override void Render(Stream file)
   {
@@ -97,14 +97,6 @@ public class TrunBox : FullBox
 
   public class SampleInfo
   {
-    public uint? SampleDuration { get; }
-
-    public int? SampleSize { get; }
-
-    public uint? SampleFlags { get; }
-
-    public int? SampleCompositionTimeOffset { get; }
-
     public SampleInfo(uint? sampleDuration, int? sampleSize, uint? sampleFlags, int? sampleCompositionTimeOffset)
     {
       SampleDuration = sampleDuration;
@@ -112,5 +104,13 @@ public class TrunBox : FullBox
       SampleFlags = sampleFlags;
       SampleCompositionTimeOffset = sampleCompositionTimeOffset;
     }
+
+    public uint? SampleDuration { get; }
+
+    public int? SampleSize { get; }
+
+    public uint? SampleFlags { get; }
+
+    public int? SampleCompositionTimeOffset { get; }
   }
 }

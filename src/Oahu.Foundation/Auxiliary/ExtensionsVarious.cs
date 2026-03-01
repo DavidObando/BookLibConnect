@@ -38,6 +38,17 @@ namespace Oahu.Aux.Extensions
     public const string SEPARATOR = "; ";
     public const char ELLIPSIS = '…';
 
+    const int MAXLEN_SHORTSTRING = 40;
+
+    static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
+    static readonly char[] DoubtfulFileNameChars =
+    {
+      '¡', '¢', '£', '¤', '¥', '¦', '§', '¨', '©', 'ª', '«', '¬', '®', '¯', '°', '±',
+      '²', '³', '´', 'µ', '¶', '·', '¸', '¹', 'º', '»', '¼', '½', '¾', '¿', '×', '÷',
+      '‘', '’', 'ƒ', '„', '…', '†', '‡', 'ˆ', '‰', '‹', '‘', '“', '”', '•', '–', '—',
+      '˜', '™', '›'
+    };
+
     public static string FirstEtAl(this IEnumerable<string> values, char separator) =>
       values.firstEtAl($"{separator} ");
 
@@ -52,53 +63,6 @@ namespace Oahu.Aux.Extensions
 
     public static string Combine(this IEnumerable<string> values, bool newLine) =>
       values.combine(newLine, SEPARATOR);
-
-    private static string firstEtAl(this IEnumerable<string> values, string separator)
-    {
-      if (values.IsNullOrEmpty())
-      {
-        return null;
-      }
-
-      if (values.Count() > 1)
-      {
-        return $"{values.First()}{separator}{ELLIPSIS}";
-      }
-      else
-      {
-        return values.First();
-      }
-    }
-
-    private static string combine(this IEnumerable<string> values, bool newLine, string separator)
-    {
-      if (values is null)
-      {
-        return null;
-      }
-
-      var sb = new StringBuilder();
-      foreach (string v in values)
-      {
-        if (string.IsNullOrWhiteSpace(v))
-        {
-          continue;
-        }
-
-        if (sb.Length > 0)
-        {
-          sb.Append(separator);
-          if (newLine)
-          {
-            sb.AppendLine();
-          }
-        }
-
-        sb.Append(v);
-      }
-
-      return sb.ToString();
-    }
 
     public static string[] SplitTrim(this string value, char separator) => value.SplitTrim(new[] { separator });
 
@@ -118,15 +82,6 @@ namespace Oahu.Aux.Extensions
       values = values.Select(v => v.Trim()).ToArray();
       return values;
     }
-
-    static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
-    static readonly char[] DoubtfulFileNameChars =
-    {
-      '¡', '¢', '£', '¤', '¥', '¦', '§', '¨', '©', 'ª', '«', '¬', '®', '¯', '°', '±',
-      '²', '³', '´', 'µ', '¶', '·', '¸', '¹', 'º', '»', '¼', '½', '¾', '¿', '×', '÷',
-      '‘', '’', 'ƒ', '„', '…', '†', '‡', 'ˆ', '‰', '‹', '’', '“', '”', '•', '–', '—',
-      '˜', '™', '›'
-    };
 
     public static string Prune(this string s, char[] invalid)
     {
@@ -194,8 +149,6 @@ namespace Oahu.Aux.Extensions
       return s1;
     }
 
-    const int MAXLEN_SHORTSTRING = 40;
-
     /// <summary>
     /// Performs the ROT13 character rotation.
     /// </summary>
@@ -234,6 +187,53 @@ namespace Oahu.Aux.Extensions
       }
 
       return new string(array);
+    }
+
+    private static string firstEtAl(this IEnumerable<string> values, string separator)
+    {
+      if (values.IsNullOrEmpty())
+      {
+        return null;
+      }
+
+      if (values.Count() > 1)
+      {
+        return $"{values.First()}{separator}{ELLIPSIS}";
+      }
+      else
+      {
+        return values.First();
+      }
+    }
+
+    private static string combine(this IEnumerable<string> values, bool newLine, string separator)
+    {
+      if (values is null)
+      {
+        return null;
+      }
+
+      var sb = new StringBuilder();
+      foreach (string v in values)
+      {
+        if (string.IsNullOrWhiteSpace(v))
+        {
+          continue;
+        }
+
+        if (sb.Length > 0)
+        {
+          sb.Append(separator);
+          if (newLine)
+          {
+            sb.AppendLine();
+          }
+        }
+
+        sb.Append(v);
+      }
+
+      return sb.ToString();
     }
   }
 

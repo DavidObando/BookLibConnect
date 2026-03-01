@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Oahu.Aux;
 using Microsoft.EntityFrameworkCore;
+using Oahu.Aux;
 using Oahu.Aux.Extensions;
 using static Oahu.Aux.Logging;
 
@@ -17,6 +17,27 @@ namespace Oahu.BooksDatabase
     private const string SUBDIR = "data";
     private const string DBFILE = "audiobooks.db";
     private static readonly string DEFAULT_DIR = Path.Combine(ApplEnv.LocalApplDirectory, SUBDIR);
+    private static readonly Dictionary<Type, EPseudoAsinId> _pseudoAsins
+      = new Dictionary<Type, EPseudoAsinId>
+      {
+        { typeof(Author), EPseudoAsinId.author },
+        { typeof(Narrator), EPseudoAsinId.narrator }
+      };
+
+    public BookDbContext(string dirpath = null, string filename = null)
+    {
+      if (dirpath is null)
+      {
+        dirpath = DEFAULT_DIR;
+      }
+
+      if (filename is null)
+      {
+        filename = DBFILE;
+      }
+
+      DbPath = Path.Combine(dirpath, filename);
+    }
 
     public DbSet<Book> Books { get; set; }
 
@@ -46,24 +67,9 @@ namespace Oahu.BooksDatabase
 
     public DbSet<Account> Accounts { get; set; }
 
-    internal DbSet<PseudoAsin> PseudoAsins { get; set; }
-
     public string DbPath { get; }
 
-    public BookDbContext(string dirpath = null, string filename = null)
-    {
-      if (dirpath is null)
-      {
-        dirpath = DEFAULT_DIR;
-      }
-
-      if (filename is null)
-      {
-        filename = DBFILE;
-      }
-
-      DbPath = Path.Combine(dirpath, filename);
-    }
+    internal DbSet<PseudoAsin> PseudoAsins { get; set; }
 
     public static async Task<bool> StartupAsync(string dirpath = null, string filename = null)
     {
@@ -90,66 +96,6 @@ namespace Oahu.BooksDatabase
 
       return dbContext.Database.CanConnect();
     }
-
-    private static async Task backupPreviousVersionAsync(BookDbContext dbContext)
-    {
-      if (!File.Exists(dbContext.DbPath))
-      {
-        return;
-      }
-
-      await Task.Run(() =>
-      {
-        try
-        {
-          string dir = Path.GetDirectoryName(dbContext.DbPath);
-          string filestub = Path.GetFileNameWithoutExtension(dbContext.DbPath);
-          string ext = Path.GetExtension(dbContext.DbPath);
-
-          string mig = dbContext.Database.GetAppliedMigrations().LastOrDefault();
-          if (mig.IsNullOrEmpty())
-          {
-            mig = "(no mig)";
-          }
-
-          string dest = Path.Combine(dir, $"{filestub} {mig}{ext}");
-          Log(2, typeof(BookDbContext), () => $"create backup: \"{dest.SubstitUser()}\"");
-
-          File.Copy(dbContext.DbPath, dest, true);
-        }
-        catch (Exception exc)
-        {
-          Log(1, typeof(BookDbContext), exc.Summary());
-        }
-      });
-    }
-
-    private static async Task compactAsync(BookDbContext dbContext)
-    {
-      var fi = new FileInfo(dbContext.DbPath);
-      long size = fi.Length / 1024;
-      Log(2, typeof(BookDbContext), () => $"before: {size} kB");
-      try
-      {
-        int n = await dbContext.Database.ExecuteSqlRawAsync("VACUUM");
-      }
-      catch (Exception exc)
-      {
-        Log(1, typeof(BookDbContext), exc.Summary());
-        return;
-      }
-
-      fi.Refresh();
-      size = fi.Length / 1024;
-      Log(2, typeof(BookDbContext), () => $"after:  {size} kB");
-    }
-
-    private static readonly Dictionary<Type, EPseudoAsinId> _pseudoAsins
-      = new Dictionary<Type, EPseudoAsinId>
-      {
-        { typeof(Author), EPseudoAsinId.author },
-        { typeof(Narrator), EPseudoAsinId.narrator }
-      };
 
     public string GetNextPseudoAsin<T>() => GetNextPseudoAsin(typeof(T));
 
@@ -271,6 +217,59 @@ namespace Oahu.BooksDatabase
         .HasForeignKey(e => e.ParentChapterId)
         .IsRequired(false)
         .OnDelete(DeleteBehavior.Cascade);
+    }
+
+    private static async Task backupPreviousVersionAsync(BookDbContext dbContext)
+    {
+      if (!File.Exists(dbContext.DbPath))
+      {
+        return;
+      }
+
+      await Task.Run(() =>
+      {
+        try
+        {
+          string dir = Path.GetDirectoryName(dbContext.DbPath);
+          string filestub = Path.GetFileNameWithoutExtension(dbContext.DbPath);
+          string ext = Path.GetExtension(dbContext.DbPath);
+
+          string mig = dbContext.Database.GetAppliedMigrations().LastOrDefault();
+          if (mig.IsNullOrEmpty())
+          {
+            mig = "(no mig)";
+          }
+
+          string dest = Path.Combine(dir, $"{filestub} {mig}{ext}");
+          Log(2, typeof(BookDbContext), () => $"create backup: \"{dest.SubstitUser()}\"");
+
+          File.Copy(dbContext.DbPath, dest, true);
+        }
+        catch (Exception exc)
+        {
+          Log(1, typeof(BookDbContext), exc.Summary());
+        }
+      });
+    }
+
+    private static async Task compactAsync(BookDbContext dbContext)
+    {
+      var fi = new FileInfo(dbContext.DbPath);
+      long size = fi.Length / 1024;
+      Log(2, typeof(BookDbContext), () => $"before: {size} kB");
+      try
+      {
+        int n = await dbContext.Database.ExecuteSqlRawAsync("VACUUM");
+      }
+      catch (Exception exc)
+      {
+        Log(1, typeof(BookDbContext), exc.Summary());
+        return;
+      }
+
+      fi.Refresh();
+      size = fi.Length / 1024;
+      Log(2, typeof(BookDbContext), () => $"after:  {size} kB");
     }
   }
 

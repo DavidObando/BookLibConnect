@@ -1,42 +1,22 @@
-﻿using Oahu.Decrypt.Mpeg4.Boxes;
-using Oahu.Decrypt.Mpeg4.Chunks;
-using Oahu.Decrypt.Mpeg4.Util;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Oahu.Decrypt.Mpeg4.Boxes;
+using Oahu.Decrypt.Mpeg4.Chunks;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4;
 
 public class Mpeg4File : IDisposable
 {
-  public ChapterInfo? Chapters { get; set; }
-
-  public Stream InputStream { get; }
-
-  public FtypBox Ftyp { get; set; }
-
-  public MoovBox Moov { get; }
-
-  public MdatBox Mdat { get; }
-
-  public MetadataItems MetadataItems => lazyMetadataItems.Value;
-
   private readonly Lazy<MetadataItems> lazyMetadataItems;
-
-  public virtual TimeSpan Duration => TimeSpan.FromSeconds((double)Moov.AudioTrack.Mdia.Mdhd.Duration / TimeScale);
-
-  public int MaxBitrate => (int)(AudioSampleEntry.Esds?.ES_Descriptor.DecoderConfig.MaxBitrate ?? 0);
-
-  public AudioSampleEntry AudioSampleEntry { get; }
-
-  public List<IBox> TopLevelBoxes { get; }
-
   private int m_Disposed;
-
-  protected bool Disposed => m_Disposed != 0;
+  private int? m_timescale = null;
+  private int? m_audioChannels = null;
+  private int? m_averageBitrate = null;
 
   public Mpeg4File(Stream file) : this(file, file.Length)
   {
@@ -61,9 +41,30 @@ public class Mpeg4File : IDisposable
         ?? throw new InvalidOperationException("The audio track's AudioSampleEntry is null");
   }
 
-  private int? m_timescale = null;
-  private int? m_audioChannels = null;
-  private int? m_averageBitrate = null;
+  ~Mpeg4File()
+  {
+    Dispose(disposing: false);
+  }
+
+  public ChapterInfo? Chapters { get; set; }
+
+  public Stream InputStream { get; }
+
+  public FtypBox Ftyp { get; set; }
+
+  public MoovBox Moov { get; }
+
+  public MdatBox Mdat { get; }
+
+  public MetadataItems MetadataItems => lazyMetadataItems.Value;
+
+  public virtual TimeSpan Duration => TimeSpan.FromSeconds((double)Moov.AudioTrack.Mdia.Mdhd.Duration / TimeScale);
+
+  public int MaxBitrate => (int)(AudioSampleEntry.Esds?.ES_Descriptor.DecoderConfig.MaxBitrate ?? 0);
+
+  public AudioSampleEntry AudioSampleEntry { get; }
+
+  public List<IBox> TopLevelBoxes { get; }
 
   public int TimeScale => m_timescale ??=
       AudioSampleEntry.Esds?.ES_Descriptor.DecoderConfig.AudioSpecificConfig.SamplingFrequency ??
@@ -83,10 +84,52 @@ public class Mpeg4File : IDisposable
       AudioSampleEntry?.Dac4?.AverageBitrate ??
       CalculateBitrate());
 
-  protected virtual uint CalculateBitrate()
+  protected bool Disposed => m_Disposed != 0;
+
+  public static async Task RelocateMoovToBeginningAsync(string mp4FilePath, ProgressTracker? progressTracker = null, CancellationToken cancellationToken = default)
   {
-    var totalSize = Moov.AudioTrack.Mdia.Minf.Stbl.Stsz?.TotalSize;
-    return !totalSize.HasValue || totalSize.Value == 0 ? 0 : (uint)Math.Round(totalSize.Value * 8 / Duration.TotalSeconds, 0);
+    List<IBox> boxes;
+
+    using (FileStream fileStream = File.OpenRead(mp4FilePath))
+    {
+      boxes = Mpeg4Util.LoadTopLevelBoxes(fileStream);
+    }
+
+    try
+    {
+      long ftypeSize = boxes.OfType<FtypBox>().Single().RenderSize;
+      MoovBox moov = boxes.OfType<MoovBox>().Single();
+
+      if (progressTracker is not null)
+      {
+        progressTracker.TotalDuration = TimeSpan.FromSeconds(moov.Mvhd.Duration / (double)moov.Mvhd.Timescale);
+        if (moov.Header.FilePosition == ftypeSize)
+        {
+          // Moov is already at the beginning, immidately following ftyp.
+          progressTracker.MovedBytes = progressTracker.TotalSize = 1;
+          return;
+        }
+      }
+
+      var mdat = boxes.OfType<MdatBox>().Single();
+
+      // Figure out how much mdat must be shifted to make room for moov at the beginning.
+      long toShift = ftypeSize + moov.RenderSize - mdat.Header.FilePosition;
+      long shifted = moov.ShiftChunkOffsetsWithMoovInFront(toShift);
+
+      using FileStream mpegFile = new(mp4FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+      await mdat.ShiftMdatAsync(mpegFile, shifted, progressTracker, cancellationToken);
+      mpegFile.Position = ftypeSize;
+      moov.Save(mpegFile);
+      mpegFile.SetLength(mpegFile.Position + mdat.Header.TotalBoxSize);
+    }
+    finally
+    {
+      foreach (IBox box in boxes)
+      {
+        box.Dispose();
+      }
+    }
   }
 
   public async Task SaveAsync(bool keepMoovInFront = true, ProgressTracker? progressTracker = null, CancellationToken cancellationToken = default)
@@ -208,52 +251,6 @@ public class Mpeg4File : IDisposable
     await InputStream.FlushAsync(cancellationToken);
   }
 
-  public static async Task RelocateMoovToBeginningAsync(string mp4FilePath, ProgressTracker? progressTracker = null, CancellationToken cancellationToken = default)
-  {
-    List<IBox> boxes;
-
-    using (FileStream fileStream = File.OpenRead(mp4FilePath))
-    {
-      boxes = Mpeg4Util.LoadTopLevelBoxes(fileStream);
-    }
-
-    try
-    {
-      long ftypeSize = boxes.OfType<FtypBox>().Single().RenderSize;
-      MoovBox moov = boxes.OfType<MoovBox>().Single();
-
-      if (progressTracker is not null)
-      {
-        progressTracker.TotalDuration = TimeSpan.FromSeconds(moov.Mvhd.Duration / (double)moov.Mvhd.Timescale);
-        if (moov.Header.FilePosition == ftypeSize)
-        {
-          // Moov is already at the beginning, immidately following ftyp.
-          progressTracker.MovedBytes = progressTracker.TotalSize = 1;
-          return;
-        }
-      }
-
-      var mdat = boxes.OfType<MdatBox>().Single();
-
-      // Figure out how much mdat must be shifted to make room for moov at the beginning.
-      long toShift = ftypeSize + moov.RenderSize - mdat.Header.FilePosition;
-      long shifted = moov.ShiftChunkOffsetsWithMoovInFront(toShift);
-
-      using FileStream mpegFile = new(mp4FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-      await mdat.ShiftMdatAsync(mpegFile, shifted, progressTracker, cancellationToken);
-      mpegFile.Position = ftypeSize;
-      moov.Save(mpegFile);
-      mpegFile.SetLength(mpegFile.Position + mdat.Header.TotalBoxSize);
-    }
-    finally
-    {
-      foreach (IBox box in boxes)
-      {
-        box.Dispose();
-      }
-    }
-  }
-
   public ChapterInfo? GetChaptersFromMetadata()
   {
     TrakBox? textTrak = Moov.TextTrack;
@@ -307,15 +304,16 @@ public class Mpeg4File : IDisposable
     return chapterInfo;
   }
 
-  ~Mpeg4File()
-  {
-    Dispose(disposing: false);
-  }
-
   public void Dispose()
   {
     Dispose(disposing: true);
     GC.SuppressFinalize(this);
+  }
+
+  protected virtual uint CalculateBitrate()
+  {
+    var totalSize = Moov.AudioTrack.Mdia.Minf.Stbl.Stsz?.TotalSize;
+    return !totalSize.HasValue || totalSize.Value == 0 ? 0 : (uint)Math.Round(totalSize.Value * 8 / Duration.TotalSeconds, 0);
   }
 
   protected virtual void Dispose(bool disposing)

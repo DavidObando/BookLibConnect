@@ -1,27 +1,11 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class TencBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + 20 + ((DefaultIsProtected && DefaultPerSampleIvSize == 0) ? 1 + DefaultConstantIvSize : 0);
-
-  public byte DefaultCryptByteBlock { get; }
-
-  public byte DefaultSkipByteBlock { get; }
-
-  public bool DefaultIsProtected { get; }
-
-  public byte DefaultPerSampleIvSize { get; }
-
-  public Guid DefaultKID { get; }
-
-  public byte DefaultConstantIvSize { get; }
-
-  public byte[] DefaultConstantIv { get; }
-
   public TencBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     file.ReadByte();
@@ -51,6 +35,22 @@ public class TencBox : FullBox
       DefaultConstantIv = Array.Empty<byte>();
     }
   }
+
+  public override long RenderSize => base.RenderSize + 20 + ((DefaultIsProtected && DefaultPerSampleIvSize == 0) ? 1 + DefaultConstantIvSize : 0);
+
+  public byte DefaultCryptByteBlock { get; }
+
+  public byte DefaultSkipByteBlock { get; }
+
+  public bool DefaultIsProtected { get; }
+
+  public byte DefaultPerSampleIvSize { get; }
+
+  public Guid DefaultKID { get; }
+
+  public byte DefaultConstantIvSize { get; }
+
+  public byte[] DefaultConstantIv { get; }
 
   protected override void Render(Stream file)
   {

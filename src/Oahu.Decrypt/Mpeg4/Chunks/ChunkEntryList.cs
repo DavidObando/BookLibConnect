@@ -1,8 +1,8 @@
-using Oahu.Decrypt.Mpeg4.Boxes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Oahu.Decrypt.Mpeg4.Boxes;
 
 namespace Oahu.Decrypt.Mpeg4.Chunks;
 
@@ -17,8 +17,6 @@ public class ChunkEntryList : IReadOnlyCollection<ChunkEntry>
   private readonly ChunkFrames[] ChunkFrameTable;
   private readonly uint TrackId;
 
-  public int Count { get; }
-
   public ChunkEntryList(TrakBox track)
   {
     TrackId = track.Tkhd.TrackID;
@@ -30,6 +28,8 @@ public class ChunkEntryList : IReadOnlyCollection<ChunkEntry>
     Stts = track.Mdia.Minf.Stbl.Stts;
     ChunkFrameTable = track.Mdia.Minf.Stbl.Stsc.CalculateChunkFrameTable(coBox.EntryCount);
   }
+
+  public int Count { get; }
 
   public IEnumerator<ChunkEntry> GetEnumerator()
       => EnumerateChunks().GetEnumerator();

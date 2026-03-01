@@ -5,11 +5,7 @@ namespace Oahu.Decrypt.Mpeg4.ID3;
 
 public class Flags
 {
-  public int Size => _flags.Length;
-
   private byte[] _flags;
-
-  public byte[] ToBytes() => _flags.ToArray();
 
   public Flags(params byte[] flags)
   {
@@ -20,6 +16,8 @@ public class Flags
   {
     _flags = [(byte)(flags >> 8), (byte)(flags & 0xff)];
   }
+
+  public int Size => _flags.Length;
 
   public bool this[int index]
   {
@@ -50,4 +48,6 @@ public class Flags
       }
     }
   }
+
+  public byte[] ToBytes() => _flags.ToArray();
 }

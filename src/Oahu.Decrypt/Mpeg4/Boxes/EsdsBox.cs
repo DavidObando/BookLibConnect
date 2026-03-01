@@ -1,5 +1,5 @@
-﻿using Oahu.Decrypt.Mpeg4.Descriptors;
-using System.IO;
+﻿using System.IO;
+using Oahu.Decrypt.Mpeg4.Descriptors;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
@@ -7,10 +7,6 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
 // https://developer.apple.com/library/archive/documentation/QuickTime/QTFF/QTFFChap3/qtff3.html#//apple_ref/doc/uid/TP40000939-CH205-124774
 public class EsdsBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + ES_Descriptor.RenderSize;
-
-  public ES_Descriptor ES_Descriptor { get; }
-
   public EsdsBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     var descroptor = DescriptorFactory.CreateDescriptor(file);
@@ -22,6 +18,10 @@ public class EsdsBox : FullBox
   {
     ES_Descriptor = es_Descriptor;
   }
+
+  public override long RenderSize => base.RenderSize + ES_Descriptor.RenderSize;
+
+  public ES_Descriptor ES_Descriptor { get; }
 
   public static EsdsBox CreateEmpty(IBox parent)
   {

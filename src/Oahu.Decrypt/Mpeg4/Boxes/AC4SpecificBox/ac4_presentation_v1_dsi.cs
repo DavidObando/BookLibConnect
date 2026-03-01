@@ -1,5 +1,5 @@
-﻿using Oahu.Decrypt.Mpeg4.Util;
-using System;
+﻿using System;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes.AC4SpecificBox;
 

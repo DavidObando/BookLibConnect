@@ -1,23 +1,11 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class SidxBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + 8 + (Version == 0 ? 8 : 16) + 4 + Segments.Length * 12;
-
-  public uint ReferenceId { get; }
-
-  public int Timescale { get; }
-
-  public long EarliestPresentationTime { get; }
-
-  public long FirstOffset { get; }
-
-  public Segment[] Segments { get; }
-
   public SidxBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     ReferenceId = file.ReadUInt32BE();
@@ -43,6 +31,18 @@ public class SidxBox : FullBox
       Segments[i] = new Segment(file);
     }
   }
+
+  public override long RenderSize => base.RenderSize + 8 + (Version == 0 ? 8 : 16) + 4 + Segments.Length * 12;
+
+  public uint ReferenceId { get; }
+
+  public int Timescale { get; }
+
+  public long EarliestPresentationTime { get; }
+
+  public long FirstOffset { get; }
+
+  public Segment[] Segments { get; }
 
   protected override void Render(Stream file)
   {
@@ -80,13 +80,6 @@ public class SidxBox : FullBox
       type_and_size = file.ReadUInt32BE();
       subsegment_duration = file.ReadUInt32BE();
       SAP = file.ReadUInt32BE();
-    }
-
-    public void Save(Stream file)
-    {
-      file.WriteUInt32BE(type_and_size);
-      file.WriteUInt32BE(subsegment_duration);
-      file.WriteUInt32BE(SAP);
     }
 
     public bool ReferenceType
@@ -139,6 +132,13 @@ public class SidxBox : FullBox
         ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 0xFFFFFFF, nameof(SapType));
         SAP = (SAP & 0xF0000000) | (uint)value;
       }
+    }
+
+    public void Save(Stream file)
+    {
+      file.WriteUInt32BE(type_and_size);
+      file.WriteUInt32BE(subsegment_duration);
+      file.WriteUInt32BE(SAP);
     }
   }
 }

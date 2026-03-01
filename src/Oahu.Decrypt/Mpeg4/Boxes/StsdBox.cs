@@ -1,15 +1,11 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.Collections.Generic;
 using System.IO;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class StsdBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + 4;
-
-  public uint EntryCount { get; }
-
   public StsdBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     EntryCount = file.ReadUInt32BE();
@@ -37,6 +33,10 @@ public class StsdBox : FullBox
       }
     }
   }
+
+  public override long RenderSize => base.RenderSize + 4;
+
+  public uint EntryCount { get; }
 
   public AudioSampleEntry? AudioSampleEntry { get; }
 

@@ -51,12 +51,6 @@ namespace Oahu.Core
 
   class TokenBearer : ITokenBearer
   {
-    public string RefreshToken { get; set; }
-
-    public string AccessToken { get; set; }
-
-    public DateTime Expiration { get; set; }
-
     public TokenBearer()
     {
     }
@@ -71,6 +65,12 @@ namespace Oahu.Core
     {
       RefreshToken = refrToken;
     }
+
+    public string RefreshToken { get; set; }
+
+    public string AccessToken { get; set; }
+
+    public DateTime Expiration { get; set; }
 
     public static TokenBearer Create(Uri uri)
     {
@@ -153,6 +153,32 @@ namespace Oahu.Core
 
   class Profile : IProfile
   {
+    public Profile()
+    {
+    }
+
+    public Profile(ERegion region, TokenBearer token, IEnumerable<KeyValuePair<string, string>> cookies, string serial)
+    {
+      Region = region;
+      Token = token;
+      Cookies = cookies;
+      DeviceInfo = new DeviceInfo
+      {
+        Serial = serial
+      };
+    }
+
+    public Profile(ERegion region, Authorization authorization, string serial, bool preAmazonAccount)
+    {
+      Region = region;
+      Authorization = authorization;
+      DeviceInfo = new DeviceInfo
+      {
+        Serial = serial
+      };
+      PreAmazon = preAmazonAccount;
+    }
+
     public uint Id { get; set; }
 
     public bool PreAmazon { get; set; }
@@ -182,32 +208,6 @@ namespace Oahu.Core
     IDeviceInfo IProfile.DeviceInfo => DeviceInfo;
 
     ICustomerInfo IProfile.CustomerInfo => CustomerInfo;
-
-    public Profile()
-    {
-    }
-
-    public Profile(ERegion region, TokenBearer token, IEnumerable<KeyValuePair<string, string>> cookies, string serial)
-    {
-      Region = region;
-      Token = token;
-      Cookies = cookies;
-      DeviceInfo = new DeviceInfo
-      {
-        Serial = serial
-      };
-    }
-
-    public Profile(ERegion region, Authorization authorization, string serial, bool preAmazonAccount)
-    {
-      Region = region;
-      Authorization = authorization;
-      DeviceInfo = new DeviceInfo
-      {
-        Serial = serial
-      };
-      PreAmazon = preAmazonAccount;
-    }
 
     public void Update(
       TokenBearer token,
@@ -239,13 +239,6 @@ namespace Oahu.Core
   class Configuration
   {
     private static readonly string CONFIG_DIR = Path.Combine(ApplEnv.LocalApplDirectory, "config");
-
-    class SerializableConfig
-    {
-      public List<Profile> Profiles { get; set; }
-
-      public string Secure { get; set; }
-    }
 
     private List<Profile> _profiles;
 
@@ -385,6 +378,13 @@ namespace Oahu.Core
       catch (Exception)
       {
       }
+    }
+
+    class SerializableConfig
+    {
+      public List<Profile> Profiles { get; set; }
+
+      public string Secure { get; set; }
     }
   }
 }

@@ -10,18 +10,6 @@ namespace Oahu.Aux
   /// </summary>
   public static class SettingsManager
   {
-    class UserConfig
-    {
-      public object Settings { get; set; }
-
-      public string File { get; set; }
-    }
-
-    private static Dictionary<Type, UserConfig> __userSettingsDict = new();
-    private static object __appSettings;
-
-    private const string JSON = ".json";
-
     /// <summary>
     /// The application settings file
     /// </summary>
@@ -33,6 +21,11 @@ namespace Oahu.Aux
     public const string USER_SETTINGS_FILE = "usersettings" + JSON;
 
     public const string SETTINGS_TEMPLATE_FILE_SUFFIX = ".template" + JSON;
+
+    private const string JSON = ".json";
+
+    private static Dictionary<Type, UserConfig> __userSettingsDict = new();
+    private static object __appSettings;
 
     /// <summary>
     /// Gets the application settings directory.
@@ -259,6 +252,13 @@ namespace Oahu.Aux
 
         return null;
       }
+    }
+
+    class UserConfig
+    {
+      public object Settings { get; set; }
+
+      public string File { get; set; }
     }
   }
 }

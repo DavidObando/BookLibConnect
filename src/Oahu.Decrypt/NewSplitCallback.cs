@@ -1,5 +1,5 @@
-using Oahu.Decrypt.Mpeg4;
 using System.IO;
+using Oahu.Decrypt.Mpeg4;
 
 namespace Oahu.Decrypt
 {
@@ -18,11 +18,14 @@ namespace Oahu.Decrypt
 
   public interface INewSplitCallback<T> : INewSplitCallback where T : INewSplitCallback<T>
   {
-    abstract static T Create(Chapter chapter);
+    static abstract T Create(Chapter chapter);
   }
 
   public class NewSplitCallback : INewSplitCallback<NewSplitCallback>
   {
+    private NewSplitCallback(Chapter chapter)
+        => Chapter = chapter;
+
     public Chapter Chapter { get; }
 
     public int? TrackNumber { get; set; }
@@ -32,9 +35,6 @@ namespace Oahu.Decrypt
     public string? TrackTitle { get; set; }
 
     public Stream? OutputFile { get; set; }
-
-    private NewSplitCallback(Chapter chapter)
-        => Chapter = chapter;
 
     public static NewSplitCallback Create(Chapter chapter)
     {

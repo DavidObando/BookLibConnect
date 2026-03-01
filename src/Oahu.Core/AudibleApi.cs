@@ -10,12 +10,12 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Oahu.Decrypt;
 using Oahu.Aux;
 using Oahu.Aux.Extensions;
 using Oahu.BooksDatabase;
 using Oahu.CommonTypes;
 using Oahu.Core.ex;
+using Oahu.Decrypt;
 using static Oahu.Aux.Logging;
 using R = Oahu.Core.Properties.Resources;
 
@@ -34,43 +34,6 @@ namespace Oahu.Core
     const char ORIG = '\'';
     const char SUBS = '.';
 #endif
-
-    // private string BaseUrlAudible { get; }
-    // private Uri BaseUriAudible => HttpClientAudible?.BaseAddress;
-    // private Uri BaseUriAmazon => HttpClientAmazon?.BaseAddress;
-    private IProfile Profile { get; }
-
-    private HttpClientEx HttpClientAudible { get; }
-
-    private HttpClientEx HttpClientAmazon { get; }
-
-    private BookLibrary BookLibrary { get; }
-
-    private int AccountId
-    {
-      get
-      {
-        ensureAccountId();
-        return _accountId;
-      }
-    }
-
-    private HttpClientEx HttpClient => Profile.PreAmazon ? HttpClientAudible : HttpClientAmazon;
-
-    public string AccountAlias
-    {
-      get
-      {
-        ensureAccountId();
-        return _accountAlias;
-      }
-    }
-
-    public ERegion Region => Profile.Region;
-
-    public Func<AccountAliasContext, bool> GetAccountAliasFunc { private get; set; }
-
-    public Func<Task> RefreshTokenAsyncFunc { get; private set; }
 
     public AudibleApi(
       IProfile profile,
@@ -106,109 +69,49 @@ namespace Oahu.Core
       Profile = new Profile(region, null, null, false);
     }
 
+    public string AccountAlias
+    {
+      get
+      {
+        ensureAccountId();
+        return _accountAlias;
+      }
+    }
+
+    public ERegion Region => Profile.Region;
+
+    public Func<AccountAliasContext, bool> GetAccountAliasFunc { private get; set; }
+
+    public Func<Task> RefreshTokenAsyncFunc { get; private set; }
+
+    // private string BaseUrlAudible { get; }
+    // private Uri BaseUriAudible => HttpClientAudible?.BaseAddress;
+    // private Uri BaseUriAmazon => HttpClientAmazon?.BaseAddress;
+    private IProfile Profile { get; }
+
+    private HttpClientEx HttpClientAudible { get; }
+
+    private HttpClientEx HttpClientAmazon { get; }
+
+    private BookLibrary BookLibrary { get; }
+
+    private int AccountId
+    {
+      get
+      {
+        ensureAccountId();
+        return _accountId;
+      }
+    }
+
+    private HttpClientEx HttpClient => Profile.PreAmazon ? HttpClientAudible : HttpClientAmazon;
+
     public void Dispose()
     {
       // HttpClientAudible?.Dispose ();
     }
 
     public async Task<Oahu.Audible.Json.LibraryResponse> GetLibraryAsync(bool resync) => await GetLibraryAsync(null, resync);
-
-    internal async Task<Oahu.Audible.Json.LibraryResponse> GetLibraryAsync(string json, bool resync)
-    {
-      using var _ = new LogGuard(3, this, () => $"resync={resync}");
-
-      const int PAGE_SIZE = 100;
-      int page = 0;
-      var libProducts = new List<Oahu.Audible.Json.Product>();
-
-      if (json is null)
-      {
-        const string GROUPS
-          = "response_groups=badge_types,category_ladders,claim_code_url,contributors,is_downloaded,is_returnable,media,"
-          + "origin_asin,pdf_url,percent_complete,price,product_attrs,product_desc,product_extended_attrs,product_plan_details,"
-          + "product_plans,provided_review,rating,relationships,review_attrs,reviews,sample,series,sku";
-
-        DateTime dt = await BookLibrary.SinceLatestPurchaseDateAsync(new ProfileId(AccountId, Region), resync);
-
-        while (true)
-        {
-          page++;
-          string url = "/1.0/library"
-            + $"?purchased_after={dt.ToXmlTime()}"
-            + $"&num_results={PAGE_SIZE}"
-            + $"&page={page}"
-            + "&"
-            + GROUPS;
-
-          string pageResult = await callAudibleApiSignedForStringAsync(url);
-          if (pageResult is null)
-          {
-            return null;
-          }
-
-          if (Logging.Level >= 3)
-          {
-            string file = pageResult.WriteTempJsonFile("LibraryResponse");
-            Log(3, this, () => $"page={page}, file=\"{Path.GetFileName(file)}\"");
-          }
-
-          Oahu.Audible.Json.LibraryResponse libraryResponse = Oahu.Audible.Json.LibraryResponse.Deserialize(pageResult);
-          if (libraryResponse is null)
-          {
-            return null;
-          }
-
-          if (!(libraryResponse?.items.Any() ?? false))
-          {
-            break;
-          }
-
-          var pageProducts = libraryResponse.items;
-#if TEST_UNAVAIL
-          pageProducts = pageProducts.ToList().Take(pageProducts.Length - 1).ToArray();
-#endif
-          Log(3, this, () => $"#items/page={pageProducts.Length}");
-          libProducts.AddRange(pageProducts);
-        }
-      }
-      else
-      {
-        Oahu.Audible.Json.LibraryResponse libraryResponse = Oahu.Audible.Json.LibraryResponse.Deserialize(json);
-        libProducts.AddRange(libraryResponse.items);
-      }
-
-      libProducts = libProducts.DistinctBy(p => p.asin).ToList();
-
-      libProducts.Sort((x, y) => DateTime.Compare(x.purchase_date, y.purchase_date));
-
-#if TEST_INVAL_CHAR
-      libProducts = libProducts
-        .Select (p => {
-          p.title = p.title.Replace (ORIG, SUBS);
-          return p;
-        })
-        .ToList ();
-#endif
-
-      await BookLibrary.AddRemBooksAsync(libProducts, new ProfileId(AccountId, Region), resync);
-
-      var allPagesResponse = new Oahu.Audible.Json.LibraryResponse();
-      allPagesResponse.items = libProducts.ToArray();
-      return allPagesResponse;
-    }
-
-    private void ensureAccountId()
-    {
-      if (_accountId > 0)
-      {
-        return;
-      }
-
-      var ctxt = Profile.GetAccountAliasContext(BookLibrary, GetAccountAliasFunc, false);
-
-      _accountId = ctxt.LocalId;
-      _accountAlias = ctxt.Alias;
-    }
 
     public async Task<string> GetUserProfileAsync()
     {
@@ -552,13 +455,88 @@ namespace Oahu.Core
         interactCallback);
     }
 
-    private async Task<string> getDownloadLicenseAsync(string asin, EDownloadQuality quality)
+    internal async Task<Oahu.Audible.Json.LibraryResponse> GetLibraryAsync(string json, bool resync)
     {
-      var url = $"{CONTENT_PATH}/{asin}/licenserequest";
+      using var _ = new LogGuard(3, this, () => $"resync={resync}");
 
-      string jsonBody = buildlicenseRequestBody(quality);
+      const int PAGE_SIZE = 100;
+      int page = 0;
+      var libProducts = new List<Oahu.Audible.Json.Product>();
 
-      return await callAudibleApiSignedForStringAsync(url, jsonBody);
+      if (json is null)
+      {
+        const string GROUPS
+          = "response_groups=badge_types,category_ladders,claim_code_url,contributors,is_downloaded,is_returnable,media,"
+          + "origin_asin,pdf_url,percent_complete,price,product_attrs,product_desc,product_extended_attrs,product_plan_details,"
+          + "product_plans,provided_review,rating,relationships,review_attrs,reviews,sample,series,sku";
+
+        DateTime dt = await BookLibrary.SinceLatestPurchaseDateAsync(new ProfileId(AccountId, Region), resync);
+
+        while (true)
+        {
+          page++;
+          string url = "/1.0/library"
+            + $"?purchased_after={dt.ToXmlTime()}"
+            + $"&num_results={PAGE_SIZE}"
+            + $"&page={page}"
+            + "&"
+            + GROUPS;
+
+          string pageResult = await callAudibleApiSignedForStringAsync(url);
+          if (pageResult is null)
+          {
+            return null;
+          }
+
+          if (Logging.Level >= 3)
+          {
+            string file = pageResult.WriteTempJsonFile("LibraryResponse");
+            Log(3, this, () => $"page={page}, file=\"{Path.GetFileName(file)}\"");
+          }
+
+          Oahu.Audible.Json.LibraryResponse libraryResponse = Oahu.Audible.Json.LibraryResponse.Deserialize(pageResult);
+          if (libraryResponse is null)
+          {
+            return null;
+          }
+
+          if (!(libraryResponse?.items.Any() ?? false))
+          {
+            break;
+          }
+
+          var pageProducts = libraryResponse.items;
+#if TEST_UNAVAIL
+          pageProducts = pageProducts.ToList().Take(pageProducts.Length - 1).ToArray();
+#endif
+          Log(3, this, () => $"#items/page={pageProducts.Length}");
+          libProducts.AddRange(pageProducts);
+        }
+      }
+      else
+      {
+        Oahu.Audible.Json.LibraryResponse libraryResponse = Oahu.Audible.Json.LibraryResponse.Deserialize(json);
+        libProducts.AddRange(libraryResponse.items);
+      }
+
+      libProducts = libProducts.DistinctBy(p => p.asin).ToList();
+
+      libProducts.Sort((x, y) => DateTime.Compare(x.purchase_date, y.purchase_date));
+
+#if TEST_INVAL_CHAR
+      libProducts = libProducts
+        .Select (p => {
+          p.title = p.title.Replace (ORIG, SUBS);
+          return p;
+        })
+        .ToList ();
+#endif
+
+      await BookLibrary.AddRemBooksAsync(libProducts, new ProfileId(AccountId, Region), resync);
+
+      var allPagesResponse = new Oahu.Audible.Json.LibraryResponse();
+      allPagesResponse.items = libProducts.ToArray();
+      return allPagesResponse;
     }
 
     private static string buildlicenseRequestBody(EDownloadQuality quality)
@@ -578,6 +556,60 @@ namespace Oahu.Core
       }
 
       return json;
+    }
+
+    private static async Task<long> copyStreams(
+      Conversion conversion,
+      BufferedStream rdr,
+      BufferedStream wrtr,
+      Action<Conversion, long> progressAction,
+      CancellationToken cancToken)
+    {
+      const int BUF_SIZE = 16384;
+      long accusize = 0;
+      byte[] buffer = new byte[BUF_SIZE];
+
+      while (true)
+      {
+        if (cancToken.IsCancellationRequested)
+        {
+          return -1;
+        }
+
+        int size = await rdr.ReadAsync(buffer, 0, BUF_SIZE, cancToken);
+        if (size == 0)
+        {
+          break;
+        }
+
+        accusize += size;
+        progressAction(conversion, accusize);
+        await wrtr.WriteAsync(buffer, 0, size, cancToken);
+      }
+
+      return accusize;
+    }
+
+    private void ensureAccountId()
+    {
+      if (_accountId > 0)
+      {
+        return;
+      }
+
+      var ctxt = Profile.GetAccountAliasContext(BookLibrary, GetAccountAliasFunc, false);
+
+      _accountId = ctxt.LocalId;
+      _accountAlias = ctxt.Alias;
+    }
+
+    private async Task<string> getDownloadLicenseAsync(string asin, EDownloadQuality quality)
+    {
+      var url = $"{CONTENT_PATH}/{asin}/licenserequest";
+
+      string jsonBody = buildlicenseRequestBody(quality);
+
+      return await callAudibleApiSignedForStringAsync(url, jsonBody);
     }
 
     private void decryptLicense(Oahu.Audible.Json.ContentLicense license)
@@ -737,38 +769,6 @@ namespace Oahu.Core
       byte[] signatureBytes = rsa.SignHash(hashBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
       return signatureBytes;
-    }
-
-    private static async Task<long> copyStreams(
-      Conversion conversion,
-      BufferedStream rdr,
-      BufferedStream wrtr,
-      Action<Conversion, long> progressAction,
-      CancellationToken cancToken)
-    {
-      const int BUF_SIZE = 16384;
-      long accusize = 0;
-      byte[] buffer = new byte[BUF_SIZE];
-
-      while (true)
-      {
-        if (cancToken.IsCancellationRequested)
-        {
-          return -1;
-        }
-
-        int size = await rdr.ReadAsync(buffer, 0, BUF_SIZE, cancToken);
-        if (size == 0)
-        {
-          break;
-        }
-
-        accusize += size;
-        progressAction(conversion, accusize);
-        await wrtr.WriteAsync(buffer, 0, size, cancToken);
-      }
-
-      return accusize;
     }
   }
 }

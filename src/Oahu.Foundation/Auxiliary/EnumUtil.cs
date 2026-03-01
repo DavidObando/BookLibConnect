@@ -9,6 +9,9 @@ namespace Oahu.Aux
 {
   public static class EnumUtil
   {
+    const char USCORE = '_';
+    static readonly byte __a = Convert.ToByte('a');
+
     // Note: constraint System.Enum available in C# 7.3
     public static IEnumerable<T> GetValues<T>() where T : struct, Enum
     {
@@ -22,9 +25,6 @@ namespace Oahu.Aux
       var values = GetValues<T>();
       return values.Select(v => $"<{v}>").ToArray();
     }
-
-    const char USCORE = '_';
-    static readonly byte __a = Convert.ToByte('a');
 
     public static string ToDisplayString<TEnum, TPunct>(this TEnum value, ResourceManager rm)
       where TEnum : struct, Enum

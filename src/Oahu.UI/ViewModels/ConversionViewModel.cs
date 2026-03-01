@@ -73,6 +73,15 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     public void UpdateQueuedCount() =>
       QueuedCount = Conversions.Count;
 
+    public void UpdateOverallProgress(double progress, string status)
+    {
+      OverallProgress = progress;
+      if (status is not null)
+      {
+        OverallStatusText = status;
+      }
+    }
+
     [RelayCommand]
     private void RemoveSelected()
     {
@@ -115,20 +124,23 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     {
       CancelRequested?.Invoke();
     }
-
-    public void UpdateOverallProgress(double progress, string status)
-    {
-      OverallProgress = progress;
-      if (status is not null)
-      {
-        OverallStatusText = status;
-      }
-    }
   }
 
   public partial class ConversionItemViewModel : ObservableObject
   {
     private readonly Book _book;
+
+    [ObservableProperty]
+    private bool _isSelected;
+
+    [ObservableProperty]
+    private EConversionState _state;
+
+    [ObservableProperty]
+    private double _progress;
+
+    [ObservableProperty]
+    private string _statusText = "Queued";
 
     public ConversionItemViewModel(Book book)
     {
@@ -142,18 +154,6 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     public string Author => _book.Author;
 
     public string Asin => _book.Asin;
-
-    [ObservableProperty]
-    private bool _isSelected;
-
-    [ObservableProperty]
-    private EConversionState _state;
-
-    [ObservableProperty]
-    private double _progress;
-
-    [ObservableProperty]
-    private string _statusText = "Queued";
 
     public Conversion Conversion => _book.Conversion;
 

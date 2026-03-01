@@ -26,19 +26,6 @@ namespace Oahu.Core
     const string SOFTWARE_VERSION = "35602678";
     const string APP_NAME = "Audible";
 
-    private IAuthorizeSettings Settings { get; }
-
-    // private Uri BaseUri => HttpClientAmazon?.BaseAddress;
-    private Configuration Configuration { get; set; }
-
-    private ConfigTokenDelegate GetTokenFunc { get; }
-
-    public HttpClientEx HttpClientAmazon { get; private set; }
-
-    public HttpClientEx HttpClientAudible { get; private set; }
-
-    public Action WeakConfigEncryptionCallback { private get; set; }
-
     public Authorize(ConfigTokenDelegate getTokenFunc, IAuthorizeSettings settings)
     {
       Log(3, this);
@@ -46,7 +33,18 @@ namespace Oahu.Core
       Settings = settings;
     }
 
-    internal IProfile GetProfile(IProfileKey key) => Configuration?.Get(key);
+    public HttpClientEx HttpClientAmazon { get; private set; }
+
+    public HttpClientEx HttpClientAudible { get; private set; }
+
+    public Action WeakConfigEncryptionCallback { private get; set; }
+
+    private IAuthorizeSettings Settings { get; }
+
+    // private Uri BaseUri => HttpClientAmazon?.BaseAddress;
+    private Configuration Configuration { get; set; }
+
+    private ConfigTokenDelegate GetTokenFunc { get; }
 
     public async Task<(bool, IProfile)> RegisterAsync(Profile profile)
     {
@@ -75,24 +73,6 @@ namespace Oahu.Core
         Log(1, this, () => exc.Summary());
         return (false, null);
       }
-    }
-
-    // internal instead of private for testing only
-    internal async Task<(bool, IProfile)> addProfileToConfig(Profile profile, string content)
-    {
-      bool succ = updateProfile(profile, content);
-      if (!succ)
-      {
-        return (false, null);
-      }
-
-      await readConfigurationAsync();
-
-      IProfile prevProfile = Configuration.AddOrReplace(profile);
-
-      await WriteConfigurationAsync();
-
-      return (true, prevProfile);
     }
 
     public async Task<bool> DeregisterAsync(IProfile profile)
@@ -142,6 +122,39 @@ namespace Oahu.Core
       return EAuthorizeResult.succ;
     }
 
+    public async Task RefreshTokenAsync(IProfile profile) =>
+      await RefreshTokenAsync(profile, false);
+
+    public async Task<IEnumerable<IProfile>> GetRegisteredProfilesAsync()
+    {
+      if (Configuration is null)
+      {
+        await readConfigurationAsync();
+      }
+
+      return Configuration.GetSorted();
+    }
+
+    internal IProfile GetProfile(IProfileKey key) => Configuration?.Get(key);
+
+    // internal instead of private for testing only
+    internal async Task<(bool, IProfile)> addProfileToConfig(Profile profile, string content)
+    {
+      bool succ = updateProfile(profile, content);
+      if (!succ)
+      {
+        return (false, null);
+      }
+
+      await readConfigurationAsync();
+
+      IProfile prevProfile = Configuration.AddOrReplace(profile);
+
+      await WriteConfigurationAsync();
+
+      return (true, prevProfile);
+    }
+
     internal async Task WriteConfigurationAsync()
     {
       Log(3, this);
@@ -160,6 +173,126 @@ namespace Oahu.Core
       {
         WeakConfigEncryptionCallback?.Invoke();
       }
+    }
+
+    internal async Task RefreshTokenAsync(IProfile profile, bool onAutoRefreshOnly)
+    {
+      using var _ = new LogGuard(3, this, () => $"auto={Settings?.AutoRefresh}, onAutoRefeshOnly={onAutoRefreshOnly}");
+      ensureHttpClient(profile);
+
+      await readConfigurationAsync();
+
+      if (onAutoRefreshOnly && (Settings?.AutoRefresh ?? false))
+      {
+        if (profile is Profile prof1 && (Configuration.Profiles?.Contains(prof1) ?? false))
+        {
+          await refreshTokenAsync(prof1);
+        }
+        else
+        {
+          Profile prof2 = Configuration.Profiles?.FirstOrDefault(d => d.Matches(profile));
+          if (prof2 is not null)
+          {
+            await refreshTokenAsync(prof2);
+          }
+        }
+
+        await WriteConfigurationAsync();
+      }
+    }
+
+    // internal instead of private for testing only
+    internal bool updateProfile(Profile profile, string json)
+    {
+      try
+      {
+        if (Logging.Level >= 3)
+        {
+          const string REGISTRATION = "RegistrationResponse";
+          if (Logging.Level >= 4)
+          {
+            json.WriteTempJsonFile(REGISTRATION);
+          }
+
+          string jsonCleaned = json.ExtractJsonStructure();
+          if (jsonCleaned is not null)
+          {
+            jsonCleaned.WriteTempJsonFile(REGISTRATION + "(cleared)");
+          }
+        }
+
+        var root = Oahu.Audible.Json.RegistrationResponse.Deserialize(json);
+        if (root is null)
+        {
+          return false;
+        }
+
+        var response = root.response;
+        var success = response.success;
+        var extensions = success.extensions;
+        var device_info = extensions.device_info;
+
+        var deviceInfo = new DeviceInfo
+        {
+          Name = device_info.device_name,
+          Type = device_info.device_type,
+          Serial = device_info.device_serial_number
+        };
+
+        var customer_info = extensions.customer_info;
+
+        var customerInfo = new CustomerInfo
+        {
+          Name = customer_info.name,
+          AccountId = customer_info.user_id
+        };
+
+        var tokens = success.tokens;
+        var website_cookies = tokens.website_cookies;
+
+        var cookies = new List<KeyValuePair<string, string>>();
+        if (website_cookies is not null)
+        {
+          foreach (var cookie in website_cookies)
+          {
+            cookies.Add(new KeyValuePair<string, string>(
+              cookie.Name,
+              cookie.Value.Replace("\"", "")));
+          }
+        }
+
+        var store_authentication_cookie = tokens.store_authentication_cookie;
+        string storeAuthentCookie = store_authentication_cookie.cookie;
+
+        var mac_dms = tokens.mac_dms;
+        string devicePrivateKey = mac_dms.device_private_key;
+        string adpToken = mac_dms.adp_token;
+
+        var bearer = tokens.bearer;
+        int.TryParse(bearer.expires_in, out var expires);
+
+        var tokenBearer = new TokenBearer(
+          bearer.access_token,
+          bearer.refresh_token,
+          DateTime.UtcNow.AddSeconds(expires));
+
+        profile.Update(
+          tokenBearer,
+          cookies,
+          deviceInfo,
+          customerInfo,
+          devicePrivateKey,
+          adpToken,
+          storeAuthentCookie);
+      }
+      catch (Exception exc)
+      {
+        // Log (1, this, () => exc.Summary ());
+        Log(1, this, () => exc.ToString());
+        return false;
+      }
+
+      return true;
     }
 
     private HttpClientEx httpClient(IProfile profile) => profile.PreAmazon ? HttpClientAudible : HttpClientAmazon;
@@ -188,35 +321,6 @@ namespace Oahu.Core
         }
 
         return HttpClientEx.Create(baseUri);
-      }
-    }
-
-    public async Task RefreshTokenAsync(IProfile profile) =>
-      await RefreshTokenAsync(profile, false);
-
-    internal async Task RefreshTokenAsync(IProfile profile, bool onAutoRefreshOnly)
-    {
-      using var _ = new LogGuard(3, this, () => $"auto={Settings?.AutoRefresh}, onAutoRefeshOnly={onAutoRefreshOnly}");
-      ensureHttpClient(profile);
-
-      await readConfigurationAsync();
-
-      if (onAutoRefreshOnly && (Settings?.AutoRefresh ?? false))
-      {
-        if (profile is Profile prof1 && (Configuration.Profiles?.Contains(prof1) ?? false))
-        {
-          await refreshTokenAsync(prof1);
-        }
-        else
-        {
-          Profile prof2 = Configuration.Profiles?.FirstOrDefault(d => d.Matches(profile));
-          if (prof2 is not null)
-          {
-            await refreshTokenAsync(prof2);
-          }
-        }
-
-        await WriteConfigurationAsync();
       }
     }
 
@@ -305,16 +409,6 @@ namespace Oahu.Core
       {
         Log(1, this, () => exc.Summary());
       }
-    }
-
-    public async Task<IEnumerable<IProfile>> GetRegisteredProfilesAsync()
-    {
-      if (Configuration is null)
-      {
-        await readConfigurationAsync();
-      }
-
-      return Configuration.GetSorted();
     }
 
     private async Task readConfigurationAsync()
@@ -424,100 +518,6 @@ namespace Oahu.Core
       }
 
       return json;
-    }
-
-    // internal instead of private for testing only
-    internal bool updateProfile(Profile profile, string json)
-    {
-      try
-      {
-        if (Logging.Level >= 3)
-        {
-          const string REGISTRATION = "RegistrationResponse";
-          if (Logging.Level >= 4)
-          {
-            json.WriteTempJsonFile(REGISTRATION);
-          }
-
-          string jsonCleaned = json.ExtractJsonStructure();
-          if (jsonCleaned is not null)
-          {
-            jsonCleaned.WriteTempJsonFile(REGISTRATION + "(cleared)");
-          }
-        }
-
-        var root = Oahu.Audible.Json.RegistrationResponse.Deserialize(json);
-        if (root is null)
-        {
-          return false;
-        }
-
-        var response = root.response;
-        var success = response.success;
-        var extensions = success.extensions;
-        var device_info = extensions.device_info;
-
-        var deviceInfo = new DeviceInfo
-        {
-          Name = device_info.device_name,
-          Type = device_info.device_type,
-          Serial = device_info.device_serial_number
-        };
-
-        var customer_info = extensions.customer_info;
-
-        var customerInfo = new CustomerInfo
-        {
-          Name = customer_info.name,
-          AccountId = customer_info.user_id
-        };
-
-        var tokens = success.tokens;
-        var website_cookies = tokens.website_cookies;
-
-        var cookies = new List<KeyValuePair<string, string>>();
-        if (website_cookies is not null)
-        {
-          foreach (var cookie in website_cookies)
-          {
-            cookies.Add(new KeyValuePair<string, string>(
-              cookie.Name,
-              cookie.Value.Replace("\"", "")));
-          }
-        }
-
-        var store_authentication_cookie = tokens.store_authentication_cookie;
-        string storeAuthentCookie = store_authentication_cookie.cookie;
-
-        var mac_dms = tokens.mac_dms;
-        string devicePrivateKey = mac_dms.device_private_key;
-        string adpToken = mac_dms.adp_token;
-
-        var bearer = tokens.bearer;
-        int.TryParse(bearer.expires_in, out var expires);
-
-        var tokenBearer = new TokenBearer(
-          bearer.access_token,
-          bearer.refresh_token,
-          DateTime.UtcNow.AddSeconds(expires));
-
-        profile.Update(
-          tokenBearer,
-          cookies,
-          deviceInfo,
-          customerInfo,
-          devicePrivateKey,
-          adpToken,
-          storeAuthentCookie);
-      }
-      catch (Exception exc)
-      {
-        // Log (1, this, () => exc.Summary ());
-        Log(1, this, () => exc.ToString());
-        return false;
-      }
-
-      return true;
     }
   }
 }

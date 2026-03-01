@@ -1,8 +1,8 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
@@ -13,10 +13,6 @@ public interface ITrackReferenceTypeBox : IBox
 
 public class TrefBox : Box
 {
-  public override long RenderSize => base.RenderSize + References.Sum(r => r.RenderSize);
-
-  public List<ITrackReferenceTypeBox> References { get; }
-
   public TrefBox(Stream file, BoxHeader header, IBox? parent) : base(header, parent)
   {
     References = new();
@@ -30,6 +26,10 @@ public class TrefBox : Box
   {
     References = [];
   }
+
+  public override long RenderSize => base.RenderSize + References.Sum(r => r.RenderSize);
+
+  public List<ITrackReferenceTypeBox> References { get; }
 
   public static TrefBox CreatEmpty(IBox parent)
   {
@@ -55,10 +55,6 @@ public class TrefBox : Box
   [DebuggerDisplay("{Header.Type,nq}, {TrackIds}")]
   private class TrackReferenceTypeBox : Box, ITrackReferenceTypeBox
   {
-    public override long RenderSize => base.RenderSize + sizeof(int) * TrackIds.Count;
-
-    public HashSet<uint> TrackIds { get; set; }
-
     public TrackReferenceTypeBox(Stream file, IBox? parent)
         : base(new BoxHeader(file), parent)
     {
@@ -75,6 +71,10 @@ public class TrefBox : Box
     {
       TrackIds = trackIds;
     }
+
+    public override long RenderSize => base.RenderSize + sizeof(int) * TrackIds.Count;
+
+    public HashSet<uint> TrackIds { get; set; }
 
     protected override void Render(Stream file)
     {

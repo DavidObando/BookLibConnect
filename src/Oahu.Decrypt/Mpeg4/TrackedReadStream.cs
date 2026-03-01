@@ -8,9 +8,9 @@ namespace Oahu.Decrypt.Mpeg4
   /// </summary>
   public class TrackedReadStream : Stream
   {
-    private long ReadPosition = 0;
     private readonly Stream BaseStream;
     private readonly long BaseStreamLength;
+    private long ReadPosition = 0;
 
     public TrackedReadStream(Stream baseStream, long streamLength)
     {

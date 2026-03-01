@@ -3,8 +3,6 @@ using Oahu.CommonTypes;
 
 namespace Oahu.BooksDatabase
 {
-  public record AudioQuality(int? SampleRate, int? BitRate) : IAudioQuality;
-
   namespace ex
   {
     public static class ExCodec
@@ -35,4 +33,6 @@ namespace Oahu.BooksDatabase
       }
     }
   }
+
+  public record AudioQuality(int? SampleRate, int? BitRate) : IAudioQuality;
 }

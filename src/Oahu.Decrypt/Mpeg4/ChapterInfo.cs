@@ -7,19 +7,19 @@ namespace Oahu.Decrypt.Mpeg4;
 
 public record ChapterInfo : IEnumerable<Chapter>
 {
+  private readonly List<Chapter> _chapterList = new();
+
+  public ChapterInfo(TimeSpan offsetFromBeginning = default) => StartOffset = offsetFromBeginning;
+
   public TimeSpan StartOffset { get; }
 
   public TimeSpan EndOffset => Count == 0 ? StartOffset : _chapterList.Max(c => c.EndOffset);
-
-  private readonly List<Chapter> _chapterList = new();
 
   public IReadOnlyList<Chapter> Chapters => _chapterList;
 
   public int Count => _chapterList.Count;
 
   public int RenderSize => _chapterList.Sum(c => c.RenderSize);
-
-  public ChapterInfo(TimeSpan offsetFromBeginning = default) => StartOffset = offsetFromBeginning;
 
   public void AddChapter(string title, TimeSpan duration)
   {

@@ -19,17 +19,8 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     [ObservableProperty]
     private BookItemViewModel _selectedBook;
 
-    public string SelectedBookAsin { get; set; }
-
     [ObservableProperty]
     private bool _hasSelectedBook;
-
-    partial void OnSelectedBookChanged(BookItemViewModel value)
-    {
-      HasSelectedBook = value is not null;
-      if (value is not null)
-        SelectedBookAsin = value.Asin;
-    }
 
     [ObservableProperty]
     private string _filterText;
@@ -40,12 +31,14 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     [ObservableProperty]
     private int _selectedCount;
 
+    public event EventHandler<IEnumerable<BookItemViewModel>> DownloadRequested;
+
+    public string SelectedBookAsin { get; set; }
+
     // Sort state remembered within the session
     public int? SortColumnIndex { get; set; }
 
     public ListSortDirection? SortDirection { get; set; }
-
-    public event EventHandler<IEnumerable<BookItemViewModel>> DownloadRequested;
 
     public void LoadBooks(IEnumerable<Book> books)
     {
@@ -84,6 +77,13 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     public void UpdateSelectedCount() =>
       SelectedCount = Books.Count(b => b.IsSelected);
 
+    partial void OnSelectedBookChanged(BookItemViewModel value)
+    {
+      HasSelectedBook = value is not null;
+      if (value is not null)
+        SelectedBookAsin = value.Asin;
+    }
+
     [RelayCommand]
     private void SelectAll()
     {
@@ -117,6 +117,9 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
   {
     private readonly Book _book;
 
+    [ObservableProperty]
+    private bool _isSelected;
+
     public BookItemViewModel(Book book)
     {
       _book = book;
@@ -141,9 +144,6 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     public string CoverImageFile => _book.CoverImageFile;
 
     public EConversionState ConversionState => _book.Conversion?.State ?? EConversionState.unknown;
-
-    [ObservableProperty]
-    private bool _isSelected;
 
     public string Duration
     {

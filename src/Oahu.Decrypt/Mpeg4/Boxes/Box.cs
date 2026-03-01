@@ -1,14 +1,27 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes
 {
   public abstract class Box : IBox
   {
+    private int m_Disposed = 0;
+
+    public Box(BoxHeader header, IBox? parent)
+    {
+      Header = header;
+      Parent = parent;
+    }
+
+    ~Box()
+    {
+      Dispose(disposing: false);
+    }
+
     public IBox? Parent { get; }
 
     public BoxHeader Header { get; }
@@ -17,15 +30,7 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
 
     public virtual long RenderSize => 8 + Children.Sum(b => b.RenderSize);
 
-    protected long RemainingBoxLength(Stream file) => Header.FilePosition + Header.TotalBoxSize - file.Position;
-
-    public Box(BoxHeader header, IBox? parent)
-    {
-      Header = header;
-      Parent = parent;
-    }
-
-    protected abstract void Render(Stream file);
+    protected bool Disposed => m_Disposed != 0;
 
     public T? GetChild<T>() where T : IBox
     {
@@ -45,27 +50,6 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
     public IEnumerable<T> GetChildren<T>() where T : IBox
     {
       return Children.OfType<T>();
-    }
-
-    protected void LoadChildren(Stream file)
-    {
-      long endPos = Header.FilePosition + Header.TotalBoxSize;
-
-      while (file.Position < endPos)
-      {
-        IBox child = BoxFactory.CreateBox(file, this);
-
-        if (child.Header.TotalBoxSize == 0)
-        {
-          break;
-        }
-
-        Children.Add(child);
-        if (child.Header.FilePosition + child.Header.TotalBoxSize != file.Position)
-        {
-          break;
-        }
-      }
     }
 
     public List<FreeBox> GetFreeBoxes()
@@ -94,20 +78,35 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
       }
     }
 
-    #region IDisposable
-    private int m_Disposed = 0;
-
-    protected bool Disposed => m_Disposed != 0;
-
     public void Dispose()
     {
       Dispose(disposing: true);
       GC.SuppressFinalize(this);
     }
 
-    ~Box()
+    protected long RemainingBoxLength(Stream file) => Header.FilePosition + Header.TotalBoxSize - file.Position;
+
+    protected abstract void Render(Stream file);
+
+    protected void LoadChildren(Stream file)
     {
-      Dispose(disposing: false);
+      long endPos = Header.FilePosition + Header.TotalBoxSize;
+
+      while (file.Position < endPos)
+      {
+        IBox child = BoxFactory.CreateBox(file, this);
+
+        if (child.Header.TotalBoxSize == 0)
+        {
+          break;
+        }
+
+        Children.Add(child);
+        if (child.Header.FilePosition + child.Header.TotalBoxSize != file.Position)
+        {
+          break;
+        }
+      }
     }
 
     protected virtual void Dispose(bool disposing)
@@ -122,6 +121,5 @@ namespace Oahu.Decrypt.Mpeg4.Boxes
         Children.Clear();
       }
     }
-    #endregion
   }
 }

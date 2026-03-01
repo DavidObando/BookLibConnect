@@ -1,10 +1,10 @@
-﻿using Oahu.Decrypt.Mpeg4.Util;
-using System;
+﻿using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
@@ -14,26 +14,11 @@ namespace Oahu.Decrypt.Mpeg4.Boxes;
  */
 public class StszBox : FullBox, IStszBox
 {
-  public override long RenderSize => base.RenderSize + 8 + SampleCount * sizeof(int);
-
-  public int SampleSize { get; }
-
   private readonly int origSampleCount;
-
-  public int SampleCount => sampleSizes_32?.Count ?? sampleSizes_16?.Count ?? origSampleCount;
-
-  public int MaxSize => sampleSizes_32?.Max() ?? sampleSizes_16?.Max() ?? SampleSize;
-
-  public long TotalSize => sampleSizes_32?.Sum(s => (long)s) ?? sampleSizes_16?.Sum(s => (long)s) ?? SampleSize * origSampleCount;
-
-  public int GetSizeAtIndex(int index) => sampleSizes_32?[index] ?? sampleSizes_16?[index] ?? SampleSize;
-
-  public long SumFirstNSizes(int firstN) => sampleSizes_32?.Take(firstN).Sum(s => (long)s) ?? sampleSizes_16?.Take(firstN).Sum(s => (long)s) ?? (long)SampleSize * firstN;
-
   private readonly List<int>? sampleSizes_32;
   private readonly List<ushort>? sampleSizes_16;
 
-  unsafe public StszBox(Stream file, BoxHeader header, IBox? parent)
+  public unsafe StszBox(Stream file, BoxHeader header, IBox? parent)
       : base(file, header, parent)
   {
     SampleSize = file.ReadInt32BE();
@@ -90,6 +75,16 @@ public class StszBox : FullBox, IStszBox
     sampleSizes_16 = sampleSizes;
   }
 
+  public override long RenderSize => base.RenderSize + 8 + SampleCount * sizeof(int);
+
+  public int SampleSize { get; }
+
+  public int SampleCount => sampleSizes_32?.Count ?? sampleSizes_16?.Count ?? origSampleCount;
+
+  public int MaxSize => sampleSizes_32?.Max() ?? sampleSizes_16?.Max() ?? SampleSize;
+
+  public long TotalSize => sampleSizes_32?.Sum(s => (long)s) ?? sampleSizes_16?.Sum(s => (long)s) ?? SampleSize * origSampleCount;
+
   public static StszBox CreateBlank(IBox parent, List<int> sampleSizes)
   {
     int size = 8 + 12 /* empty Box size*/;
@@ -111,6 +106,10 @@ public class StszBox : FullBox, IStszBox
     parent.Children.Add(stszBox);
     return stszBox;
   }
+
+  public int GetSizeAtIndex(int index) => sampleSizes_32?[index] ?? sampleSizes_16?[index] ?? SampleSize;
+
+  public long SumFirstNSizes(int firstN) => sampleSizes_32?.Take(firstN).Sum(s => (long)s) ?? sampleSizes_16?.Take(firstN).Sum(s => (long)s) ?? (long)SampleSize * firstN;
 
   protected unsafe override void Render(Stream file)
   {

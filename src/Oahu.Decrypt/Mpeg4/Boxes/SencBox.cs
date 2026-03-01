@@ -1,18 +1,12 @@
-using Oahu.Decrypt.Mpeg4.Util;
 using System;
 using System.IO;
 using System.Linq;
+using Oahu.Decrypt.Mpeg4.Util;
 
 namespace Oahu.Decrypt.Mpeg4.Boxes;
 
 public class SencBox : FullBox
 {
-  public override long RenderSize => base.RenderSize + 4 + IVs.Sum(iv => iv.Length);
-
-  public bool UseSubSampleEncryption => (Flags & 2) == 2;
-
-  public byte[][] IVs { get; }
-
   public SencBox(Stream file, BoxHeader header, IBox? parent) : base(file, header, parent)
   {
     var sampleCount = file.ReadInt32BE();
@@ -31,6 +25,12 @@ public class SencBox : FullBox
       IVs[i] = file.ReadBlock(ivSize);
     }
   }
+
+  public override long RenderSize => base.RenderSize + 4 + IVs.Sum(iv => iv.Length);
+
+  public bool UseSubSampleEncryption => (Flags & 2) == 2;
+
+  public byte[][] IVs { get; }
 
   protected override void Render(Stream file)
   {
