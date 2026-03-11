@@ -80,18 +80,18 @@ Platform-specific build scripts are provided in the `build/` directory:
 
 ### Project Architecture
 
-The solution is organized into 5 projects with a strict layered dependency graph:
+The solution is organized into 6 projects with a strict layered dependency graph:
 
 ```
 Oahu.Foundation   — Utilities, logging, settings, diagnostics, shared types, IO
-      ↑
-Oahu.Data         — EF Core + SQLite database (entities, migrations)
-      ↑
-Oahu.Core         — Core business logic (Audible API, auth, library, download/decrypt)
-      ↑
-Oahu.UI           — Avalonia MVVM ViewModels + Views
-      ↑
-Oahu.App          — Application entry point + platform-specific hardware ID providers
+      ↑                       ↑
+Oahu.Data         Oahu.Decrypt — AAX/AAXC decryption (MP4/MPEG-4 parsing, frame filters, crypto)
+      ↑                       ↑
+         Oahu.Core            — Core business logic (Audible API, auth, library, download/decrypt)
+               ↑
+           Oahu.UI            — Avalonia MVVM ViewModels + Views
+               ↑
+          Oahu.App            — Application entry point + platform-specific hardware ID providers
 ```
 
 ## Acknowledgments
