@@ -80,19 +80,16 @@ Platform-specific build scripts are provided in the `build/` directory:
 
 ### Project Architecture
 
-The solution is organized into 5 projects with a strict layered dependency graph:
+The solution is organized into 6 projects:
 
-```
-Oahu.Foundation   — Utilities, logging, settings, diagnostics, shared types, IO
-      ↑
-Oahu.Data         — EF Core + SQLite database (entities, migrations)
-      ↑
-Oahu.Core         — Core business logic (Audible API, auth, library, download/decrypt)
-      ↑
-Oahu.UI           — Avalonia MVVM ViewModels + Views
-      ↑
-Oahu.App          — Application entry point + platform-specific hardware ID providers
-```
+| Project | Depends on | Description |
+|---|---|---|
+| `Oahu.Foundation` | — | Utilities, logging, settings, diagnostics, shared types, IO |
+| `Oahu.Decrypt` | — | AAX/AAXC decryption (MP4/MPEG-4 parsing, frame filters, crypto) |
+| `Oahu.Data` | Foundation | EF Core + SQLite database (entities, migrations) |
+| `Oahu.Core` | Decrypt, Foundation, Data | Core business logic (Audible API, auth, library, download/decrypt) |
+| `Oahu.UI` | Foundation, Data, Core | Avalonia MVVM ViewModels + Views |
+| `Oahu.App` | Foundation, Data, Core, UI | Application entry point + platform-specific hardware ID providers |
 
 ## Acknowledgments
 - [audiamus](https://github.com/audiamus/BookLibConnect) for his original implementation of BookLibConnect. This repository is a fork of audiamus' work.
