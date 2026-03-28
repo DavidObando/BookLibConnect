@@ -498,7 +498,7 @@ namespace Oahu.BooksDatabase
     public string AudibleId { get; set; }
   }
 
-  internal class PseudoAsin
+  public class PseudoAsin
   {
     public EPseudoAsinId Id { get; set; }
 

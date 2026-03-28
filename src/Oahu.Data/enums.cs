@@ -57,7 +57,7 @@
     Extreme
   }
 
-  internal enum EPseudoAsinId
+  public enum EPseudoAsinId
   {
     None,
     Author,

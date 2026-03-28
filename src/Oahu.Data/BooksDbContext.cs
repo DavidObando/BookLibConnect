@@ -17,7 +17,7 @@ namespace Oahu.BooksDatabase
     private const string SUBDIR = "data";
     private const string DBFILE = "audiobooks.db";
     private static readonly string DefaultDir = Path.Combine(ApplEnv.LocalApplDirectory, SUBDIR);
-    private static readonly Dictionary<Type, EPseudoAsinId> pseudoAsins
+    private static readonly Dictionary<Type, EPseudoAsinId> PseudoAsinsValue
       = new Dictionary<Type, EPseudoAsinId>
       {
         { typeof(Author), EPseudoAsinId.Author },
@@ -101,7 +101,7 @@ namespace Oahu.BooksDatabase
 
     public string GetNextPseudoAsin(Type t)
     {
-      bool succ = pseudoAsins.TryGetValue(t, out var pseudoAsinId);
+      bool succ = PseudoAsinsValue.TryGetValue(t, out var pseudoAsinId);
       if (!succ)
       {
         return null;
