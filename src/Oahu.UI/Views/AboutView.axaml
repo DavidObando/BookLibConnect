@@ -19,6 +19,21 @@
     <TextBlock Text="{Binding Copyright}"
                HorizontalAlignment="Center"
                Foreground="{DynamicResource MutedTextBrush}" />
+    <TextBlock Text="This software is open source licensed to you under GPL version 3."
+               HorizontalAlignment="Center"
+               TextAlignment="Center"
+               TextWrapping="Wrap"
+               MaxWidth="400" />
+    <Button Click="OpenRepositoryLink"
+            HorizontalAlignment="Center"
+            Background="Transparent"
+            BorderThickness="0"
+            Padding="0"
+            Cursor="Hand">
+      <TextBlock Text="https://github.com/davidobando/oahu"
+                 Foreground="{DynamicResource ThemeAccentBrush}"
+                 TextDecorations="Underline" />
+    </Button>
   </StackPanel>
 
 </UserControl>
