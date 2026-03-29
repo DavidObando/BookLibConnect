@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Oahu.Aux;
@@ -66,6 +68,43 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 
     [ObservableProperty]
     private string loginErrorMessage;
+
+    // Step 1: Direct login
+    [ObservableProperty]
+    private bool useDirectLogin = true;
+
+    [ObservableProperty]
+    private string emailInput;
+
+    [ObservableProperty]
+    private string passwordInput;
+
+    // Step 1: Challenge handling (CAPTCHA, MFA, CVF, approval)
+    [ObservableProperty]
+    private bool showChallenge;
+
+    [ObservableProperty]
+    private string challengeMessage;
+
+    [ObservableProperty]
+    private bool challengeHasImage;
+
+    [ObservableProperty]
+    private Bitmap challengeImage;
+
+    [ObservableProperty]
+    private bool challengeHasInput;
+
+    [ObservableProperty]
+    private string challengeInput;
+
+    [ObservableProperty]
+    private string challengeInputWatermark;
+
+    [ObservableProperty]
+    private string challengeSubmitText = "Submit";
+
+    private TaskCompletionSource<string> challengeTcs;
 
     // Step 2: Account alias
     [ObservableProperty]
@@ -319,6 +358,178 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       {
         IsProcessingResponse = false;
       }
+    }
+
+    [RelayCommand]
+    private async Task SubmitDirectLogin()
+    {
+      if (EmailInput.IsNullOrWhiteSpace() || PasswordInput.IsNullOrWhiteSpace())
+      {
+        LoginErrorMessage = "Please enter both email and password.";
+        return;
+      }
+
+      LoginErrorMessage = null;
+      IsProcessingResponse = true;
+      ShowChallenge = false;
+
+      try
+      {
+        var credentials = new Credentials(EmailInput, PasswordInput);
+        var callbacks = new Callbacks
+        {
+          DeregisterDeviceConfirmCallback = DeregisterDeviceConfirmation,
+          GetAccountAliasFunc = GetAccountAliasFromWizard,
+          CaptchaCallback = HandleCaptchaCallback,
+          MfaCallback = HandleMfaCallback,
+          CvfCallback = HandleCvfCallback,
+          ApprovalCallback = HandleApprovalCallback,
+        };
+
+        var result = await client.ConfigFromProgrammaticLoginAsync(
+          SelectedRegion,
+          UsePreAmazonAccount,
+          credentials,
+          callbacks);
+
+        Log(3, this, () => $"result={result.Result}");
+
+        var key = result.NewProfileKey;
+        switch (result.Result)
+        {
+          case EAuthorizeResult.Succ:
+          case EAuthorizeResult.DeregistrationFailed:
+            ProfileKey = key;
+            CustomerName = key?.AccountName;
+            AccountAlias = key?.AccountName;
+            RegistrationSucceeded = true;
+
+            CurrentStep = 2;
+            UpdateStepState();
+            if (result.Result == EAuthorizeResult.DeregistrationFailed)
+            {
+              LoginErrorMessage = $"Note: A previous device \"{result.PrevDeviceName}\" could not be deregistered.";
+            }
+
+            break;
+
+          case EAuthorizeResult.AuthorizationFailed:
+            LoginErrorMessage = "Authorization failed. Please check your credentials and try again.";
+            break;
+
+          case EAuthorizeResult.RegistrationFailed:
+            LoginErrorMessage = "Device registration failed. Please try again.";
+            break;
+
+          default:
+            LoginErrorMessage = $"An error occurred: {result.Result}";
+            break;
+        }
+      }
+      catch (OperationCanceledException)
+      {
+        LoginErrorMessage = "Sign-in was cancelled.";
+      }
+      catch (TimeoutException ex)
+      {
+        LoginErrorMessage = $"Connection timed out: {ex.Message}";
+      }
+      catch (Exception ex)
+      {
+        Log(1, this, () => $"error: {ex.Message}");
+        LoginErrorMessage = $"An error occurred: {ex.Message}";
+      }
+      finally
+      {
+        IsProcessingResponse = false;
+        ShowChallenge = false;
+      }
+    }
+
+    [RelayCommand]
+    private void SubmitChallenge()
+    {
+      challengeTcs?.TrySetResult(ChallengeInput ?? string.Empty);
+      ShowChallenge = false;
+    }
+
+    [RelayCommand]
+    private void CancelChallenge()
+    {
+      challengeTcs?.TrySetResult(null);
+      ShowChallenge = false;
+    }
+
+    private string HandleCaptchaCallback(byte[] imageData)
+    {
+      var tcs = new TaskCompletionSource<string>();
+      challengeTcs = tcs;
+      Dispatcher.UIThread.Post(() =>
+      {
+        ChallengeImage = new Bitmap(new MemoryStream(imageData));
+        ChallengeInput = null;
+        ChallengeMessage = "Please enter the text shown in the image:";
+        ChallengeHasImage = true;
+        ChallengeHasInput = true;
+        ChallengeInputWatermark = "Enter CAPTCHA text";
+        ChallengeSubmitText = "Submit";
+        ShowChallenge = true;
+      });
+      return tcs.Task.GetAwaiter().GetResult();
+    }
+
+    private string HandleMfaCallback()
+    {
+      var tcs = new TaskCompletionSource<string>();
+      challengeTcs = tcs;
+      Dispatcher.UIThread.Post(() =>
+      {
+        ChallengeImage = null;
+        ChallengeInput = null;
+        ChallengeMessage = "Enter the one-time password (OTP) sent to your device:";
+        ChallengeHasImage = false;
+        ChallengeHasInput = true;
+        ChallengeInputWatermark = "Enter code";
+        ChallengeSubmitText = "Submit";
+        ShowChallenge = true;
+      });
+      return tcs.Task.GetAwaiter().GetResult();
+    }
+
+    private string HandleCvfCallback()
+    {
+      var tcs = new TaskCompletionSource<string>();
+      challengeTcs = tcs;
+      Dispatcher.UIThread.Post(() =>
+      {
+        ChallengeImage = null;
+        ChallengeInput = null;
+        ChallengeMessage = "A verification code was sent to your registered email or phone. Enter it below:";
+        ChallengeHasImage = false;
+        ChallengeHasInput = true;
+        ChallengeInputWatermark = "Enter verification code";
+        ChallengeSubmitText = "Submit";
+        ShowChallenge = true;
+      });
+      return tcs.Task.GetAwaiter().GetResult();
+    }
+
+    private void HandleApprovalCallback()
+    {
+      var tcs = new TaskCompletionSource<string>();
+      challengeTcs = tcs;
+      Dispatcher.UIThread.Post(() =>
+      {
+        ChallengeImage = null;
+        ChallengeInput = null;
+        ChallengeMessage = "Please approve the sign-in request on your device or email, then click Continue.";
+        ChallengeHasImage = false;
+        ChallengeHasInput = false;
+        ChallengeInputWatermark = null;
+        ChallengeSubmitText = "Continue";
+        ShowChallenge = true;
+      });
+      tcs.Task.GetAwaiter().GetResult();
     }
 
     private void BuildLoginUrl()

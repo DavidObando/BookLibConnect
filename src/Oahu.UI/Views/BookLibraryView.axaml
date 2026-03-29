@@ -14,12 +14,12 @@
                Width="250" />
       <Button Content="Select All" Command="{Binding SelectAllCommand}" />
       <Button Content="Deselect All" Command="{Binding DeselectAllCommand}" />
-      <Border Width="1" Background="LightGray" Margin="4,2" />
+      <Border Width="1" Background="{DynamicResource SeparatorBrush}" Margin="4,2" />
       <Button Content="Queue Selection For Download"
               Command="{Binding DownloadSelectedCommand}"
               Classes="accent" />
       <TextBlock Text="{Binding SelectedCount, StringFormat='{}{0} selected'}"
-                 VerticalAlignment="Center" Foreground="Gray" FontSize="12" />
+                 VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" />
     </StackPanel>
 
     <!-- Main content: book list + detail panel -->
@@ -79,7 +79,7 @@
 
       <!-- Detail panel -->
       <Border Grid.Row="2"
-              BorderBrush="LightGray" BorderThickness="0,1,0,0"
+              BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0"
               IsVisible="{Binding HasSelectedBook}">
         <Grid ColumnDefinitions="Auto,*,Auto" Margin="8">
 
@@ -132,7 +132,7 @@
             <TextBlock Text="{Binding SelectedBook.Description}"
                        TextWrapping="Wrap"
                        FontSize="12"
-                       Foreground="Gray" />
+                       Foreground="{DynamicResource MutedTextBrush}" />
           </ScrollViewer>
 
           <!-- Cover image -->

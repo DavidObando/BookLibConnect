@@ -4,6 +4,7 @@
         xmlns:views="using:Oahu.Core.UI.Avalonia.Views"
         x:Class="Oahu.App.Avalonia.MainWindow"
         x:DataType="vm:MainWindowViewModel"
+        x:CompileBindings="True"
         Title="{Binding Title}"
         Width="1200" Height="800"
         MinWidth="800" MinHeight="600">
@@ -12,19 +13,150 @@
     <Style Selector="TabControl">
       <Setter Property="Margin" Value="0" />
     </Style>
+
+    <Style Selector="Button.header-sign-in">
+      <Setter Property="Padding" Value="16,8" />
+      <Setter Property="Background" Value="{DynamicResource SignInButtonBackgroundBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource SignInButtonForegroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SignInButtonBackgroundBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="Button.account-avatar">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="MinWidth" Value="40" />
+      <Setter Property="MinHeight" Value="40" />
+    </Style>
+
+    <Style Selector="Button.profile-sign-out">
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="Background" Value="{DynamicResource SignOutButtonBackgroundBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource SignOutButtonForegroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SignOutButtonBorderBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
   </Window.Styles>
 
   <Panel>
-    <!-- Main content -->
-    <DockPanel>
-      <!-- Status bar -->
-      <Border DockPanel.Dock="Bottom" Background="#F0F0F0"
-              Padding="8,4" BorderThickness="0,1,0,0" BorderBrush="LightGray">
-        <TextBlock Text="{Binding StatusMessage}" FontSize="12" />
+    <Grid RowDefinitions="Auto,*,Auto">
+      <Border Grid.Row="0"
+              Background="{DynamicResource HeaderBackgroundBrush}"
+              BorderBrush="{DynamicResource HeaderBorderBrush}"
+              BorderThickness="0,0,0,1"
+              Padding="16,12">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2" VerticalAlignment="Center">
+            <TextBlock Text="{Binding Title}"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource HeaderTitleBrush}" />
+            <TextBlock Text="Your Audible library and downloads"
+                       FontSize="12"
+                       Foreground="{DynamicResource HeaderSubtitleBrush}" />
+          </StackPanel>
+
+          <Button Grid.Column="1"
+                  Content="Sign in"
+                  Classes="header-sign-in"
+                  Click="OnSignInClicked"
+                  IsVisible="{Binding !IsSignedIn}" />
+
+          <Button Grid.Column="1"
+                  Classes="account-avatar"
+                  IsVisible="{Binding IsSignedIn}">
+            <Button.Flyout>
+              <Flyout Placement="BottomEdgeAlignedRight">
+                <Border Width="320"
+                        Padding="16"
+                        Background="{DynamicResource FlyoutBackgroundBrush}"
+                        BorderBrush="{DynamicResource FlyoutBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="18">
+                  <StackPanel Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                      <TextBlock Text="Account"
+                                 FontSize="12"
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource SecondaryTextBrush}"
+                                 VerticalAlignment="Center" />
+                      <Button Grid.Column="1"
+                              Content="Sign out"
+                              Classes="profile-sign-out"
+                              Click="OnSignOutClicked" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="Auto,*">
+                      <Grid Width="64" Height="64">
+                        <Border Width="64" Height="64"
+                                CornerRadius="32"
+                                Background="{DynamicResource AvatarBackgroundBrush}"
+                                ClipToBounds="True"
+                                IsVisible="{Binding HasProfileImage}">
+                          <Image Source="{Binding ProfileImage}" Stretch="UniformToFill" />
+                        </Border>
+                        <Border Width="64" Height="64"
+                                CornerRadius="32"
+                                Background="{DynamicResource AvatarAccentBrush}"
+                                IsVisible="{Binding !HasProfileImage}">
+                          <TextBlock Text="{Binding ProfileInitial}"
+                                     FontSize="28"
+                                     FontWeight="Bold"
+                                     Foreground="White"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center" />
+                        </Border>
+                      </Grid>
+
+                      <StackPanel Grid.Column="1" Margin="14,0,0,0" Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ProfileDisplayName}"
+                                   FontSize="20"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource HeaderTitleBrush}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding ProfileSubtitle}"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource HeaderSubtitleBrush}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="Stored credentials are available on this device."
+                                   FontSize="12"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap" />
+                      </StackPanel>
+                    </Grid>
+                  </StackPanel>
+                </Border>
+              </Flyout>
+            </Button.Flyout>
+
+            <Grid Width="40" Height="40">
+              <Border Width="40" Height="40"
+                      CornerRadius="20"
+                      Background="{DynamicResource AvatarBackgroundBrush}"
+                      ClipToBounds="True"
+                      IsVisible="{Binding HasProfileImage}">
+                <Image Source="{Binding ProfileImage}" Stretch="UniformToFill" />
+              </Border>
+              <Border Width="40" Height="40"
+                      CornerRadius="20"
+                      Background="{DynamicResource AvatarAccentBrush}"
+                      IsVisible="{Binding !HasProfileImage}">
+                <TextBlock Text="{Binding ProfileInitial}"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+              </Border>
+            </Grid>
+          </Button>
+        </Grid>
       </Border>
 
-      <!-- Tab layout -->
-      <TabControl>
+      <TabControl Grid.Row="1">
         <TabItem Header="Library">
           <views:BookLibraryView DataContext="{Binding BookLibrary}" />
         </TabItem>
@@ -42,7 +174,15 @@
           </views:AboutView>
         </TabItem>
       </TabControl>
-    </DockPanel>
+
+      <Border Grid.Row="2"
+              Background="{DynamicResource HeaderBackgroundBrush}"
+              Padding="8,4"
+              BorderThickness="0,1,0,0"
+              BorderBrush="{DynamicResource HeaderBorderBrush}">
+        <TextBlock Text="{Binding StatusMessage}" FontSize="12" />
+      </Border>
+    </Grid>
 
     <!-- Wait overlay -->
     <views:WaitOverlay />

@@ -12,7 +12,7 @@ namespace Oahu.Core
 {
   class AudibleLogin
   {
-    public const string DeviceType = "A2CZJZGLK2JJVM";
+    public const string DeviceType = "A10KISP2GWF0E4";
 
     public ERegion Region { get; private set; }
 
@@ -47,42 +47,43 @@ namespace Oahu.Core
       CodeVerifierB64 = CreateCodeVerifier();
       CodeChallengeB64 = CreateSHA256CodeChallenge(CodeVerifierB64);
 
-      string base_url, return_to, assoc_handle, page_id;
+      // return_to is always audible.{TLD} per AudibleApi's static analysis of Audible Android APK
+      string return_to = $"https://www.audible.{locale.Domain}/ap/maplanding";
+      string cc = locale.CountryCode.ToString().ToLowerInvariant();
+      string base_url, assoc_handle, page_id;
       if (withPreAmazonUsername)
       {
         base_url = $"https://www.audible.{locale.Domain}/ap/signin";
-        return_to = $"https://www.audible.{locale.Domain}/ap/maplanding";
-        assoc_handle = $"amzn_audible_ios_lap_{locale.CountryCode}";
-        page_id = "amzn_audible_ios_privatepool";
+        assoc_handle = $"amzn_audible_android_aui_lap_{cc}";
+        page_id = $"amzn_audible_android_privatepool_aui_v2_dark_{cc}";
       }
       else
       {
         base_url = $"https://www.amazon.{locale.Domain}/ap/signin";
-        return_to = $"https://www.amazon.{locale.Domain}/ap/maplanding";
-        assoc_handle = $"amzn_audible_ios_{locale.CountryCode}";
-        page_id = "amzn_audible_ios";
+        assoc_handle = $"amzn_audible_android_aui_{cc}";
+        page_id = $"amzn_audible_android_aui_v2_dark_us{cc}";
       }
 
       var oauthParams = new List<KeyValuePair<string, string>>()
       {
-        new("openid.oa2.response_type", "code"),
-        new("openid.oa2.code_challenge_method", "S256"),
-        new("openid.oa2.code_challenge", CodeChallengeB64),
+        new("openid.pape.max_auth_age", "0"),
+        new("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select"),
+        new("accountStatusPolicy", "P1"),
+        new("marketPlaceId", locale.MarketPlaceId),
+        new("pageId", page_id),
         new("openid.return_to", return_to),
         new("openid.assoc_handle", assoc_handle),
-        new("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select"),
-        new("pageId", page_id),
-        new("accountStatusPolicy", "P1"),
-        new("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select"),
+        new("openid.oa2.response_type", "code"),
         new("openid.mode", "checkid_setup"),
-        new("openid.ns.oa2", "http://www.amazon.com/ap/ext/oauth/2"),
-        new("openid.oa2.client_id", $"device:{ClientId}"),
         new("openid.ns.pape", "http://specs.openid.net/extensions/pape/1.0"),
-        new("marketPlaceId", locale.MarketPlaceId),
+        new("openid.oa2.code_challenge_method", "S256"),
+        new("openid.ns.oa2", "http://www.amazon.com/ap/ext/oauth/2"),
+        new("openid.oa2.code_challenge", CodeChallengeB64),
         new("openid.oa2.scope", "device_auth_access"),
-        new("forceMobileLayout", "true"),
+        new("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select"),
+        new("openid.oa2.client_id", $"device:{ClientId}"),
+        new("disableLoginPrepopulate", "1"),
         new("openid.ns", "http://specs.openid.net/auth/2.0"),
-        new("openid.pape.max_auth_age", "0")
       };
 
       return new Uri($"{base_url}?{oauthParams.ToQueryString()}");
@@ -104,17 +105,19 @@ namespace Oahu.Core
     // internal instead of private for testing only
     internal static string BuildDeviceSerial()
     {
-      var guid = Guid.NewGuid().ToString("N").ToUpper();
-      Log(3, typeof(AudibleLogin), () => guid);
-      return guid;
+      byte[] serialBytes = new byte[20];
+      Random.Shared.NextBytes(serialBytes);
+      string serial = Convert.ToHexString(serialBytes).ToLower();
+      Log(3, typeof(AudibleLogin), () => serial);
+      return serial;
     }
 
     // internal instead of private for testing only
     internal static string BuildClientId(string serial)
     {
       string serialEx = $"{serial}#{DeviceType}";
-      byte[] clientId = Encoding.ASCII.GetBytes(serialEx);
-      string clientIdHex = clientId.BytesToHexString();
+      byte[] clientId = Encoding.UTF8.GetBytes(serialEx);
+      string clientIdHex = Convert.ToHexString(clientId).ToLower();
       Log(3, typeof(AudibleLogin), () => clientIdHex);
       return clientIdHex;
     }
@@ -122,9 +125,8 @@ namespace Oahu.Core
     // internal instead of private for testing only
     internal static string CreateCodeVerifier()
     {
-      var random = new Random();
       byte[] tokenBytes = new byte[32];
-      random.NextBytes(tokenBytes);
+      Random.Shared.NextBytes(tokenBytes);
       string codeVerifier = tokenBytes.ToUrlBase64String();
       return codeVerifier;
     }

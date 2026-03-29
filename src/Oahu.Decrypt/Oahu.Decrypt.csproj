@@ -5,7 +5,6 @@
     <AssemblyName>Oahu.Decrypt</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
-    <DefineConstants>$(DefineConstants);FEATURE_CRYPTO</DefineConstants>
   </PropertyGroup>
 
 </Project>

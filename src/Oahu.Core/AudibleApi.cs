@@ -23,7 +23,7 @@ namespace Oahu.Core
 {
   class AudibleApi : IAudibleApi
   {
-    const string UserAgent = "Audible/671 CFNetwork/1240.0.4 Darwin/20.6.0";
+    const string UserAgent = "com.audible.playersdk.player/3.96.1 (Linux;Android 14) AndroidXMedia3/1.3.0";
 
     // const string HTTP_AUTHORITY_AUDIBLE = @"https://api.audible.";
     const string ContentPath = "/1.0/content";
@@ -84,6 +84,12 @@ namespace Oahu.Core
 
     public Func<Task> RefreshTokenAsyncFunc { get; private set; }
 
+    internal bool HasAdpToken => !string.IsNullOrEmpty(Profile?.AdpToken);
+
+    internal bool HasPrivateKey => !string.IsNullOrEmpty(Profile?.PrivateKey);
+
+    internal bool HasAccessToken => !string.IsNullOrEmpty(Profile?.Token?.AccessToken);
+
     // private string BaseUrlAudible { get; }
     // private Uri BaseUriAudible => HttpClientAudible?.BaseAddress;
     // private Uri BaseUriAmazon => HttpClientAmazon?.BaseAddress;
@@ -141,7 +147,7 @@ namespace Oahu.Core
     public async Task<bool> GetActivationBytesAsync()
     {
       using var logGuard = new LogGuard(3, this);
-      var url = "/license/token?action=register&player_manuf=Audible,iPhone&player_model=iPhone";
+      var url = "/license/token?action=register&player_manuf=Audible,Android&player_model=Android";
       byte[] response = await CallAudibleApiSignedForBytesAsync(url);
 
       return false;
@@ -600,6 +606,47 @@ namespace Oahu.Core
       return accusize;
     }
 
+    /// <summary>
+    /// Imports a private key that may be PEM-encoded (PKCS#1 or PKCS#8) or raw base64 DER.
+    /// Amazon's registration response sends the key with PEM headers and escaped newlines.
+    /// </summary>
+    private static void ImportPrivateKey(RSA rsa, string privateKey)
+    {
+      // First, try direct PEM import (works if the string has proper PEM headers and real newlines)
+      try
+      {
+        rsa.ImportFromPem(privateKey);
+        return;
+      }
+      catch (ArgumentException)
+      {
+        // PEM import failed — key may have escaped newlines or be raw base64
+      }
+
+      // Strip PEM headers and normalize newlines
+      string cleaned = privateKey
+        .Replace("-----BEGIN RSA PRIVATE KEY-----", string.Empty)
+        .Replace("-----END RSA PRIVATE KEY-----", string.Empty)
+        .Replace("-----BEGIN PRIVATE KEY-----", string.Empty)
+        .Replace("-----END PRIVATE KEY-----", string.Empty)
+        .Replace("\\n", string.Empty)
+        .Replace("\n", string.Empty)
+        .Replace("\r", string.Empty)
+        .Trim();
+
+      byte[] keyBytes = Convert.FromBase64String(cleaned);
+
+      // Try PKCS#1 first (RSA PRIVATE KEY), then PKCS#8 (PRIVATE KEY)
+      try
+      {
+        rsa.ImportRSAPrivateKey(keyBytes, out _);
+      }
+      catch (CryptographicException)
+      {
+        rsa.ImportPkcs8PrivateKey(keyBytes, out _);
+      }
+    }
+
     private void EnsureAccountId()
     {
       if (accountId > 0)
@@ -703,6 +750,13 @@ namespace Oahu.Core
         await response.LogAsync(4, this, httpClient.CookieContainer, httpClient.BaseAddress);
 
         content = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+          Log(1, this, () => $"API call failed: {(int)response.StatusCode} {response.ReasonPhrase} " +
+            $"URL={request.RequestUri} Content={(content?.Length > 500 ? content[..500] : content)}");
+        }
+
         response.EnsureSuccessStatusCode();
 
         return content;
@@ -747,8 +801,7 @@ namespace Oahu.Core
 
     private string MakeRequestSignature(HttpRequestMessage request)
     {
-      // HACK
-      DateTime dt = DateTime.UtcNow.RoundDown(TimeSpan.FromMinutes(10));
+      DateTime dt = DateTime.UtcNow;
 
       string method = request.Method.ToString().ToUpper();
       string url = request.RequestUri.OriginalString;
@@ -774,7 +827,7 @@ namespace Oahu.Core
       byte[] hashBytes = sha256Hash.ComputeHash(dataBytes);
 
       using RSA rsa = RSA.Create();
-      rsa.ImportFromPem(Profile.PrivateKey);
+      ImportPrivateKey(rsa, Profile.PrivateKey);
 
       byte[] signatureBytes = rsa.SignHash(hashBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 

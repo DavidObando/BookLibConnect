@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -23,6 +24,24 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 
     [ObservableProperty]
     private SettingsViewModel settings;
+
+    [ObservableProperty]
+    private bool isSignedIn;
+
+    [ObservableProperty]
+    private string profileDisplayName = "Signed out";
+
+    [ObservableProperty]
+    private string profileSubtitle = "Sign in to start the setup wizard.";
+
+    [ObservableProperty]
+    private string profileInitial = "?";
+
+    [ObservableProperty]
+    private Bitmap profileImage;
+
+    [ObservableProperty]
+    private bool hasProfileImage;
 
     public MainWindowViewModel()
     {
@@ -52,6 +71,45 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     public void InitSettings(DownloadSettings downloadSettings, ExportSettings exportSettings, ConfigSettings configSettings)
     {
       Settings = new SettingsViewModel(downloadSettings, exportSettings, configSettings);
+    }
+
+    public void SetSignedInProfile(string displayName, string givenName, string subtitle, Bitmap profileImage = null)
+    {
+      ProfileDisplayName = string.IsNullOrWhiteSpace(displayName) ? "Audible account" : displayName;
+      ProfileSubtitle = string.IsNullOrWhiteSpace(subtitle) ? "Audible account" : subtitle;
+      ProfileInitial = CreateProfileInitial(givenName, ProfileDisplayName);
+      ProfileImage = profileImage;
+      IsSignedIn = true;
+    }
+
+    public void ClearSignedInProfile()
+    {
+      CurrentProfile = null;
+      Api = null;
+      ProfileDisplayName = "Signed out";
+      ProfileSubtitle = "Sign in to start the setup wizard.";
+      ProfileInitial = "?";
+      ProfileImage = null;
+      IsSignedIn = false;
+    }
+
+    private static string CreateProfileInitial(string givenName, string displayName)
+    {
+      string source = !string.IsNullOrWhiteSpace(givenName)
+        ? givenName
+        : displayName;
+
+      if (string.IsNullOrWhiteSpace(source))
+      {
+        return "?";
+      }
+
+      return char.ToUpperInvariant(source.Trim()[0]).ToString();
+    }
+
+    partial void OnProfileImageChanged(Bitmap value)
+    {
+      HasProfileImage = value is not null;
     }
   }
 }

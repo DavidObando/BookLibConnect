@@ -153,6 +153,8 @@ namespace Oahu.Core
   {
     string Name { get; }
 
+    string GivenName { get; }
+
     string AccountId { get; }
   }
 }

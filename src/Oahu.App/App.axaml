@@ -8,4 +8,60 @@
     <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
   </Application.Styles>
 
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <!-- Light theme colors -->
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#F8FAFC" />
+          <SolidColorBrush x:Key="HeaderBorderBrush" Color="#E2E8F0" />
+          <SolidColorBrush x:Key="HeaderTitleBrush" Color="#0F172A" />
+          <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#475569" />
+          <SolidColorBrush x:Key="SecondaryTextBrush" Color="#64748B" />
+          <SolidColorBrush x:Key="SignInButtonBackgroundBrush" Color="#0F172A" />
+          <SolidColorBrush x:Key="SignInButtonForegroundBrush" Color="White" />
+          <SolidColorBrush x:Key="SignOutButtonBackgroundBrush" Color="#EFF6FF" />
+          <SolidColorBrush x:Key="SignOutButtonForegroundBrush" Color="#1D4ED8" />
+          <SolidColorBrush x:Key="SignOutButtonBorderBrush" Color="#BFDBFE" />
+          <SolidColorBrush x:Key="FlyoutBackgroundBrush" Color="White" />
+          <SolidColorBrush x:Key="FlyoutBorderBrush" Color="#CBD5E1" />
+          <SolidColorBrush x:Key="AvatarBackgroundBrush" Color="#DBEAFE" />
+          <SolidColorBrush x:Key="AvatarAccentBrush" Color="#2563EB" />
+          <SolidColorBrush x:Key="SeparatorBrush" Color="#D1D5DB" />
+          <SolidColorBrush x:Key="CardBorderBrush" Color="#D1D5DB" />
+          <SolidColorBrush x:Key="MutedTextBrush" Color="Gray" />
+          <SolidColorBrush x:Key="SuccessBrush" Color="#16A34A" />
+          <SolidColorBrush x:Key="ErrorBrush" Color="#DC2626" />
+          <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#80000000" />
+          <SolidColorBrush x:Key="OverlayTextBrush" Color="White" />
+        </ResourceDictionary>
+
+        <!-- Dark theme colors -->
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#1E293B" />
+          <SolidColorBrush x:Key="HeaderBorderBrush" Color="#334155" />
+          <SolidColorBrush x:Key="HeaderTitleBrush" Color="#F1F5F9" />
+          <SolidColorBrush x:Key="HeaderSubtitleBrush" Color="#94A3B8" />
+          <SolidColorBrush x:Key="SecondaryTextBrush" Color="#94A3B8" />
+          <SolidColorBrush x:Key="SignInButtonBackgroundBrush" Color="#3B82F6" />
+          <SolidColorBrush x:Key="SignInButtonForegroundBrush" Color="White" />
+          <SolidColorBrush x:Key="SignOutButtonBackgroundBrush" Color="#1E3A5F" />
+          <SolidColorBrush x:Key="SignOutButtonForegroundBrush" Color="#93C5FD" />
+          <SolidColorBrush x:Key="SignOutButtonBorderBrush" Color="#1E40AF" />
+          <SolidColorBrush x:Key="FlyoutBackgroundBrush" Color="#1E293B" />
+          <SolidColorBrush x:Key="FlyoutBorderBrush" Color="#475569" />
+          <SolidColorBrush x:Key="AvatarBackgroundBrush" Color="#1E3A5F" />
+          <SolidColorBrush x:Key="AvatarAccentBrush" Color="#3B82F6" />
+          <SolidColorBrush x:Key="SeparatorBrush" Color="#475569" />
+          <SolidColorBrush x:Key="CardBorderBrush" Color="#475569" />
+          <SolidColorBrush x:Key="MutedTextBrush" Color="#9CA3AF" />
+          <SolidColorBrush x:Key="SuccessBrush" Color="#22C55E" />
+          <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444" />
+          <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#CC000000" />
+          <SolidColorBrush x:Key="OverlayTextBrush" Color="White" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
 </Application>

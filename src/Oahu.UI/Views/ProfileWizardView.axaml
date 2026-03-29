@@ -10,7 +10,7 @@
     <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,16">
       <TextBlock Text="{Binding StepTitle}"
                  FontSize="20" FontWeight="Bold" />
-      <TextBlock FontSize="12" Foreground="Gray">
+      <TextBlock FontSize="12" Foreground="{DynamicResource MutedTextBrush}">
         <TextBlock.Text>
           <MultiBinding StringFormat="Step {0} of {1}">
             <CompiledBinding Path="CurrentStep" Converter="{x:Static vm:ProfileWizardViewModel.OneBasedConverter}" />
@@ -39,7 +39,7 @@
     </StackPanel>
 
     <!-- Step content area -->
-    <Border BorderBrush="LightGray" BorderThickness="1"
+    <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
             CornerRadius="4" Padding="16">
       <ScrollViewer>
         <Panel>
@@ -48,7 +48,7 @@
             <TextBlock Text="Create an initial profile for your Amazon/Audible account and your region."
                        TextWrapping="Wrap" />
             <TextBlock Text="This will register this app as a device with Amazon and allow you to download your books."
-                       TextWrapping="Wrap" Foreground="Gray" />
+                       TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
             <StackPanel Spacing="4" Margin="0,8,0,0">
               <TextBlock Text="Select your Audible marketplace:" />
               <ComboBox ItemsSource="{Binding AvailableRegions}"
@@ -59,48 +59,98 @@
                       IsChecked="{Binding UsePreAmazonAccount}"
                       IsEnabled="{Binding PreAmazonAllowed}" />
             <TextBlock Text="You can add additional profiles for different accounts or regions later."
-                       TextWrapping="Wrap" Foreground="Gray" FontSize="12" Margin="0,8,0,0" />
+                       TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" Margin="0,8,0,0" />
           </StackPanel>
 
           <!-- Step 1: Login -->
           <StackPanel Spacing="12" IsVisible="{Binding CurrentStep, Converter={x:Static vm:ProfileWizardViewModel.StepConverter}, ConverterParameter=1}">
             <TextBlock Text="Sign in to your Audible account:" TextWrapping="Wrap" FontWeight="SemiBold" />
-            <TextBlock Text="1. Click 'Open in Browser' to open the Audible sign-in page."
-                       TextWrapping="Wrap" />
-            <TextBlock Text="2. Sign in with your Amazon/Audible credentials in the browser."
-                       TextWrapping="Wrap" />
-            <TextBlock Text="3. After signing in, copy the final URL from the browser's address bar and paste it below."
-                       TextWrapping="Wrap" />
 
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-              <Button Content="Open in Browser"
-                      Command="{Binding OpenLoginInBrowserCommand}" />
-              <Button Content="Copy URL"
-                      Command="{Binding CopyLoginUrlCommand}"
-                      Name="btnCopyUrl" />
+            <CheckBox Content="Sign in directly with email and password"
+                      IsChecked="{Binding UseDirectLogin}" />
+
+            <!-- Browser-based login -->
+            <StackPanel Spacing="12" IsVisible="{Binding !UseDirectLogin}">
+              <TextBlock Text="1. Click 'Open in Browser' to open the Audible sign-in page."
+                         TextWrapping="Wrap" />
+              <TextBlock Text="2. Sign in with your Amazon/Audible credentials in the browser."
+                         TextWrapping="Wrap" />
+              <TextBlock Text="3. After signing in, copy the final URL from the browser's address bar and paste it below."
+                         TextWrapping="Wrap" />
+
+              <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                <Button Content="Open in Browser"
+                        Command="{Binding OpenLoginInBrowserCommand}" />
+                <Button Content="Copy URL"
+                        Command="{Binding CopyLoginUrlCommand}"
+                        Name="btnCopyUrl" />
+              </StackPanel>
+
+              <TextBlock Text="✓ Login URL opened/copied"
+                         Foreground="{DynamicResource SuccessBrush}" FontSize="12"
+                         IsVisible="{Binding LoginUrlCopied}" />
+
+              <StackPanel Spacing="4" Margin="0,8,0,0"
+                          IsVisible="{Binding IsLoggingIn}">
+                <TextBlock Text="Paste the final URL from the browser after signing in:" />
+                <TextBox Text="{Binding PastedResponseUrl}"
+                         Watermark="https://www.amazon.com/..."
+                         AcceptsReturn="False" />
+                <Button Content="Submit"
+                        Command="{Binding SubmitResponseUrlCommand}"
+                        HorizontalAlignment="Left"
+                        IsEnabled="{Binding !IsProcessingResponse}" />
+              </StackPanel>
             </StackPanel>
 
-            <TextBlock Text="✓ Login URL opened/copied"
-                       Foreground="Green" FontSize="12"
-                       IsVisible="{Binding LoginUrlCopied}" />
+            <!-- Direct login -->
+            <StackPanel Spacing="12" IsVisible="{Binding UseDirectLogin}">
+              <!-- Credentials (hidden during challenges) -->
+              <StackPanel Spacing="8" IsVisible="{Binding !ShowChallenge}">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Email:" />
+                  <TextBox Text="{Binding EmailInput}"
+                           Watermark="your@email.com"
+                           Width="300" HorizontalAlignment="Left" />
+                </StackPanel>
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Password:" />
+                  <TextBox Text="{Binding PasswordInput}"
+                           PasswordChar="•"
+                           Width="300" HorizontalAlignment="Left" />
+                </StackPanel>
+                <Button Content="Sign In"
+                        Command="{Binding SubmitDirectLoginCommand}"
+                        HorizontalAlignment="Left"
+                        IsEnabled="{Binding !IsProcessingResponse}" />
+              </StackPanel>
 
-            <StackPanel Spacing="4" Margin="0,8,0,0"
-                        IsVisible="{Binding IsLoggingIn}">
-              <TextBlock Text="Paste the final URL from the browser after signing in:" />
-              <TextBox Text="{Binding PastedResponseUrl}"
-                       Watermark="https://www.amazon.com/..."
-                       AcceptsReturn="False" />
-              <Button Content="Submit"
-                      Command="{Binding SubmitResponseUrlCommand}"
-                      HorizontalAlignment="Left"
-                      IsEnabled="{Binding !IsProcessingResponse}" />
+              <!-- Challenge panel (CAPTCHA, MFA, CVF, Approval) -->
+              <StackPanel Spacing="8" IsVisible="{Binding ShowChallenge}">
+                <TextBlock Text="{Binding ChallengeMessage}"
+                           TextWrapping="Wrap" FontWeight="SemiBold" />
+                <Image Source="{Binding ChallengeImage}"
+                       IsVisible="{Binding ChallengeHasImage}"
+                       MaxWidth="300" MaxHeight="100"
+                       HorizontalAlignment="Left" />
+                <TextBox Text="{Binding ChallengeInput}"
+                         IsVisible="{Binding ChallengeHasInput}"
+                         Watermark="{Binding ChallengeInputWatermark}"
+                         Width="300" HorizontalAlignment="Left" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Button Content="{Binding ChallengeSubmitText}"
+                          Command="{Binding SubmitChallengeCommand}" />
+                  <Button Content="Cancel"
+                          Command="{Binding CancelChallengeCommand}" />
+                </StackPanel>
+              </StackPanel>
             </StackPanel>
 
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsProcessingResponse}"
                          Width="200" HorizontalAlignment="Left" Margin="0,4,0,0" />
 
             <TextBlock Text="{Binding LoginErrorMessage}"
-                       Foreground="Red" TextWrapping="Wrap"
+                       Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"
                        IsVisible="{Binding LoginErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
           </StackPanel>
 
@@ -108,7 +158,7 @@
           <StackPanel Spacing="12" IsVisible="{Binding CurrentStep, Converter={x:Static vm:ProfileWizardViewModel.StepConverter}, ConverterParameter=2}">
             <TextBlock Text="Choose a friendly name for this account." TextWrapping="Wrap" />
             <TextBlock Text="This alias helps identify the account when you have multiple profiles."
-                       TextWrapping="Wrap" Foreground="Gray" />
+                       TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
             <StackPanel Spacing="4" Margin="0,8,0,0">
               <TextBlock Text="Account name:" />
               <TextBlock Text="{Binding CustomerName}" FontWeight="SemiBold" />
@@ -126,7 +176,7 @@
             <TextBlock Text="Select the folder where downloaded audiobooks will be saved."
                        TextWrapping="Wrap" />
             <TextBlock Text="You can change this later in Settings."
-                       TextWrapping="Wrap" Foreground="Gray" />
+                       TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
             <StackPanel Spacing="4" Margin="0,8,0,0">
               <TextBlock Text="Download folder:" />
               <StackPanel Orientation="Horizontal" Spacing="8">
@@ -145,7 +195,7 @@
             <TextBlock Text="Optionally export downloaded books as AAX files to a separate folder."
                        TextWrapping="Wrap" />
             <TextBlock Text="This creates a copy of each downloaded book in AAX format."
-                       TextWrapping="Wrap" Foreground="Gray" />
+                       TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
             <CheckBox Content="Export to AAX"
                       IsChecked="{Binding ExportToAax}"
                       Margin="0,8,0,0" />
@@ -164,7 +214,7 @@
 
           <!-- Step 5: Complete -->
           <StackPanel Spacing="12" IsVisible="{Binding CurrentStep, Converter={x:Static vm:ProfileWizardViewModel.StepConverter}, ConverterParameter=5}">
-            <TextBlock Text="✓" FontSize="48" Foreground="Green"
+            <TextBlock Text="✓" FontSize="48" Foreground="{DynamicResource SuccessBrush}"
                        HorizontalAlignment="Center" />
             <TextBlock Text="{Binding CompletionMessage}" TextWrapping="Wrap"
                        HorizontalAlignment="Center" />
