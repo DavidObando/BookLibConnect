@@ -12,6 +12,7 @@ namespace Oahu.App.Avalonia
     public static AppBuilder BuildAvaloniaApp() =>
       AppBuilder.Configure<App>()
         .UsePlatformDetect()
+        .With(new AvaloniaNativePlatformOptions { OverlayPopups = true })
         .WithInterFont()
         .LogToTrace();
   }
