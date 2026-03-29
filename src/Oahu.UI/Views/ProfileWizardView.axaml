@@ -65,35 +65,85 @@
           <!-- Step 1: Login -->
           <StackPanel Spacing="12" IsVisible="{Binding CurrentStep, Converter={x:Static vm:ProfileWizardViewModel.StepConverter}, ConverterParameter=1}">
             <TextBlock Text="Sign in to your Audible account:" TextWrapping="Wrap" FontWeight="SemiBold" />
-            <TextBlock Text="1. Click 'Open in Browser' to open the Audible sign-in page."
-                       TextWrapping="Wrap" />
-            <TextBlock Text="2. Sign in with your Amazon/Audible credentials in the browser."
-                       TextWrapping="Wrap" />
-            <TextBlock Text="3. After signing in, copy the final URL from the browser's address bar and paste it below."
-                       TextWrapping="Wrap" />
 
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-              <Button Content="Open in Browser"
-                      Command="{Binding OpenLoginInBrowserCommand}" />
-              <Button Content="Copy URL"
-                      Command="{Binding CopyLoginUrlCommand}"
-                      Name="btnCopyUrl" />
+            <CheckBox Content="Sign in directly with email and password"
+                      IsChecked="{Binding UseDirectLogin}" />
+
+            <!-- Browser-based login -->
+            <StackPanel Spacing="12" IsVisible="{Binding !UseDirectLogin}">
+              <TextBlock Text="1. Click 'Open in Browser' to open the Audible sign-in page."
+                         TextWrapping="Wrap" />
+              <TextBlock Text="2. Sign in with your Amazon/Audible credentials in the browser."
+                         TextWrapping="Wrap" />
+              <TextBlock Text="3. After signing in, copy the final URL from the browser's address bar and paste it below."
+                         TextWrapping="Wrap" />
+
+              <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                <Button Content="Open in Browser"
+                        Command="{Binding OpenLoginInBrowserCommand}" />
+                <Button Content="Copy URL"
+                        Command="{Binding CopyLoginUrlCommand}"
+                        Name="btnCopyUrl" />
+              </StackPanel>
+
+              <TextBlock Text="✓ Login URL opened/copied"
+                         Foreground="Green" FontSize="12"
+                         IsVisible="{Binding LoginUrlCopied}" />
+
+              <StackPanel Spacing="4" Margin="0,8,0,0"
+                          IsVisible="{Binding IsLoggingIn}">
+                <TextBlock Text="Paste the final URL from the browser after signing in:" />
+                <TextBox Text="{Binding PastedResponseUrl}"
+                         Watermark="https://www.amazon.com/..."
+                         AcceptsReturn="False" />
+                <Button Content="Submit"
+                        Command="{Binding SubmitResponseUrlCommand}"
+                        HorizontalAlignment="Left"
+                        IsEnabled="{Binding !IsProcessingResponse}" />
+              </StackPanel>
             </StackPanel>
 
-            <TextBlock Text="✓ Login URL opened/copied"
-                       Foreground="Green" FontSize="12"
-                       IsVisible="{Binding LoginUrlCopied}" />
+            <!-- Direct login -->
+            <StackPanel Spacing="12" IsVisible="{Binding UseDirectLogin}">
+              <!-- Credentials (hidden during challenges) -->
+              <StackPanel Spacing="8" IsVisible="{Binding !ShowChallenge}">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Email:" />
+                  <TextBox Text="{Binding EmailInput}"
+                           Watermark="your@email.com"
+                           Width="300" HorizontalAlignment="Left" />
+                </StackPanel>
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Password:" />
+                  <TextBox Text="{Binding PasswordInput}"
+                           PasswordChar="•"
+                           Width="300" HorizontalAlignment="Left" />
+                </StackPanel>
+                <Button Content="Sign In"
+                        Command="{Binding SubmitDirectLoginCommand}"
+                        HorizontalAlignment="Left"
+                        IsEnabled="{Binding !IsProcessingResponse}" />
+              </StackPanel>
 
-            <StackPanel Spacing="4" Margin="0,8,0,0"
-                        IsVisible="{Binding IsLoggingIn}">
-              <TextBlock Text="Paste the final URL from the browser after signing in:" />
-              <TextBox Text="{Binding PastedResponseUrl}"
-                       Watermark="https://www.amazon.com/..."
-                       AcceptsReturn="False" />
-              <Button Content="Submit"
-                      Command="{Binding SubmitResponseUrlCommand}"
-                      HorizontalAlignment="Left"
-                      IsEnabled="{Binding !IsProcessingResponse}" />
+              <!-- Challenge panel (CAPTCHA, MFA, CVF, Approval) -->
+              <StackPanel Spacing="8" IsVisible="{Binding ShowChallenge}">
+                <TextBlock Text="{Binding ChallengeMessage}"
+                           TextWrapping="Wrap" FontWeight="SemiBold" />
+                <Image Source="{Binding ChallengeImage}"
+                       IsVisible="{Binding ChallengeHasImage}"
+                       MaxWidth="300" MaxHeight="100"
+                       HorizontalAlignment="Left" />
+                <TextBox Text="{Binding ChallengeInput}"
+                         IsVisible="{Binding ChallengeHasInput}"
+                         Watermark="{Binding ChallengeInputWatermark}"
+                         Width="300" HorizontalAlignment="Left" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Button Content="{Binding ChallengeSubmitText}"
+                          Command="{Binding SubmitChallengeCommand}" />
+                  <Button Content="Cancel"
+                          Command="{Binding CancelChallengeCommand}" />
+                </StackPanel>
+              </StackPanel>
             </StackPanel>
 
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsProcessingResponse}"

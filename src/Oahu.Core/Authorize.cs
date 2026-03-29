@@ -21,16 +21,16 @@ namespace Oahu.Core
     const string HttpPathDeregister = @"/auth/deregister";
     const string HttpPathToken = @"/auth/token";
 
-    const string OsVersion = @"google/sdk_gphone64_x86_64/emu64xa:14/UPB5.230623.003/10615560:userdebug/dev-keys";
-    const string OsVersionNumber = "34";
-    const string AppVersion = "2090253826";
-    const string AppVersionName = "25.38.26";
-    const string SoftwareVersion = "130050002";
-    const string AppName = "com.audible.application";
-    const string DeviceModel = "sdk_gphone64_x86_64";
-    const string OsFamily = "android";
-    const string Manufacturer = "Google";
-    const string DeviceProduct = "sdk_phone64_x86_64";
+    internal const string OsVersion = @"google/sdk_gphone64_x86_64/emu64xa:14/UPB5.230623.003/10615560:userdebug/dev-keys";
+    internal const string OsVersionNumber = "34";
+    internal const string AppVersion = "2090253826";
+    internal const string AppVersionName = "25.38.26";
+    internal const string SoftwareVersion = "130050002";
+    internal const string AppName = "com.audible.application";
+    internal const string DeviceModel = "sdk_gphone64_x86_64";
+    internal const string OsFamily = "android";
+    internal const string Manufacturer = "Google";
+    internal const string DeviceProduct = "sdk_phone64_x86_64";
 
     public Authorize(ConfigTokenDelegate getTokenFunc, IAuthorizeSettings settings)
     {

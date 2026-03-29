@@ -98,6 +98,45 @@ namespace Oahu.Core
       return result;
     }
 
+    public async Task<RegisterResult> ConfigFromProgrammaticLoginAsync(
+      ERegion region,
+      bool withPreAmazonUsername,
+      Credentials credentials,
+      Callbacks callbacks)
+    {
+      Log(3, this, () => $"reg={region}, preAmznAccnt={withPreAmazonUsername}");
+
+      // Run on thread pool to avoid capturing the UI synchronization context.
+      // The synchronous challenge callbacks (CaptchaCallback, MfaCallback, etc.) use
+      // Dispatcher.UIThread.Post + TaskCompletionSource.Wait, which deadlocks if
+      // the callback fires on the UI thread due to sync context capture.
+      return await Task.Run(async () =>
+      {
+        // Build OAuth URI (this also generates Serial, ClientId, CodeVerifier in AudibleLogin)
+        Uri oauthUri = ConfigBuildNewLoginUri(region, withPreAmazonUsername);
+
+        // Perform programmatic login to obtain the redirect URI with authorization code
+        var locale = region.FromCountryCode();
+        var programmaticLogin = new ProgrammaticLogin();
+        Uri responseUri = await programmaticLogin.LoginAsync(
+          locale,
+          withPreAmazonUsername,
+          oauthUri,
+          AudibleLogin.Serial,
+          credentials,
+          callbacks);
+
+        if (responseUri == null)
+        {
+          Log(1, this, () => "Programmatic login returned no response URI");
+          return new RegisterResult(EAuthorizeResult.AuthorizationFailed, null, null);
+        }
+
+        // Parse the response and complete device registration (same as external login)
+        return await ConfigParseExternalLoginResponseAsync(responseUri, callbacks);
+      });
+    }
+
     public Uri ConfigBuildNewLoginUri(
       ERegion region,
       bool withPreAmazonUsername)

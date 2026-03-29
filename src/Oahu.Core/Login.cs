@@ -49,18 +49,19 @@ namespace Oahu.Core
 
       // return_to is always audible.{TLD} per AudibleApi's static analysis of Audible Android APK
       string return_to = $"https://www.audible.{locale.Domain}/ap/maplanding";
+      string cc = locale.CountryCode.ToString().ToLowerInvariant();
       string base_url, assoc_handle, page_id;
       if (withPreAmazonUsername)
       {
         base_url = $"https://www.audible.{locale.Domain}/ap/signin";
-        assoc_handle = $"amzn_audible_android_aui_lap_{locale.CountryCode}";
-        page_id = $"amzn_audible_android_privatepool_aui_v2_dark_{locale.CountryCode}";
+        assoc_handle = $"amzn_audible_android_aui_lap_{cc}";
+        page_id = $"amzn_audible_android_privatepool_aui_v2_dark_{cc}";
       }
       else
       {
         base_url = $"https://www.amazon.{locale.Domain}/ap/signin";
-        assoc_handle = $"amzn_audible_android_aui_{locale.CountryCode}";
-        page_id = $"amzn_audible_android_aui_v2_dark_us{locale.CountryCode}";
+        assoc_handle = $"amzn_audible_android_aui_{cc}";
+        page_id = $"amzn_audible_android_aui_v2_dark_us{cc}";
       }
 
       var oauthParams = new List<KeyValuePair<string, string>>()

@@ -91,13 +91,29 @@ namespace Oahu.App.Avalonia
           {
             viewModel.Api.GetAccountAliasFunc = GetAccountAlias;
 
+            Log(3, this, () => $"Profile loaded: region={client.ProfileKey?.Region}, " +
+              $"account={client.ProfileKey?.AccountId ?? "(null)"}");
+
             if (userSettings.DownloadSettings.AutoUpdateLibrary)
             {
               viewModel.SetBusy(true, "Updating library...");
-              await viewModel.Api.GetLibraryAsync(false);
+              var libraryResult = await viewModel.Api.GetLibraryAsync(false);
+              if (libraryResult is null)
+              {
+                Log(1, this, () => "Library sync returned null — API call likely failed. Check log for HTTP error details.");
+                viewModel.StatusMessage = "Warning: Library sync failed. See logs for details.";
+              }
+              else
+              {
+                Log(3, this, () => $"Library sync: {libraryResult.Items?.Length ?? 0} book(s)");
+              }
 
               viewModel.SetBusy(true, "Downloading cover images...");
               await viewModel.Api.DownloadCoverImagesAsync();
+            }
+            else
+            {
+              Log(3, this, () => "AutoUpdateLibrary is disabled, skipping library sync");
             }
 
             // Verify that completed downloads still have their output files on disk.
@@ -113,6 +129,7 @@ namespace Oahu.App.Avalonia
 
             // Load books into the library view
             var books = viewModel.Api.GetBooks();
+            Log(3, this, () => $"Local books: {books?.Count() ?? 0}");
             if (books is not null)
             {
               viewModel.BookLibrary.LoadBooks(books);
@@ -125,6 +142,16 @@ namespace Oahu.App.Avalonia
             viewModel.Conversion.RunRequested += OnRunDownloadPipeline;
             viewModel.Conversion.CancelRequested += OnCancelDownload;
           }
+          else
+          {
+            Log(1, this, () => "API is null after profile load — profile may be incomplete");
+            viewModel.StatusMessage = "Warning: API not initialized. Profile may be incomplete.";
+          }
+        }
+        else
+        {
+          Log(1, this, () => "CurrentProfile is null after ConfigFromFileAsync");
+          viewModel.StatusMessage = "Warning: No profile loaded. Try signing in again.";
         }
 
         viewModel.SetBusy(false, "Ready");

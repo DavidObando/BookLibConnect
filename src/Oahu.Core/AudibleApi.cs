@@ -95,6 +95,12 @@ namespace Oahu.Core
 
     private BookLibrary BookLibrary { get; }
 
+    internal bool HasAdpToken => !string.IsNullOrEmpty(Profile?.AdpToken);
+
+    internal bool HasPrivateKey => !string.IsNullOrEmpty(Profile?.PrivateKey);
+
+    internal bool HasAccessToken => !string.IsNullOrEmpty(Profile?.Token?.AccessToken);
+
     private int AccountId
     {
       get
@@ -703,6 +709,13 @@ namespace Oahu.Core
         await response.LogAsync(4, this, httpClient.CookieContainer, httpClient.BaseAddress);
 
         content = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+          Log(1, this, () => $"API call failed: {(int)response.StatusCode} {response.ReasonPhrase} " +
+            $"URL={request.RequestUri} Content={(content?.Length > 500 ? content[..500] : content)}");
+        }
+
         response.EnsureSuccessStatusCode();
 
         return content;
