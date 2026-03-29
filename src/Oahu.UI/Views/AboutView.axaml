@@ -18,7 +18,7 @@
                MaxWidth="400" />
     <TextBlock Text="{Binding Copyright}"
                HorizontalAlignment="Center"
-               Foreground="Gray" />
+               Foreground="{DynamicResource MutedTextBrush}" />
   </StackPanel>
 
 </UserControl>

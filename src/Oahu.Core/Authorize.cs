@@ -250,6 +250,7 @@ namespace Oahu.Core
         var customerInfo = new CustomerInfo
         {
           Name = customer_info.Name,
+          GivenName = customer_info.GivenName,
           AccountId = customer_info.UserId
         };
 

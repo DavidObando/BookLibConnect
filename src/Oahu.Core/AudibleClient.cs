@@ -37,6 +37,10 @@ namespace Oahu.Core
 
     public IProfileAliasKey ProfileAliasKey => Profile?.AliasKey;
 
+    public string CurrentCustomerName => Profile?.Profile?.CustomerInfo?.Name;
+
+    public string CurrentGivenName => Profile?.Profile?.CustomerInfo?.GivenName;
+
     public ConfigSettings ConfigSettings { get; }
 
     public IBookLibrary BookLibraryExcerpt => BookLibrary;
@@ -253,6 +257,25 @@ namespace Oahu.Core
       }
 
       return result;
+    }
+
+    public async Task<bool> RemoveAllProfilesAsync()
+    {
+      var profiles = await GetProfilesAsync();
+      if (profiles is null)
+      {
+        DisposeProfileAndApi();
+        return true;
+      }
+
+      bool allRemoved = true;
+      foreach (var profile in profiles.ToList())
+      {
+        var result = await RemoveProfileAsync(profile);
+        allRemoved &= result >= EAuthorizeResult.Succ;
+      }
+
+      return allRemoved;
     }
 
     public async Task<bool?> ChangeProfileAsync(IProfileKey key, bool aliasChanged)

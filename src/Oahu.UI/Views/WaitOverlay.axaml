@@ -5,12 +5,12 @@
              x:DataType="vm:MainWindowViewModel"
              x:CompileBindings="True">
 
-  <Border Background="#80000000" IsVisible="{Binding IsBusy}">
+  <Border Background="{DynamicResource OverlayBackgroundBrush}" IsVisible="{Binding IsBusy}">
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
                 Spacing="16">
       <ProgressBar IsIndeterminate="True" Width="200" />
       <TextBlock Text="{Binding StatusMessage}"
-                 Foreground="White"
+                 Foreground="{DynamicResource OverlayTextBrush}"
                  HorizontalAlignment="Center"
                  FontSize="14" />
     </StackPanel>

@@ -786,11 +786,52 @@ namespace Oahu.Core
       byte[] hashBytes = sha256Hash.ComputeHash(dataBytes);
 
       using RSA rsa = RSA.Create();
-      rsa.ImportFromPem(Profile.PrivateKey);
+      ImportPrivateKey(rsa, Profile.PrivateKey);
 
       byte[] signatureBytes = rsa.SignHash(hashBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
       return signatureBytes;
+    }
+
+    /// <summary>
+    /// Imports a private key that may be PEM-encoded (PKCS#1 or PKCS#8) or raw base64 DER.
+    /// Amazon's registration response sends the key with PEM headers and escaped newlines.
+    /// </summary>
+    private static void ImportPrivateKey(RSA rsa, string privateKey)
+    {
+      // First, try direct PEM import (works if the string has proper PEM headers and real newlines)
+      try
+      {
+        rsa.ImportFromPem(privateKey);
+        return;
+      }
+      catch (ArgumentException)
+      {
+        // PEM import failed — key may have escaped newlines or be raw base64
+      }
+
+      // Strip PEM headers and normalize newlines
+      string cleaned = privateKey
+        .Replace("-----BEGIN RSA PRIVATE KEY-----", string.Empty)
+        .Replace("-----END RSA PRIVATE KEY-----", string.Empty)
+        .Replace("-----BEGIN PRIVATE KEY-----", string.Empty)
+        .Replace("-----END PRIVATE KEY-----", string.Empty)
+        .Replace("\\n", string.Empty)
+        .Replace("\n", string.Empty)
+        .Replace("\r", string.Empty)
+        .Trim();
+
+      byte[] keyBytes = Convert.FromBase64String(cleaned);
+
+      // Try PKCS#1 first (RSA PRIVATE KEY), then PKCS#8 (PRIVATE KEY)
+      try
+      {
+        rsa.ImportRSAPrivateKey(keyBytes, out _);
+      }
+      catch (CryptographicException)
+      {
+        rsa.ImportPkcs8PrivateKey(keyBytes, out _);
+      }
     }
   }
 }

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Oahu.Aux;
 using Oahu.Aux.Extensions;
@@ -21,6 +22,7 @@ namespace Oahu.App.Avalonia
     private readonly MainWindowViewModel viewModel;
     private readonly UserSettings userSettings;
     private bool initDone;
+    private bool databaseInitialized;
     private CancellationTokenSource cts;
     private WindowNotificationManager notificationManager;
 
@@ -68,93 +70,8 @@ namespace Oahu.App.Avalonia
         Log(4, this, () => "before wizard");
         await RunWizardAsync(client);
 
-        // Initialize the database (mirrors Windows init)
-        Log(4, this, () => "before db");
-        viewModel.SetBusy(true, "Initializing database...");
-        await BookDbContextLazyLoad.StartupAsync();
-
-        // Load profile from config file (mirrors Windows ConfigFromFileAsync)
-        Log(4, this, () => "before config");
-        viewModel.SetBusy(true, "Loading configuration...");
-        viewModel.CurrentProfile = await client.ConfigFromFileAsync(
-          userSettings.DownloadSettings?.Profile,
-          GetAccountAlias);
-
-        if (viewModel.CurrentProfile is not null)
-        {
-          userSettings.DownloadSettings.Profile = new ProfileAliasKey(viewModel.CurrentProfile);
-          userSettings.Save();
-
-          // Initialize the API and library (mirrors Windows initLibraryAsync)
-          viewModel.Api = client.Api;
-          if (viewModel.Api is not null)
-          {
-            viewModel.Api.GetAccountAliasFunc = GetAccountAlias;
-
-            Log(3, this, () => $"Profile loaded: region={client.ProfileKey?.Region}, " +
-              $"account={client.ProfileKey?.AccountId ?? "(null)"}");
-
-            if (userSettings.DownloadSettings.AutoUpdateLibrary)
-            {
-              viewModel.SetBusy(true, "Updating library...");
-              var libraryResult = await viewModel.Api.GetLibraryAsync(false);
-              if (libraryResult is null)
-              {
-                Log(1, this, () => "Library sync returned null — API call likely failed. Check log for HTTP error details.");
-                viewModel.StatusMessage = "Warning: Library sync failed. See logs for details.";
-              }
-              else
-              {
-                Log(3, this, () => $"Library sync: {libraryResult.Items?.Length ?? 0} book(s)");
-              }
-
-              viewModel.SetBusy(true, "Downloading cover images...");
-              await viewModel.Api.DownloadCoverImagesAsync();
-            }
-            else
-            {
-              Log(3, this, () => "AutoUpdateLibrary is disabled, skipping library sync");
-            }
-
-            // Verify that completed downloads still have their output files on disk.
-            // If a file is missing, the conversion state is reset to Remote.
-            viewModel.SetBusy(true, "Verifying downloaded files...");
-            int resetCount = viewModel.Api.VerifyCompletedDownloads(
-              userSettings.DownloadSettings,
-              userSettings.ExportSettings);
-            if (resetCount > 0)
-            {
-              Log(3, this, () => $"{resetCount} book(s) reset to Remote (output files missing)");
-            }
-
-            // Load books into the library view
-            var books = viewModel.Api.GetBooks();
-            Log(3, this, () => $"Local books: {books?.Count() ?? 0}");
-            if (books is not null)
-            {
-              viewModel.BookLibrary.LoadBooks(books);
-            }
-
-            // Wire download button to move selected books to Downloads tab
-            viewModel.BookLibrary.DownloadRequested += OnDownloadRequested;
-
-            // Wire the download pipeline
-            viewModel.Conversion.RunRequested += OnRunDownloadPipeline;
-            viewModel.Conversion.CancelRequested += OnCancelDownload;
-          }
-          else
-          {
-            Log(1, this, () => "API is null after profile load — profile may be incomplete");
-            viewModel.StatusMessage = "Warning: API not initialized. Profile may be incomplete.";
-          }
-        }
-        else
-        {
-          Log(1, this, () => "CurrentProfile is null after ConfigFromFileAsync");
-          viewModel.StatusMessage = "Warning: No profile loaded. Try signing in again.";
-        }
-
-        viewModel.SetBusy(false, "Ready");
+        await EnsureDatabaseInitializedAsync();
+        await LoadActiveProfileAsync();
         viewModel.IsInitialized = true;
         Log(4, this, () => "all done");
       }
@@ -165,33 +82,177 @@ namespace Oahu.App.Avalonia
       }
     }
 
-    private async Task RunWizardAsync(AudibleClient client)
+    private async Task<bool> RunWizardAsync(AudibleClient client, bool force = false)
     {
       using var logGuard = new LogGuard(3, this);
 
       var profiles = await client.GetProfilesAsync();
-      bool needsProfile = profiles.IsNullOrEmpty();
+      bool needsProfile = force || profiles.IsNullOrEmpty();
 
       if (!needsProfile)
       {
         Log(3, this, () => "profiles exist, skipping wizard");
-        return;
+        return false;
       }
 
-      Log(3, this, () => "no profiles found, showing setup wizard");
+      Log(3, this, () => force ? "showing setup wizard on demand" : "no profiles found, showing setup wizard");
 
       var wizardVm = new ProfileWizardViewModel();
       wizardVm.SetClient(client);
       wizardVm.SetSettings(userSettings.DownloadSettings, userSettings.ExportSettings);
 
       var wizardWindow = new SetupWizardWindow(wizardVm);
-      await wizardWindow.ShowWizardAsync(this);
+      bool registered = await wizardWindow.ShowWizardAsync(this);
 
-      if (!wizardVm.RegistrationSucceeded)
+      if (!registered)
       {
         Log(1, this, () => "wizard: no profile was created");
         viewModel.StatusMessage = "Warning: No profile was created. You can create one later via Settings.";
       }
+
+      return registered;
+    }
+
+    private async Task EnsureDatabaseInitializedAsync()
+    {
+      if (databaseInitialized)
+      {
+        return;
+      }
+
+      Log(4, this, () => "before db");
+      viewModel.SetBusy(true, "Initializing database...");
+      bool canConnect = await BookDbContextLazyLoad.StartupAsync();
+      if (!canConnect)
+      {
+        throw new InvalidOperationException("Database initialization failed.");
+      }
+
+      databaseInitialized = true;
+    }
+
+    private async Task LoadActiveProfileAsync()
+    {
+      using var logGuard = new LogGuard(3, this);
+
+      var client = viewModel.AudibleClient;
+
+      ClearLoadedSession();
+
+      Log(4, this, () => "before config");
+      viewModel.SetBusy(true, "Loading configuration...");
+      viewModel.CurrentProfile = await client.ConfigFromFileAsync(
+        userSettings.DownloadSettings?.Profile,
+        GetAccountAlias);
+
+      if (viewModel.CurrentProfile is null)
+      {
+        Log(3, this, () => "no active profile loaded");
+        viewModel.SetBusy(false, "Sign in to start the setup wizard.");
+        return;
+      }
+
+      userSettings.DownloadSettings.Profile = new ProfileAliasKey(viewModel.CurrentProfile);
+      userSettings.Save();
+
+      viewModel.Api = client.Api;
+      if (viewModel.Api is null)
+      {
+        Log(1, this, () => "API is null after profile load — profile may be incomplete");
+        ClearLoadedSession();
+        viewModel.SetBusy(false, "Warning: API not initialized. Profile may be incomplete.");
+        return;
+      }
+
+      viewModel.Api.GetAccountAliasFunc = GetAccountAlias;
+      UpdateSignedInProfile();
+
+      Log(3, this, () => $"Profile loaded: region={client.ProfileKey?.Region}, " +
+        $"account={client.ProfileKey?.AccountId ?? "(null)"}");
+
+      if (userSettings.DownloadSettings.AutoUpdateLibrary)
+      {
+        viewModel.SetBusy(true, "Updating library...");
+        var libraryResult = await viewModel.Api.GetLibraryAsync(false);
+        if (libraryResult is null)
+        {
+          Log(1, this, () => "Library sync returned null — API call likely failed. Check log for HTTP error details.");
+          viewModel.StatusMessage = "Warning: Library sync failed. See logs for details.";
+        }
+        else
+        {
+          Log(3, this, () => $"Library sync: {libraryResult.Items?.Length ?? 0} book(s)");
+        }
+
+        viewModel.SetBusy(true, "Downloading cover images...");
+        await viewModel.Api.DownloadCoverImagesAsync();
+      }
+      else
+      {
+        Log(3, this, () => "AutoUpdateLibrary is disabled, skipping library sync");
+      }
+
+      viewModel.SetBusy(true, "Verifying downloaded files...");
+      int resetCount = viewModel.Api.VerifyCompletedDownloads(
+        userSettings.DownloadSettings,
+        userSettings.ExportSettings);
+      if (resetCount > 0)
+      {
+        Log(3, this, () => $"{resetCount} book(s) reset to Remote (output files missing)");
+      }
+
+      var books = viewModel.Api.GetBooks() ?? Enumerable.Empty<Book>();
+      Log(3, this, () => $"Local books: {books.Count()}");
+      viewModel.BookLibrary.LoadBooks(books);
+
+      WireLoadedSessionEvents();
+      viewModel.SetBusy(false, "Ready");
+    }
+
+    private void ClearLoadedSession()
+    {
+      viewModel.BookLibrary.DownloadRequested -= OnDownloadRequested;
+      viewModel.Conversion.RunRequested -= OnRunDownloadPipeline;
+      viewModel.Conversion.CancelRequested -= OnCancelDownload;
+      viewModel.BookLibrary.LoadBooks(Array.Empty<Book>());
+      viewModel.Conversion.Clear();
+      viewModel.Conversion.UpdateOverallProgress(0, "Idle");
+      viewModel.ClearSignedInProfile();
+    }
+
+    private void WireLoadedSessionEvents()
+    {
+      viewModel.BookLibrary.DownloadRequested -= OnDownloadRequested;
+      viewModel.BookLibrary.DownloadRequested += OnDownloadRequested;
+      viewModel.Conversion.RunRequested -= OnRunDownloadPipeline;
+      viewModel.Conversion.RunRequested += OnRunDownloadPipeline;
+      viewModel.Conversion.CancelRequested -= OnCancelDownload;
+      viewModel.Conversion.CancelRequested += OnCancelDownload;
+    }
+
+    private void UpdateSignedInProfile()
+    {
+      var client = viewModel.AudibleClient;
+      var parts = new List<string>();
+
+      if (!viewModel.CurrentProfile?.AccountAlias.IsNullOrWhiteSpace() ?? false)
+      {
+        parts.Add(viewModel.CurrentProfile.AccountAlias);
+      }
+
+      if (client?.ProfileKey is not null)
+      {
+        parts.Add(client.ProfileKey.Region.ToString());
+      }
+
+      string subtitle = parts.Count > 0
+        ? string.Join(" • ", parts)
+        : "Audible account";
+
+      viewModel.SetSignedInProfile(
+        client?.CurrentCustomerName,
+        client?.CurrentGivenName,
+        subtitle);
     }
 
     private void OnDownloadRequested(object sender, IEnumerable<BookItemViewModel> selectedBooks)
@@ -211,6 +272,84 @@ namespace Oahu.App.Avalonia
     {
       Log(3, this, () => "cancel requested");
       cts?.Cancel();
+    }
+
+    private async void OnSignInClicked(object sender, RoutedEventArgs e)
+    {
+      if (viewModel.IsBusy)
+      {
+        return;
+      }
+
+      if (viewModel.Conversion.IsRunning)
+      {
+        viewModel.StatusMessage = "Finish or cancel the current download before signing in again.";
+        return;
+      }
+
+      try
+      {
+        bool registered = await RunWizardAsync(viewModel.AudibleClient, true);
+        if (!registered)
+        {
+          viewModel.StatusMessage = "Sign-in cancelled.";
+          return;
+        }
+
+        await EnsureDatabaseInitializedAsync();
+        await LoadActiveProfileAsync();
+      }
+      catch (Exception ex)
+      {
+        Log(1, this, () => $"sign-in error: {ex.Message}");
+        viewModel.SetBusy(false, $"Sign-in error: {ex.Message}");
+      }
+    }
+
+    private async void OnSignOutClicked(object sender, RoutedEventArgs e)
+    {
+      if (viewModel.IsBusy)
+      {
+        return;
+      }
+
+      if (viewModel.Conversion.IsRunning)
+      {
+        string message = "Finish or cancel the current download before signing out.";
+        viewModel.StatusMessage = message;
+        notificationManager?.Show(new Notification(
+          "Sign-out unavailable",
+          message,
+          NotificationType.Warning));
+        return;
+      }
+
+      try
+      {
+        viewModel.SetBusy(true, "Signing out...");
+
+        bool removed = await viewModel.AudibleClient.RemoveAllProfilesAsync();
+        if (!removed)
+        {
+          throw new InvalidOperationException("One or more stored profiles could not be removed.");
+        }
+
+        userSettings.DownloadSettings.Profile = null;
+        userSettings.Save();
+
+        ClearLoadedSession();
+        viewModel.SetBusy(false, "Signed out. Use Sign in to start the setup wizard.");
+
+        notificationManager?.Show(new Notification(
+          "Signed out",
+          "Stored credentials were removed from this device.",
+          NotificationType.Information));
+      }
+      catch (Exception ex)
+      {
+        Log(1, this, () => $"sign-out error: {ex.Message}");
+        viewModel.SetBusy(false, $"Sign-out error: {ex.Message}");
+      }
     }
 
     private async Task OnRunDownloadPipeline(IReadOnlyList<ConversionItemViewModel> items)
