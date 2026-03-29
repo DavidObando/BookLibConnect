@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Oahu.Core;
 
 namespace Oahu.Core.UI.Avalonia.ViewModels
 {
@@ -71,6 +72,7 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     public void InitSettings(DownloadSettings downloadSettings, ExportSettings exportSettings, ConfigSettings configSettings)
     {
       Settings = new SettingsViewModel(downloadSettings, exportSettings, configSettings);
+      BookLibrary.SetDownloadSettings(downloadSettings);
     }
 
     public void SetSignedInProfile(string displayName, string givenName, string subtitle, Bitmap profileImage = null)

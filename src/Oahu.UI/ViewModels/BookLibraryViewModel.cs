@@ -7,12 +7,16 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Oahu.Aux;
 using Oahu.BooksDatabase;
+using Oahu.Core;
 
 namespace Oahu.Core.UI.Avalonia.ViewModels
 {
   public partial class BookLibraryViewModel : ObservableObject
   {
+    private IDownloadSettings downloadSettings;
+
     [ObservableProperty]
     private ObservableCollection<BookItemViewModel> books = new();
 
@@ -30,6 +34,11 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
 
     [ObservableProperty]
     private int selectedCount;
+
+    public BookLibraryViewModel(IDownloadSettings downloadSettings = null)
+    {
+      SetDownloadSettings(downloadSettings);
+    }
 
     public event EventHandler<IEnumerable<BookItemViewModel>> DownloadRequested;
 
@@ -77,6 +86,28 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
     public void UpdateSelectedCount() =>
       SelectedCount = Books.Count(b => b.IsSelected);
 
+    public void SetDownloadSettings(IDownloadSettings settings)
+    {
+      if (ReferenceEquals(downloadSettings, settings))
+      {
+        return;
+      }
+
+      if (downloadSettings is not null)
+      {
+        downloadSettings.ChangedSettings -= OnDownloadSettingsChanged;
+      }
+
+      downloadSettings = settings;
+
+      if (downloadSettings is not null)
+      {
+        downloadSettings.ChangedSettings += OnDownloadSettingsChanged;
+      }
+
+      OpenDownloadsFolderCommand.NotifyCanExecuteChanged();
+    }
+
     partial void OnSelectedBookChanged(BookItemViewModel value)
     {
       HasSelectedBook = value is not null;
@@ -111,6 +142,18 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
         DownloadRequested?.Invoke(this, selected);
       }
     }
+
+    [RelayCommand(CanExecute = nameof(CanOpenDownloadsFolder))]
+    private void OpenDownloadsFolder()
+    {
+      ShellExecute.Directory(downloadSettings?.DownloadDirectory);
+    }
+
+    private bool CanOpenDownloadsFolder() =>
+      !string.IsNullOrWhiteSpace(downloadSettings?.DownloadDirectory);
+
+    private void OnDownloadSettingsChanged(object sender, EventArgs e) =>
+      OpenDownloadsFolderCommand.NotifyCanExecuteChanged();
   }
 
   public partial class BookItemViewModel : ObservableObject
