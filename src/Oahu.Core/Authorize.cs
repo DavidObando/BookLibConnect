@@ -21,10 +21,16 @@ namespace Oahu.Core
     const string HttpPathDeregister = @"/auth/deregister";
     const string HttpPathToken = @"/auth/token";
 
-    const string IosVersion = "15.0.0";
-    const string AppVersion = "3.56.2";
-    const string SoftwareVersion = "35602678";
-    const string AppName = "Audible";
+    const string OsVersion = @"google/sdk_gphone64_x86_64/emu64xa:14/UPB5.230623.003/10615560:userdebug/dev-keys";
+    const string OsVersionNumber = "34";
+    const string AppVersion = "2090253826";
+    const string AppVersionName = "25.38.26";
+    const string SoftwareVersion = "130050002";
+    const string AppName = "com.audible.application";
+    const string DeviceModel = "sdk_gphone64_x86_64";
+    const string OsFamily = "android";
+    const string Manufacturer = "Google";
+    const string DeviceProduct = "sdk_phone64_x86_64";
 
     public Authorize(ConfigTokenDelegate getTokenFunc, IAuthorizeSettings settings)
     {
@@ -476,30 +482,40 @@ namespace Oahu.Core
     {
       string json = $@"{{
         ""requested_token_type"":
-            [""bearer"", ""mac_dms"", ""website_cookies"",
-             ""store_authentication_cookie""],
+            [""bearer"", ""mac_dms"", ""store_authentication_cookie"",
+             ""website_cookies""],
         ""cookies"": {{
-          ""website_cookies"": [],
-          ""domain"": "".amazon.{locale.Domain}""
+          ""domain"": ""https://www.audible.{locale.Domain}"",
+          ""website_cookies"": []
         }},
         ""registration_data"": {{
-          ""domain"": ""Device"",
-          ""app_version"": ""{AppVersion}"",
-          ""device_serial"": ""{profile.DeviceInfo.Serial}"",
+          ""domain"": ""DeviceLegacy"",
           ""device_type"": ""{AudibleLogin.DeviceType}"",
-          ""device_name"":
-              ""%FIRST_NAME%%FIRST_NAME_POSSESSIVE_STRING%%DUPE_STRATEGY_1ST%Audible for iPhone"",
-          ""os_version"": ""{IosVersion}"",
+          ""device_serial"": ""{profile.DeviceInfo.Serial}"",
+          ""app_name"": ""{AppName}"",
+          ""app_version"": ""{AppVersion}"",
+          ""device_model"": ""{DeviceModel}"",
+          ""os_version"": ""{OsVersion}"",
           ""software_version"": ""{SoftwareVersion}"",
-          ""device_model"": ""iPhone"",
-          ""app_name"": ""{AppName}""
-          }},
+          ""device_name"":
+              ""%FIRST_NAME%%FIRST_NAME_POSSESSIVE_STRING%%DUPE_STRATEGY_1ST%Oahu""
+        }},
+        ""device_metadata"": {{
+          ""device_os_family"": ""{OsFamily}"",
+          ""device_type"": ""{AudibleLogin.DeviceType}"",
+          ""device_serial"": ""{profile.DeviceInfo.Serial}"",
+          ""manufacturer"": ""{Manufacturer}"",
+          ""model"": ""{DeviceModel}"",
+          ""os_version"": ""{OsVersionNumber}"",
+          ""product"": ""{DeviceProduct}""
+        }},
         ""auth_data"": {{
-          ""client_id"": ""{AudibleLogin.BuildClientId(profile.DeviceInfo.Serial)}"",
+          ""use_global_authentication"": ""true"",
           ""authorization_code"": ""{profile.Authorization.AuthorizationCode}"",
           ""code_verifier"": ""{profile.Authorization.CodeVerifier}"",
           ""code_algorithm"": ""SHA-256"",
-          ""client_domain"": ""DeviceLegacy""
+          ""client_domain"": ""DeviceLegacy"",
+          ""client_id"": ""{AudibleLogin.BuildClientId(profile.DeviceInfo.Serial)}""
         }},
         ""requested_extensions"": [""device_info"", ""customer_info""]
       }}";

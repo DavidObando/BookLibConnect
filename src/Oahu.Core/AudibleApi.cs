@@ -23,7 +23,7 @@ namespace Oahu.Core
 {
   class AudibleApi : IAudibleApi
   {
-    const string UserAgent = "Audible/671 CFNetwork/1240.0.4 Darwin/20.6.0";
+    const string UserAgent = "com.audible.playersdk.player/3.96.1 (Linux;Android 14) AndroidXMedia3/1.3.0";
 
     // const string HTTP_AUTHORITY_AUDIBLE = @"https://api.audible.";
     const string ContentPath = "/1.0/content";
@@ -141,7 +141,7 @@ namespace Oahu.Core
     public async Task<bool> GetActivationBytesAsync()
     {
       using var logGuard = new LogGuard(3, this);
-      var url = "/license/token?action=register&player_manuf=Audible,iPhone&player_model=iPhone";
+      var url = "/license/token?action=register&player_manuf=Audible,Android&player_model=Android";
       byte[] response = await CallAudibleApiSignedForBytesAsync(url);
 
       return false;
@@ -747,8 +747,7 @@ namespace Oahu.Core
 
     private string MakeRequestSignature(HttpRequestMessage request)
     {
-      // HACK
-      DateTime dt = DateTime.UtcNow.RoundDown(TimeSpan.FromMinutes(10));
+      DateTime dt = DateTime.UtcNow;
 
       string method = request.Method.ToString().ToUpper();
       string url = request.RequestUri.OriginalString;
