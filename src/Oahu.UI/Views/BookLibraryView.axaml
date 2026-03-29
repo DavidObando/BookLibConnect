@@ -15,6 +15,9 @@
       <Button Content="Select All" Command="{Binding SelectAllCommand}" />
       <Button Content="Deselect All" Command="{Binding DeselectAllCommand}" />
       <Border Width="1" Background="{DynamicResource SeparatorBrush}" Margin="4,2" />
+      <Button Content="Open Downloads Folder"
+              Command="{Binding OpenDownloadsFolderCommand}" />
+      <Border Width="1" Background="{DynamicResource SeparatorBrush}" Margin="4,2" />
       <Button Content="Queue Selection For Download"
               Command="{Binding DownloadSelectedCommand}"
               Classes="accent" />
@@ -23,7 +26,12 @@
     </StackPanel>
 
     <!-- Main content: book list + detail panel -->
-    <Grid RowDefinitions="3*,Auto,*" Margin="8">
+    <Grid Margin="8">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="3*" MinHeight="220" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="2*" MinHeight="240" />
+      </Grid.RowDefinitions>
 
       <!-- Book list -->
       <DataGrid x:Name="booksGrid"
