@@ -50,14 +50,14 @@ namespace Oahu.Core
 
       // GET the OAuth sign-in page directly (cookies frc/map-md/sid + UA are sufficient)
       Log(3, this, () => $"Getting OAuth page: {oauthUri}");
-      var (AuthCodeUri, Response) = await GetFollowingRedirectsAsync(client, oauthUri, loginBaseUri);
-      if (AuthCodeUri != null)
+      var (authCodeUri, response) = await GetFollowingRedirectsAsync(client, oauthUri, loginBaseUri);
+      if (authCodeUri != null)
       {
-        return AuthCodeUri;
+        return authCodeUri;
       }
 
-      Response.EnsureSuccessStatusCode();
-      var html = await Response.Content.ReadAsStringAsync();
+      response.EnsureSuccessStatusCode();
+      var html = await response.Content.ReadAsStringAsync();
 
       // Parse form, submit credentials, handle challenges
       return await HandleLoginFlowAsync(client, loginBaseUri, html, credentials, callbacks, locale);

@@ -9,7 +9,9 @@ internal static class XXTEA
   {
     ArgumentNullException.ThrowIfNull(key);
     if (key.Length != 4)
+    {
       throw new ArgumentException("Key must be exactly 4 uint values", nameof(key));
+    }
 
     int n = (int)Math.Ceiling(clearBytes.Length / 4d);
 

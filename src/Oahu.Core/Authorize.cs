@@ -15,12 +15,6 @@ namespace Oahu.Core
 {
   class Authorize
   {
-    const string HttpAuthorityAmzn = @"https://api.amazon.";
-    const string HttpAuthorityAdbl = @"https://api.audible.";
-    const string HttpPathRegister = @"/auth/register";
-    const string HttpPathDeregister = @"/auth/deregister";
-    const string HttpPathToken = @"/auth/token";
-
     internal const string OsVersion = @"google/sdk_gphone64_x86_64/emu64xa:14/UPB5.230623.003/10615560:userdebug/dev-keys";
     internal const string OsVersionNumber = "34";
     internal const string AppVersion = "2090253826";
@@ -31,6 +25,12 @@ namespace Oahu.Core
     internal const string OsFamily = "android";
     internal const string Manufacturer = "Google";
     internal const string DeviceProduct = "sdk_phone64_x86_64";
+
+    private const string HttpAuthorityAmzn = @"https://api.amazon.";
+    private const string HttpAuthorityAdbl = @"https://api.audible.";
+    private const string HttpPathRegister = @"/auth/register";
+    private const string HttpPathDeregister = @"/auth/deregister";
+    private const string HttpPathToken = @"/auth/token";
 
     public Authorize(ConfigTokenDelegate getTokenFunc, IAuthorizeSettings settings)
     {

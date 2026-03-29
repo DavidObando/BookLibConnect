@@ -28,7 +28,10 @@ internal static class FrcEncoder
   {
     using var ms = new MemoryStream();
     using (var gzip = new GZipStream(ms, CompressionLevel.SmallestSize))
+    {
       gzip.Write(data);
+    }
+
     return ms.ToArray();
   }
 

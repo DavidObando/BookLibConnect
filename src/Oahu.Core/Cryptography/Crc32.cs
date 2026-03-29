@@ -15,11 +15,17 @@ internal static class Crc32
       for (byte j = 0; j < 8; ++j)
       {
         if (((value ^ temp) & 0x1) != 0)
+        {
           value = value >> 1 ^ Polynomial;
+        }
         else
+        {
           value >>= 1;
+        }
+
         temp >>= 1;
       }
+
       Table[i] = value;
     }
   }
@@ -33,6 +39,7 @@ internal static class Crc32
       byte index = (byte)(crc ^ bytes[i]);
       crc = crc >> 8 ^ Table[index];
     }
+
     crc ^= uint.MaxValue;
     return crc;
   }

@@ -93,11 +93,6 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       IsSignedIn = false;
     }
 
-    partial void OnProfileImageChanged(Bitmap value)
-    {
-      HasProfileImage = value is not null;
-    }
-
     private static string CreateProfileInitial(string givenName, string displayName)
     {
       string source = !string.IsNullOrWhiteSpace(givenName)
@@ -110,6 +105,11 @@ namespace Oahu.Core.UI.Avalonia.ViewModels
       }
 
       return char.ToUpperInvariant(source.Trim()[0]).ToString();
+    }
+
+    partial void OnProfileImageChanged(Bitmap value)
+    {
+      HasProfileImage = value is not null;
     }
   }
 }
