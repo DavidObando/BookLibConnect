@@ -78,6 +78,7 @@ internal static class RootCommandFactory
         // Subcommands.
         root.Subcommands.Add(TuiCommand.Create());
         root.Subcommands.Add(DoctorCommand.Create(ResolveGlobals, loggerFactory));
+        root.Subcommands.Add(UiPreviewCommand.Create(ResolveGlobals));
 
         return root;
     }

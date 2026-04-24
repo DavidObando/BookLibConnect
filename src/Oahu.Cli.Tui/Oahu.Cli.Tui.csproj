@@ -7,7 +7,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <NoWarn>$(NoWarn);CS1591;SA0001;SA1600;SA1601;SA1602;SA1611;SA1615;SA1623;SA1629;SA1633;SA1652;SA1201;SA1502;SA1513;SA1515;SA1516</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;SA0001;SA1600;SA1601;SA1602;SA1611;SA1615;SA1623;SA1629;SA1633;SA1652;SA1201;SA1502;SA1513;SA1515;SA1516;SA1204</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
