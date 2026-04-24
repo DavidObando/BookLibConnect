@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Oahu.Cli</RootNamespace>
+    <AssemblyName>oahu-cli</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RollForward>LatestMajor</RollForward>
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- Packaging as a dotnet tool. Self-contained binaries are produced via dotnet publish per RID. -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>oahu-cli</ToolCommandName>
+    <PackageId>Oahu.Cli</PackageId>
+    <Description>Oahu CLI: command-mode + TUI front end for the Oahu Audible toolkit.</Description>
+
+    <!-- New project; existing StyleCop documentation rules would generate a wall of warnings. Suppress doc-only rules here. -->
+    <NoWarn>$(NoWarn);CS1591;SA0001;SA1600;SA1601;SA1602;SA1611;SA1615;SA1623;SA1629;SA1633;SA1652;SA1201;SA1502;SA1513;SA1515;SA1516</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.7" />
+    <PackageReference Include="Spectre.Console" Version="0.55.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Oahu.Cli.App\Oahu.Cli.App.csproj" />
+    <ProjectReference Include="..\Oahu.Cli.Tui\Oahu.Cli.Tui.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Oahu.Cli.Tests" />
+  </ItemGroup>
+
+</Project>

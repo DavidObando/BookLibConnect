@@ -88,6 +88,9 @@ jobs:
       - name: Build
         run: dotnet build Oahu.sln --configuration Release --no-restore
 
+      - name: Test (oahu-cli)
+        run: dotnet test tests/Oahu.Cli.Tests/Oahu.Cli.Tests.csproj --configuration Release --no-build --logger "console;verbosity=normal"
+
       - name: Create .app bundle, sign, and create DMG
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -166,6 +169,9 @@ jobs:
       - name: Build
         run: dotnet build Oahu.sln --configuration Release --no-restore
 
+      - name: Test (oahu-cli)
+        run: dotnet test tests/Oahu.Cli.Tests/Oahu.Cli.Tests.csproj --configuration Release --no-build --logger "console;verbosity=normal"
+
       - name: Publish app
         run: |
           ./build/build-windows.ps1 `
@@ -213,6 +219,9 @@ jobs:
 
       - name: Build
         run: dotnet build Oahu.sln --configuration Release --no-restore
+
+      - name: Test (oahu-cli)
+        run: dotnet test tests/Oahu.Cli.Tests/Oahu.Cli.Tests.csproj --configuration Release --no-build --logger "console;verbosity=normal"
 
       - name: Publish and package
         run: |
