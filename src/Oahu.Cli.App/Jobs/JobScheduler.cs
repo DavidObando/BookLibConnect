@@ -75,13 +75,17 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
         await work.Writer.WriteAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
-    public IAsyncEnumerable<JobUpdate> ObserveAll(CancellationToken cancellationToken = default) =>
-        Subscribe(_ => true, cancellationToken);
+    public IAsyncEnumerable<JobUpdate> ObserveAll(CancellationToken cancellationToken = default)
+    {
+        var (ch, key) = RegisterSubscriber();
+        return Drain(ch, key, _ => true, cancellationToken);
+    }
 
     public IAsyncEnumerable<JobUpdate> ObserveAsync(string jobId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
-        return Subscribe(u => u.JobId == jobId, cancellationToken);
+        var (ch, key) = RegisterSubscriber();
+        return Drain(ch, key, u => u.JobId == jobId, cancellationToken);
     }
 
     public bool Cancel(string jobId)
@@ -206,11 +210,12 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
         }
     }
 
-    private async IAsyncEnumerable<JobUpdate> Subscribe(
-        Func<JobUpdate, bool> filter,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+    private (Channel<JobUpdate> Channel, Guid Key) RegisterSubscriber()
     {
-        var ch = Channel.CreateBounded<JobUpdate>(new BoundedChannelOptions(256)
+        // Register synchronously at call time (NOT lazily inside the async
+        // iterator) so that callers which subscribe-then-submit are
+        // guaranteed to see every update produced after the call returns.
+        var ch = System.Threading.Channels.Channel.CreateBounded<JobUpdate>(new BoundedChannelOptions(256)
         {
             FullMode = BoundedChannelFullMode.DropOldest,
             SingleReader = true,
@@ -218,6 +223,15 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
         });
         var key = Guid.NewGuid();
         subscribers.TryAdd(key, ch);
+        return (ch, key);
+    }
+
+    private async IAsyncEnumerable<JobUpdate> Drain(
+        Channel<JobUpdate> ch,
+        Guid key,
+        Func<JobUpdate, bool> filter,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
         try
         {
             await foreach (var u in ch.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))

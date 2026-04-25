@@ -118,11 +118,14 @@ internal static class DownloadCommand
         var lastPhase = new ConcurrentDictionary<string, JobPhase>(StringComparer.Ordinal);
 
         // Subscribe BEFORE submitting so we don't miss the Queued update.
+        // Call ObserveAll synchronously here (not inside Task.Run) so the
+        // subscriber is registered before the first SubmitAsync.
         using var observerCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var stream = jobService.ObserveAll(observerCts.Token);
         var observerTask = Task.Run(
             async () =>
             {
-                await foreach (var u in jobService.ObserveAll(observerCts.Token).ConfigureAwait(false))
+                await foreach (var u in stream.ConfigureAwait(false))
                 {
                     if (!ids.Contains(u.JobId))
                     {
