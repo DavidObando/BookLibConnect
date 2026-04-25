@@ -40,10 +40,13 @@ public static class Program
         }
 
         var minLevel = ResolveMinLogLevel(args);
+        var logBuffer = new Oahu.Cli.Tui.Logging.LogRingBuffer(minimumLevel: minLevel);
+        Commands.TuiCommand.LogBuffer = logBuffer;
         using var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.SetMinimumLevel(minLevel);
             builder.AddProvider(new RotatingFileLoggerProvider(minLevel));
+            builder.AddProvider(logBuffer);
         });
 
         var root = RootCommandFactory.Create(() => loggerFactory);

@@ -66,7 +66,7 @@ public class RootCommandTests
     }
 
     [Fact]
-    public void TuiPlaceholder_ReturnsExitCode2WhenNotATty()
+    public void Tui_ReturnsExitCode2WhenNotATty()
     {
         // The test runner does not provide a TTY, so CanEnterTui should be false.
         using var sw = new StringWriter();
@@ -75,7 +75,7 @@ public class RootCommandTests
         try
         {
             CliEnvironment.Initialise();
-            var rc = TuiCommand.RunPlaceholder();
+            var rc = TuiCommand.Run();
             Assert.Equal(2, rc);
             Assert.Contains("TUI mode requires", sw.ToString());
         }
