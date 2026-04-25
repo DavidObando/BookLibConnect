@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Oahu.Cli.App.Auth;
+using Oahu.Cli.App.Config;
 using Oahu.Cli.App.Core;
 using Oahu.Cli.App.Jobs;
 using Oahu.Cli.App.Library;
@@ -28,6 +29,7 @@ public static class CliServiceFactory
     private static ILibraryService? librarySingleton;
     private static IJobService? jobSingleton;
     private static IQueueService? queueSingleton;
+    private static IConfigService? configSingleton;
 
     public static Func<IAuthService> AuthServiceFactory { get; set; } = () =>
     {
@@ -42,6 +44,20 @@ public static class CliServiceFactory
         lock (Lock)
         {
             return librarySingleton ??= new CoreLibraryService();
+        }
+    };
+
+    public static Func<IConfigService> ConfigServiceFactory { get; set; } = () =>
+    {
+        lock (Lock)
+        {
+            if (configSingleton is not null)
+            {
+                return configSingleton;
+            }
+            CliPaths.EnsureDirectories();
+            configSingleton = new JsonConfigService(CliPaths.ConfigFile);
+            return configSingleton;
         }
     };
 
@@ -114,6 +130,7 @@ public static class CliServiceFactory
                 _ = iad.DisposeAsync().AsTask();
             }
             jobSingleton = null;
+            configSingleton = null;
             OverrideMaxParallelism = null;
         }
     }

@@ -1,7 +1,11 @@
 using System;
 using System.CommandLine;
+using Oahu.Cli.App.Auth;
+using Oahu.Cli.App.Models;
 using Oahu.Cli.Tui;
+using Oahu.Cli.Tui.Auth;
 using Oahu.Cli.Tui.Logging;
+using Oahu.Cli.Tui.Screens;
 using Oahu.Cli.Tui.Shell;
 
 namespace Oahu.Cli.Commands;
@@ -48,11 +52,43 @@ public static class TuiCommand
             return TuiHost.NoTtyExitCode;
         }
 
+        var state = new AppShellState();
+
+        // Populate initial profile from existing sessions.
+        try
+        {
+            var auth = CliServiceFactory.AuthServiceFactory();
+            var session = auth.GetActiveAsync().GetAwaiter().GetResult();
+            if (session is not null)
+            {
+                state.Profile = session.ProfileAlias;
+                state.Region = session.Region.ToString().ToLowerInvariant();
+            }
+        }
+        catch
+        {
+            // Swallow — fresh install has no profiles.
+        }
+
+        var tabs = DefaultTabs.CreateReal(
+            state,
+            CliServiceFactory.AuthServiceFactory,
+            CliServiceFactory.LibraryServiceFactory,
+            () => CliServiceFactory.ConfigServiceFactory());
+
+        // Wire sign-in flow: Home "s" key → region picker → external login → sync
+        if (tabs[0] is HomeScreen home)
+        {
+            home.OnSignInRequested = () => { /* handled in TuiHost via shell modal flow */ };
+        }
+
         var opts = new AppShellOptions
         {
             UseAscii = string.Equals(Environment.GetEnvironmentVariable("OAHU_ASCII_ICONS"), "1", StringComparison.Ordinal),
             LogBuffer = LogBuffer,
             Version = ResolveVersion(),
+            Tabs = tabs,
+            State = state,
         };
 
         return Launcher(opts);

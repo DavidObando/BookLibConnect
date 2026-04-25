@@ -29,4 +29,10 @@ public sealed class AppShellOptions
 
     /// <summary>Synthesised activity verb shown in the header (e.g. "idle", "syncing library…").</summary>
     public Func<string>? ActivityVerb { get; init; }
+
+    /// <summary>
+    /// Mutable runtime state. When set, the header reads profile/region/activity
+    /// from this instead of the init-only properties. Phase 7+.
+    /// </summary>
+    public AppShellState? State { get; init; }
 }
