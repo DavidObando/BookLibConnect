@@ -209,6 +209,15 @@ public sealed class AppShell
             }
         }
 
+        // Delegate to the active screen FIRST — when a screen is capturing
+        // input (e.g. search mode, text editing) it returns true and global
+        // navigation keys are suppressed. If the screen doesn't consume the
+        // key, fall through to the global handlers below.
+        if (tabs[activeTab].HandleKey(key))
+        {
+            return ShellAction.Continue;
+        }
+
         // Number keys 1..9 jump to that tab.
         if (key.KeyChar >= '1' && key.KeyChar <= '9')
         {
@@ -241,12 +250,6 @@ public sealed class AppShell
             case ConsoleKey.Q when key.Modifiers == 0:
                 // Plain `q` is *not* a global quit (the active screen may use it).
                 break;
-        }
-
-        // Delegate to the active screen.
-        if (tabs[activeTab].HandleKey(key))
-        {
-            return ShellAction.Continue;
         }
 
         return ShellAction.Continue;

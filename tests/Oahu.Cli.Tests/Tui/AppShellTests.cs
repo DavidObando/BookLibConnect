@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Oahu.Cli.Tui.Logging;
 using Oahu.Cli.Tui.Shell;
 using Oahu.Cli.Tui.Themes;
+using Spectre.Console;
+using Spectre.Console.Rendering;
 using Spectre.Console.Testing;
 using Xunit;
 
@@ -130,6 +132,67 @@ public class AppShellTests : IDisposable
             Key((char)3, ConsoleKey.C, ConsoleModifiers.Control),
             Key((char)3, ConsoleKey.C, ConsoleModifiers.Control));
         Assert.Equal(130, shell.Run(reader));
+    }
+
+    [Fact]
+    public void Screen_Capturing_Input_Suppresses_Global_L()
+    {
+        // Regression: typing 'l' in Library search opened the logs overlay
+        // instead of being forwarded to the search TextInput.
+        var buf = new LogRingBuffer();
+        var capturingScreen = new InputCapturingScreen();
+        var shell = new AppShell(NewConsole(), new AppShellOptions
+        {
+            Tabs = new ITabScreen[] { capturingScreen },
+            LogBuffer = buf,
+        });
+
+        // Screen is capturing — 'l' should go to screen, not open logs.
+        capturingScreen.Capturing = true;
+        shell.Dispatch(Key('l', ConsoleKey.L));
+        Assert.False(shell.LogsOpen, "'l' opened logs even though the screen was capturing input");
+        Assert.True(capturingScreen.ReceivedL, "Screen did not receive the 'l' key");
+
+        // Screen is NOT capturing — 'l' should open logs.
+        capturingScreen.Capturing = false;
+        shell.Dispatch(Key('l', ConsoleKey.L));
+        Assert.True(shell.LogsOpen, "'l' should open logs when screen is not capturing input");
+    }
+
+    [Fact]
+    public void Screen_Capturing_Input_Suppresses_Number_Keys()
+    {
+        var capturingScreen = new InputCapturingScreen();
+        var placeholder = new InputCapturingScreen { Title = "Other", NumberKey = '2' };
+        var shell = new AppShell(NewConsole(), new AppShellOptions
+        {
+            Tabs = new ITabScreen[] { capturingScreen, placeholder },
+        });
+        capturingScreen.Capturing = true;
+        shell.Dispatch(Key('2', ConsoleKey.D2));
+        Assert.Equal(0, shell.ActiveTab); // Should NOT switch tabs
+    }
+
+    private sealed class InputCapturingScreen : ITabScreen
+    {
+        public string Title { get; init; } = "Test";
+        public char NumberKey { get; init; } = '1';
+        public bool Capturing { get; set; }
+        public bool ReceivedL { get; private set; }
+
+        public IRenderable Render(int width, int height) => new Markup(string.Empty);
+
+        public bool HandleKey(ConsoleKeyInfo key)
+        {
+            if (key.Key == ConsoleKey.L)
+            {
+                ReceivedL = true;
+            }
+            return Capturing; // Consume all keys when capturing
+        }
+
+        public IEnumerable<KeyValuePair<string, string?>> Hints =>
+            Array.Empty<KeyValuePair<string, string?>>();
     }
 
     private sealed class ScriptedReader : AppShell.IKeyReader
