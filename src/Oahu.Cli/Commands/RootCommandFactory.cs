@@ -14,11 +14,10 @@ namespace Oahu.Cli.Commands;
 public static class RootCommandFactory
 {
     /// <summary>
-    /// Hook for tests / Phase 6: replace this delegate to launch the real TUI shell.
-    /// The default implementation prints a "not implemented" message and returns
-    /// <see cref="TuiCommand.NotImplementedExitCode"/>.
+    /// Hook for tests / Phase 6+: replace this delegate to launch the real TUI shell.
+    /// The default implementation calls <see cref="TuiCommand.Run"/>.
     /// </summary>
-    public static Func<int> TuiEntryPoint { get; set; } = TuiCommand.RunPlaceholder;
+    public static Func<int> TuiEntryPoint { get; set; } = TuiCommand.Run;
 
     public static RootCommand Create(Func<ILoggerFactory> loggerFactory)
     {

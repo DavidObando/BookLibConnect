@@ -1,0 +1,91 @@
+using System;
+using System.Collections.Generic;
+using Oahu.Cli.Tui.Shell;
+using Spectre.Console;
+using Spectre.Console.Rendering;
+
+namespace Oahu.Cli.Tui.Screens;
+
+/// <summary>The six default tabs shipped in Phase 6.</summary>
+public static class DefaultTabs
+{
+    public static IReadOnlyList<ITabScreen> Create() => new ITabScreen[]
+    {
+        new PlaceholderScreen
+        {
+            Title = "Home",
+            NumberKey = '1',
+            Heading = "Aloha.",
+            Body = "Quick actions, recent events, and a status summary live here.",
+        },
+        new PlaceholderScreen
+        {
+            Title = "Library",
+            NumberKey = '2',
+            Heading = "Library",
+            Body = "Searchable table of your Audible library with multi-select.",
+        },
+        new PlaceholderScreen
+        {
+            Title = "Queue",
+            NumberKey = '3',
+            Heading = "Queue",
+            Body = "Ordered list of jobs waiting to run; reorder, remove, start.",
+        },
+        new PlaceholderScreen
+        {
+            Title = "Jobs",
+            NumberKey = '4',
+            Heading = "Jobs",
+            Body = "Live in-flight jobs, with download / decrypt / mux / export progress.",
+        },
+        new PlaceholderScreen
+        {
+            Title = "History",
+            NumberKey = '5',
+            Heading = "History",
+            Body = "Completed and failed jobs; re-run, view error, open file.",
+        },
+        new PlaceholderScreen
+        {
+            Title = "Settings",
+            NumberKey = '6',
+            Heading = "Settings",
+            Body = "Edit configuration, switch theme, manage profiles.",
+        },
+    };
+}
+
+/// <summary>
+/// Phase 6 placeholder screens. Each is a simple "this is the X tab"
+/// rendering wrapped in the same body Panel; phases 7 and 8 swap them
+/// for the real implementations.
+/// </summary>
+internal sealed class PlaceholderScreen : ITabScreen
+{
+    public required string Title { get; init; }
+
+    public required char NumberKey { get; init; }
+
+    public required string Heading { get; init; }
+
+    public required string Body { get; init; }
+
+    public IEnumerable<KeyValuePair<string, string?>> Hints { get; init; } =
+        Array.Empty<KeyValuePair<string, string?>>();
+
+    public IRenderable Render(int width, int height)
+    {
+        var rows = new List<IRenderable>
+        {
+            new Markup($"[{Tokens.Tokens.TextPrimary.Value.ToMarkup()} bold]{Markup.Escape(Heading)}[/]"),
+            new Markup(string.Empty),
+            new Markup($"[{Tokens.Tokens.TextSecondary.Value.ToMarkup()}]{Markup.Escape(Body)}[/]"),
+            new Markup(string.Empty),
+            new Markup($"[{Tokens.Tokens.TextTertiary.Value.ToMarkup()}](real content lands in a later phase)[/]"),
+        };
+        return new Padder(new Rows(rows)).Padding(2, 1, 2, 1);
+    }
+
+    public bool HandleKey(ConsoleKeyInfo key) => false;
+}
