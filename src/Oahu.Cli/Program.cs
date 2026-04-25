@@ -23,6 +23,22 @@ public static class Program
     {
         CliEnvironment.Initialise();
 
+        // Route ApplEnv (and everything that derives paths from it: AudibleClient
+        // profile config, BookDbContext, BookLibrary image cache, ...) to the
+        // GUI-shared "Oahu" data root. Must happen BEFORE any code path touches
+        // ApplEnv.LocalApplDirectory; cheap (no I/O) so we always run it.
+        try
+        {
+            App.Core.CoreEnvironment.Initialize();
+        }
+        catch (Exception ex)
+        {
+            // Don't take the whole CLI down if hardware-id selection fails
+            // (e.g. exotic platform). Log and continue — auth/library commands
+            // will surface a clearer error if they actually try to use Core.
+            Console.Error.WriteLine($"oahu-cli: warning: {ex.GetType().Name}: {ex.Message}");
+        }
+
         var minLevel = ResolveMinLogLevel(args);
         using var loggerFactory = LoggerFactory.Create(builder =>
         {

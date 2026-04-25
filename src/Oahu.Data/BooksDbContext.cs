@@ -16,7 +16,7 @@ namespace Oahu.BooksDatabase
   {
     private const string SUBDIR = "data";
     private const string DBFILE = "audiobooks.db";
-    private static readonly string DefaultDir = Path.Combine(ApplEnv.LocalApplDirectory, SUBDIR);
+    private static string DefaultDir => Path.Combine(ApplEnv.LocalApplDirectory, SUBDIR);
     private static readonly Dictionary<Type, EPseudoAsinId> PseudoAsinsValue
       = new Dictionary<Type, EPseudoAsinId>
       {

@@ -240,7 +240,7 @@ namespace Oahu.Core
 
   class Configuration
   {
-    private static readonly string ConfigDir = Path.Combine(ApplEnv.LocalApplDirectory, "config");
+    private static string ConfigDir => Path.Combine(ApplEnv.LocalApplDirectory, "config");
 
     private List<Profile> profiles;
 

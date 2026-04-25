@@ -15,13 +15,13 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.2.7" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.7" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.7" />
-    <PackageReference Include="System.Management" Version="9.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Oahu.Foundation\Oahu.Foundation.csproj" />
     <ProjectReference Include="..\Oahu.Data\Oahu.Data.csproj" />
     <ProjectReference Include="..\Oahu.Core\Oahu.Core.csproj" />
+    <ProjectReference Include="..\Oahu.SystemManagement\Oahu.SystemManagement.csproj" />
     <ProjectReference Include="..\Oahu.UI\Oahu.UI.csproj" />
   </ItemGroup>
 

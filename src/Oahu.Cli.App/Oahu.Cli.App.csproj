@@ -17,6 +17,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Oahu.Foundation\Oahu.Foundation.csproj" />
+    <ProjectReference Include="..\Oahu.Core\Oahu.Core.csproj" />
+    <ProjectReference Include="..\Oahu.Data\Oahu.Data.csproj" />
+    <ProjectReference Include="..\Oahu.SystemManagement\Oahu.SystemManagement.csproj" />
   </ItemGroup>
 
   <ItemGroup>
