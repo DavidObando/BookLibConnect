@@ -11,7 +11,7 @@ namespace Oahu.Cli.Commands;
 /// Phase 1 wires only <c>--version</c>, <c>--help</c>, <c>doctor</c>, and the <c>tui</c>
 /// placeholder. Later phases append <c>auth</c>, <c>library</c>, <c>queue</c>, etc.
 /// </summary>
-internal static class RootCommandFactory
+public static class RootCommandFactory
 {
     /// <summary>
     /// Hook for tests / Phase 6: replace this delegate to launch the real TUI shell.
@@ -98,6 +98,7 @@ internal static class RootCommandFactory
         root.Subcommands.Add(LibraryCommand.Create(ResolveGlobals));
         root.Subcommands.Add(QueueCommand.Create(ResolveGlobals));
         root.Subcommands.Add(DownloadCommand.Create(ResolveGlobals));
+        root.Subcommands.Add(ConvertCommand.Create(ResolveGlobals));
         root.Subcommands.Add(HistoryCommand.Create(ResolveGlobals));
         root.Subcommands.Add(CompletionCommand.Create());
 

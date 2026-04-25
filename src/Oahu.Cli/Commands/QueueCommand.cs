@@ -18,7 +18,7 @@ namespace Oahu.Cli.Commands;
 /// (resolved through the library cache). The on-disk file is shared with the GUI
 /// per design §7.
 /// </summary>
-internal static class QueueCommand
+public static class QueueCommand
 {
     public const string SchemaResource = "queue";
 

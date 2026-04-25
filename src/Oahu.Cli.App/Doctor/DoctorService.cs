@@ -57,7 +57,7 @@ public sealed class DoctorService : IDoctorService
         return new DoctorReport(checks);
     }
 
-    internal static DoctorCheck CheckOutputDirectoryWritable(string path)
+    public static DoctorCheck CheckOutputDirectoryWritable(string path)
     {
         try
         {
@@ -78,7 +78,7 @@ public sealed class DoctorService : IDoctorService
         }
     }
 
-    internal static DoctorCheck CheckSharedUserDataDirReadable()
+    public static DoctorCheck CheckSharedUserDataDirReadable()
     {
         var dir = CliPaths.SharedUserDataDir;
         try
@@ -112,7 +112,7 @@ public sealed class DoctorService : IDoctorService
         }
     }
 
-    internal static DoctorCheck CheckLibraryCacheReachable()
+    public static DoctorCheck CheckLibraryCacheReachable()
     {
         // The library cache lives under <SharedUserDataDir>/data/audiobooks.db (see Oahu.Data.BookDbContext).
         // We don't open EF here (that would require a profile); we just check the file's directory is reachable.
@@ -139,7 +139,7 @@ public sealed class DoctorService : IDoctorService
         }
     }
 
-    internal static DoctorCheck CheckCliConfigWritable()
+    public static DoctorCheck CheckCliConfigWritable()
     {
         try
         {
@@ -155,7 +155,7 @@ public sealed class DoctorService : IDoctorService
         }
     }
 
-    internal static DoctorCheck CheckDiskFree(string path, long minFreeBytes)
+    public static DoctorCheck CheckDiskFree(string path, long minFreeBytes)
     {
         try
         {
@@ -192,7 +192,7 @@ public sealed class DoctorService : IDoctorService
         }
     }
 
-    internal async Task<DoctorCheck> CheckAudibleApiReachableAsync(CancellationToken ct)
+    public async Task<DoctorCheck> CheckAudibleApiReachableAsync(CancellationToken ct)
     {
         try
         {

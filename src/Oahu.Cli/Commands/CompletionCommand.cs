@@ -12,7 +12,7 @@ namespace Oahu.Cli.Commands;
 /// They intentionally hard-code the v1 surface so completions work on systems
 /// that block subprocess calls during tab-completion (e.g. corp-managed pwsh).
 /// </summary>
-internal static class CompletionCommand
+public static class CompletionCommand
 {
     public static readonly string[] SupportedShells = new[] { "bash", "zsh", "fish", "pwsh" };
 

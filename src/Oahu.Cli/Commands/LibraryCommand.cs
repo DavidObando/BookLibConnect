@@ -18,7 +18,7 @@ namespace Oahu.Cli.Commands;
 /// on a clean machine <c>library list</c> prints an empty table until 4b.2
 /// substitutes the Core-backed service that reads the GUI-shared library cache.
 /// </summary>
-internal static class LibraryCommand
+public static class LibraryCommand
 {
     public const string ListSchemaResource = "library-list";
     public const string ShowSchemaResource = "library-show";

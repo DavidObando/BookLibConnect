@@ -10,7 +10,7 @@ namespace Oahu.Cli.App;
 /// the directory-entry level, so a crash either leaves the old file untouched
 /// or the new file fully present.
 /// </summary>
-internal static class AtomicFile
+public static class AtomicFile
 {
     public static readonly JsonSerializerOptions DefaultJsonOptions = new()
     {

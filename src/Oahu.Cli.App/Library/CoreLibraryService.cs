@@ -25,7 +25,7 @@ public sealed class CoreLibraryService : ILibraryService
     {
     }
 
-    internal CoreLibraryService(AudibleClient client)
+    public CoreLibraryService(AudibleClient client)
     {
         this.client = client ?? throw new ArgumentNullException(nameof(client));
     }

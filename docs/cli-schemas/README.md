@@ -15,6 +15,8 @@ documents that conform to the shape declared here.
 | `oahu-cli history show <id> --json` | [`history-show.schema.json`](./history-show.schema.json) |
 | `oahu-cli download <asin>... --json` (per-update) | [`download-update.schema.json`](./download-update.schema.json) |
 | `oahu-cli download <asin>... --json` (final summary) | [`download-summary.schema.json`](./download-summary.schema.json) |
+| `oahu-cli convert <asin>... --json` (per-update) | reuses [`download-update.schema.json`](./download-update.schema.json) |
+| `oahu-cli convert <asin>... --json` (final summary) | reuses [`download-summary.schema.json`](./download-summary.schema.json) |
 | `oahu-cli doctor --json` | [`doctor.schema.json`](./doctor.schema.json) |
 
 Every document includes a top-level `_schemaVersion` string. The current

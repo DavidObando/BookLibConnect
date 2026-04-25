@@ -27,7 +27,7 @@ public sealed class CoreAuthService : IAuthService
     {
     }
 
-    internal CoreAuthService(AudibleClient client)
+    public CoreAuthService(AudibleClient client)
     {
         this.client = client ?? throw new ArgumentNullException(nameof(client));
     }
@@ -156,7 +156,7 @@ public sealed class CoreAuthService : IAuthService
             ?? throw new InvalidOperationException($"Profile '{profileAlias}' disappeared after refresh.");
     }
 
-    internal static CliRegion ToCliRegion(ERegion region) => region switch
+    public static CliRegion ToCliRegion(ERegion region) => region switch
     {
         ERegion.Us => CliRegion.Us,
         ERegion.Uk => CliRegion.Uk,
@@ -172,7 +172,7 @@ public sealed class CoreAuthService : IAuthService
         _ => throw new ArgumentOutOfRangeException(nameof(region), region, null),
     };
 
-    internal static ERegion ToCoreRegion(CliRegion region) => region switch
+    public static ERegion ToCoreRegion(CliRegion region) => region switch
     {
         CliRegion.Us => ERegion.Us,
         CliRegion.Uk => ERegion.Uk,

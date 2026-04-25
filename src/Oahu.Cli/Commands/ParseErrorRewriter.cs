@@ -13,7 +13,7 @@ namespace Oahu.Cli.Commands;
 /// "Did you mean: <i>x</i>" suggestion for unknown subcommands when there is
 /// a close match (Levenshtein ≤ 2 within the eligible command set).
 /// </summary>
-internal static class ParseErrorRewriter
+public static class ParseErrorRewriter
 {
     public const string HelpHint = "Try 'oahu-cli --help' for more information.";
 

@@ -7,7 +7,7 @@ namespace Oahu.Cli.Commands;
 /// <c>Oahu.Cli.Tui.AppShell.RunAsync</c>; for now it returns a clear "not yet
 /// implemented" message and exit code 1, so users / CI can detect the gap.
 /// </summary>
-internal static class TuiCommand
+public static class TuiCommand
 {
     public const int NotImplementedExitCode = 1;
 

@@ -10,7 +10,7 @@ namespace Oahu.Cli;
 ///
 /// Mirrors the design-doc <c>setupProcess()</c> contract (§5.1 + Phase 1).
 /// </summary>
-internal static class CliEnvironment
+public static class CliEnvironment
 {
     private static int restoreInstalled;
     private static Action? restoreAction;

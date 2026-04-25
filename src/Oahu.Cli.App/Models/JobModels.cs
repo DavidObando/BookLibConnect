@@ -26,6 +26,12 @@ public sealed record JobRequest
 
     public string? ProfileAlias { get; init; }
 
+    /// <summary>When true, run the AAX exporter ("Muxing" phase) after decrypt.</summary>
+    public bool ExportToAax { get; init; }
+
+    /// <summary>Optional override for the export directory (only meaningful when <see cref="ExportToAax"/>).</summary>
+    public string? OutputDir { get; init; }
+
     /// <summary>Stable identifier for cross-invocation tracking (history.jsonl).</summary>
     public string Id { get; init; } = Guid.NewGuid().ToString("n");
 }

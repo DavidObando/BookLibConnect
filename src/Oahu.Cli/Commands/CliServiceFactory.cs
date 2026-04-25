@@ -20,7 +20,7 @@ namespace Oahu.Cli.Commands;
 /// <see cref="AudibleJobExecutor"/>. Tests override the factories to inject
 /// seeded fakes.
 /// </summary>
-internal static class CliServiceFactory
+public static class CliServiceFactory
 {
     private static readonly object Lock = new();
     private static IAuthService? authSingleton;
