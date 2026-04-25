@@ -190,6 +190,7 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
                 CompletedAt = DateTimeOffset.UtcNow,
                 ErrorMessage = error,
                 ProfileAlias = request.ProfileAlias,
+                Quality = request.Quality,
             });
         }
     }

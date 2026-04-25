@@ -63,4 +63,11 @@ public sealed record JobRecord
     public string? ErrorMessage { get; init; }
 
     public string? ProfileAlias { get; init; }
+
+    /// <summary>
+    /// Quality requested when the job was submitted. Optional for backwards
+    /// compatibility with records produced before phase 4c.2: a missing
+    /// value means "use the current default" on retry.
+    /// </summary>
+    public DownloadQuality? Quality { get; init; }
 }

@@ -14,7 +14,8 @@
     "startedAt": { "type": "string", "format": "date-time" },
     "completedAt": { "type": "string", "format": "date-time" },
     "errorMessage": { "type": ["string", "null"] },
-    "profileAlias": { "type": ["string", "null"] }
+    "profileAlias": { "type": ["string", "null"] },
+    "quality": { "type": ["string", "null"], "enum": ["Normal", "High", "Extreme", null] }
   },
   "additionalProperties": false
 }
