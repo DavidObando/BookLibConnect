@@ -38,23 +38,44 @@ namespace Oahu.Aux
 
     public static string AssemblyGuid { get; } = GetAttribute<GuidAttribute>()?.Value;
 
-    public static string ApplName { get; } = EntryAssembly.GetName().Name;
+    public static string ApplName { get; private set; } = EntryAssembly.GetName().Name;
 
     public static string ApplDirectory { get; } = AppContext.BaseDirectory;
 
     public static string LocalDirectoryRoot { get; } = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-    public static string LocalApplDirectory { get; } = Path.Combine(LocalDirectoryRoot, ApplName);
+    public static string LocalApplDirectory => Path.Combine(LocalDirectoryRoot, ApplName);
 
-    public static string SettingsDirectory { get; } = Path.Combine(LocalApplDirectory, "settings");
+    public static string SettingsDirectory => Path.Combine(LocalApplDirectory, "settings");
 
-    public static string TempDirectory { get; } = Path.Combine(LocalApplDirectory, "tmp");
+    public static string TempDirectory => Path.Combine(LocalApplDirectory, "tmp");
 
-    public static string LogDirectory { get; } = Path.Combine(LocalApplDirectory, "log");
+    public static string LogDirectory => Path.Combine(LocalApplDirectory, "log");
 
     public static string UserName { get; } = Environment.UserName;
 
     public static string UserDirectoryRoot { get; } = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+    /// <summary>
+    /// Override the assembly-derived <see cref="ApplName"/> so that all path
+    /// derivatives (<see cref="LocalApplDirectory"/>, <see cref="SettingsDirectory"/>,
+    /// <see cref="TempDirectory"/>, <see cref="LogDirectory"/>) resolve under a
+    /// shared name. Used by <c>oahu-cli</c> to coexist on the same machine as the
+    /// Avalonia GUI by routing both front-ends to the GUI's <c>Oahu</c> data root.
+    ///
+    /// Must be called before any code path touches the affected directories or
+    /// any type that captures them in static fields (e.g. before
+    /// <c>Oahu.Core.AudibleClient</c>, <c>Oahu.BooksDatabase.BookDbContext</c>).
+    /// </summary>
+    public static void OverrideApplName(string name)
+    {
+      if (string.IsNullOrWhiteSpace(name))
+      {
+        throw new ArgumentException("name must not be null or empty", nameof(name));
+      }
+
+      ApplName = name;
+    }
 
     private static T GetAttribute<T>() where T : Attribute
     {

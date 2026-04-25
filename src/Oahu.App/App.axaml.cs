@@ -8,8 +8,6 @@ using Oahu.CommonTypes;
 using Oahu.Core;
 using Oahu.Core.UI.Avalonia.ViewModels;
 using Oahu.SystemManagement;
-using Oahu.SystemManagement.Linux;
-using Oahu.SystemManagement.Mac;
 using static Oahu.Aux.Logging;
 
 namespace Oahu.App.Avalonia

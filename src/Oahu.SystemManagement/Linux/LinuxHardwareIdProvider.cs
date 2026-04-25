@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using Oahu.CommonTypes;
 
-namespace Oahu.SystemManagement.Linux
+namespace Oahu.SystemManagement
 {
   public class LinuxHardwareIdProvider : IHardwareIdProvider
   {

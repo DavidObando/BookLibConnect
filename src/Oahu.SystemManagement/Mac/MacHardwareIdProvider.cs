@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using Oahu.CommonTypes;
 
-namespace Oahu.SystemManagement.Mac
+namespace Oahu.SystemManagement
 {
   public class MacHardwareIdProvider : IHardwareIdProvider
   {
