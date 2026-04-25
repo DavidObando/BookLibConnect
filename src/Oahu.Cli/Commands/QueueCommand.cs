@@ -126,6 +126,36 @@ public static class QueueCommand
             var globals = resolveGlobals(parse);
             var asins = parse.GetValue(asinArg) ?? Array.Empty<string>();
             var svc = new JsonFileQueueService(QueuePath());
+            var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
+
+            if (globals.DryRun)
+            {
+                var items = await svc.ListAsync(ct).ConfigureAwait(false);
+                var present = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var e in items)
+                {
+                    present.Add(e.Asin);
+                }
+                int wouldRemove = 0, wouldMiss = 0;
+                foreach (var a in asins)
+                {
+                    if (present.Contains(a))
+                    {
+                        wouldRemove++;
+                    }
+                    else
+                    {
+                        wouldMiss++;
+                    }
+                }
+                writer.WriteResource("queue-remove-plan", new Dictionary<string, object?>
+                {
+                    ["wouldRemove"] = wouldRemove,
+                    ["wouldMiss"] = wouldMiss,
+                });
+                return 0;
+            }
+
             var removed = 0;
             var missing = 0;
             foreach (var asin in asins)
@@ -139,7 +169,6 @@ public static class QueueCommand
                     missing++;
                 }
             }
-            var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
             writer.WriteResource("queue-remove-result", new Dictionary<string, object?>
             {
                 ["removed"] = removed,
@@ -152,12 +181,24 @@ public static class QueueCommand
 
     private static Command CreateClear(Func<ParseResult, GlobalOptions> resolveGlobals)
     {
-        var forceOpt = new Option<bool>("--force", "-f") { Description = "Skip the confirmation prompt." };
-        var c = new Command("clear", "Remove every item from the queue.") { forceOpt };
+        var c = new Command("clear", "Remove every item from the queue.");
         c.SetAction(async (parse, ct) =>
         {
             var globals = resolveGlobals(parse);
-            var force = parse.GetValue(forceOpt);
+            var force = globals.Force;
+            var svc = new JsonFileQueueService(QueuePath());
+            var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
+
+            if (globals.DryRun)
+            {
+                var items = await svc.ListAsync(ct).ConfigureAwait(false);
+                writer.WriteResource("queue-clear-plan", new Dictionary<string, object?>
+                {
+                    ["wouldRemove"] = items.Count,
+                });
+                return 0;
+            }
+
             if (!force && CliEnvironment.IsStdinTty && CliEnvironment.IsStdoutTty)
             {
                 CliEnvironment.Out.Write("Clear the entire queue? [y/N] ");
@@ -168,9 +209,7 @@ public static class QueueCommand
                     return 0;
                 }
             }
-            var svc = new JsonFileQueueService(QueuePath());
             await svc.ClearAsync(ct).ConfigureAwait(false);
-            var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
             writer.WriteSuccess("Queue cleared.");
             return 0;
         });

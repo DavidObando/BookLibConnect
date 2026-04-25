@@ -168,6 +168,15 @@ public static class AuthCommand
                 alias = active.ProfileAlias;
             }
 
+            if (globals.DryRun)
+            {
+                writer.WriteResource("auth-logout-plan", new Dictionary<string, object?>
+                {
+                    ["wouldLogout"] = alias,
+                });
+                return 0;
+            }
+
             try
             {
                 await svc.LogoutAsync(alias!, ct).ConfigureAwait(false);

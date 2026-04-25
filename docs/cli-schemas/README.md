@@ -15,6 +15,10 @@ documents that conform to the shape declared here.
 | `oahu-cli history show <id> --json` | [`history-show.schema.json`](./history-show.schema.json) |
 | `oahu-cli download <asin>... --json` (per-update) | [`download-update.schema.json`](./download-update.schema.json) |
 | `oahu-cli download <asin>... --json` (final summary) | [`download-summary.schema.json`](./download-summary.schema.json) |
+| `oahu-cli download/convert --dry-run --json` (resolved request set) | `download-plan` (ad hoc — column shape: asin/title/quality/profile/exportToAax/outputDir) |
+| `oahu-cli queue clear --dry-run --json` | `queue-clear-plan` (ad hoc — `{ wouldRemove }`) |
+| `oahu-cli queue remove --dry-run --json` | `queue-remove-plan` (ad hoc — `{ wouldRemove, wouldMiss }`) |
+| `oahu-cli auth logout --dry-run --json` | `auth-logout-plan` (ad hoc — `{ wouldLogout }`) |
 | `oahu-cli convert <asin>... --json` (per-update) | reuses [`download-update.schema.json`](./download-update.schema.json) |
 | `oahu-cli convert <asin>... --json` (final summary) | reuses [`download-summary.schema.json`](./download-summary.schema.json) |
 | `oahu-cli doctor --json` | [`doctor.schema.json`](./doctor.schema.json) |
