@@ -154,13 +154,33 @@ public class JobSchedulerTests : IDisposable
         var deadline = DateTimeOffset.UtcNow + (timeout ?? TimeSpan.FromSeconds(5));
         while (DateTimeOffset.UtcNow < deadline)
         {
-            if (File.Exists(path))
+            try
             {
-                var lines = File.ReadAllLines(path);
-                if (lines.Length >= expectedRecords)
+                if (File.Exists(path))
                 {
-                    return;
+                    using var fs = new FileStream(
+                        path,
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.ReadWrite | FileShare.Delete);
+                    using var reader = new StreamReader(fs);
+                    var count = 0;
+                    while (await reader.ReadLineAsync().ConfigureAwait(false) is string line)
+                    {
+                        if (!string.IsNullOrWhiteSpace(line))
+                        {
+                            count++;
+                        }
+                    }
+                    if (count >= expectedRecords)
+                    {
+                        return;
+                    }
                 }
+            }
+            catch (IOException)
+            {
+                // file briefly locked by the writer on Windows; retry.
             }
             await Task.Delay(25);
         }

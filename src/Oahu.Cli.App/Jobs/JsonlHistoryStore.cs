@@ -56,7 +56,11 @@ public sealed class JsonlHistoryStore
             yield break;
         }
 
-        using var reader = new StreamReader(path);
+        using var reader = new StreamReader(new FileStream(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete));
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
