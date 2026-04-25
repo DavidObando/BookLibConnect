@@ -98,8 +98,35 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
         return false;
     }
 
+    public JobSnapshot? GetSnapshot(string jobId) =>
+        jobs.TryGetValue(jobId, out var lc) ? Snapshot(lc) : null;
+
+    public IReadOnlyList<JobSnapshot> ListActive()
+    {
+        var list = new List<JobSnapshot>(jobs.Count);
+        foreach (var (_, lc) in jobs)
+        {
+            list.Add(Snapshot(lc));
+        }
+        return list;
+    }
+
     public IAsyncEnumerable<JobRecord> ReadHistoryAsync(CancellationToken cancellationToken = default) =>
         history?.ReadAllAsync(cancellationToken) ?? EmptyHistory(cancellationToken);
+
+    private static JobSnapshot Snapshot(JobLifecycle lc) => new()
+    {
+        JobId = lc.Request.Id,
+        Asin = lc.Request.Asin,
+        Title = lc.Request.Title,
+        Phase = lc.LastPhase,
+        Progress = lc.LastProgress,
+        Message = lc.LastMessage,
+        StartedAt = lc.StartedAt,
+        UpdatedAt = lc.LastUpdatedAt,
+        Quality = lc.Request.Quality,
+        ProfileAlias = lc.Request.ProfileAlias,
+    };
 
     public async ValueTask DisposeAsync()
     {
@@ -200,6 +227,14 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
 
     private async ValueTask Publish(JobUpdate update)
     {
+        // Update the per-job lifecycle so GetSnapshot/ListActive return fresh state.
+        if (jobs.TryGetValue(update.JobId, out var lc))
+        {
+            lc.LastPhase = update.Phase;
+            lc.LastProgress = update.Progress ?? lc.LastProgress;
+            lc.LastMessage = update.Message ?? lc.LastMessage;
+            lc.LastUpdatedAt = update.Timestamp;
+        }
         foreach (var (_, ch) in subscribers)
         {
             // Per-subscriber backpressure: drop oldest rather than stall the worker.
@@ -257,8 +292,28 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
         yield break;
     }
 
-    private sealed record JobLifecycle(JobRequest Request, DateTimeOffset StartedAt)
+    private sealed class JobLifecycle
     {
+        public JobLifecycle(JobRequest request, DateTimeOffset startedAt)
+        {
+            Request = request;
+            StartedAt = startedAt;
+            LastUpdatedAt = startedAt;
+            LastPhase = JobPhase.Queued;
+        }
+
+        public JobRequest Request { get; }
+
+        public DateTimeOffset StartedAt { get; }
+
         public CancellationTokenSource Cts { get; } = new();
+
+        public JobPhase LastPhase { get; set; }
+
+        public double? LastProgress { get; set; }
+
+        public string? LastMessage { get; set; }
+
+        public DateTimeOffset LastUpdatedAt { get; set; }
     }
 }

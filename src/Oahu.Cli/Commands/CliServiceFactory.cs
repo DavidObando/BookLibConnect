@@ -5,6 +5,7 @@ using Oahu.Cli.App.Core;
 using Oahu.Cli.App.Jobs;
 using Oahu.Cli.App.Library;
 using Oahu.Cli.App.Paths;
+using Oahu.Cli.App.Queue;
 
 namespace Oahu.Cli.Commands;
 
@@ -26,6 +27,7 @@ public static class CliServiceFactory
     private static IAuthService? authSingleton;
     private static ILibraryService? librarySingleton;
     private static IJobService? jobSingleton;
+    private static IQueueService? queueSingleton;
 
     public static Func<IAuthService> AuthServiceFactory { get; set; } = () =>
     {
@@ -78,6 +80,27 @@ public static class CliServiceFactory
         }
     };
 
+    /// <summary>
+    /// Resolves the process-singleton <see cref="IQueueService"/>. Default:
+    /// <see cref="JsonFileQueueService"/> at <c>&lt;SharedUserDataDir&gt;/queue.json</c>
+    /// (shared with the GUI per design §7). Tests override this factory to inject
+    /// <see cref="InMemoryQueueService"/>.
+    /// </summary>
+    public static Func<IQueueService> QueueServiceFactory { get; set; } = () =>
+    {
+        lock (Lock)
+        {
+            if (queueSingleton is not null)
+            {
+                return queueSingleton;
+            }
+            var path = Path.Combine(CliPaths.SharedUserDataDir, "queue.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            queueSingleton = new JsonFileQueueService(path);
+            return queueSingleton;
+        }
+    };
+
     /// <summary>Test hook: drop cached singletons so the next resolve produces a fresh instance.</summary>
     public static void Reset()
     {
@@ -85,6 +108,7 @@ public static class CliServiceFactory
         {
             authSingleton = null;
             librarySingleton = null;
+            queueSingleton = null;
             if (jobSingleton is IAsyncDisposable iad)
             {
                 _ = iad.DisposeAsync().AsTask();

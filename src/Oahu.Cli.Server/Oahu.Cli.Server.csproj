@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Oahu.Cli.Server</RootNamespace>
+    <AssemblyName>Oahu.Cli.Server</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591;SA0001;SA1600;SA1601;SA1602;SA1611;SA1615;SA1623;SA1629;SA1633;SA1652;SA1201;SA1502;SA1513;SA1515;SA1516;SA1204;SA1101;SA1309;SA1311;SA1413;SA1117;SA1118</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="ModelContextProtocol" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Oahu.Cli.App\Oahu.Cli.App.csproj" />
+  </ItemGroup>
+
+</Project>
+
