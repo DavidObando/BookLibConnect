@@ -7,6 +7,9 @@ documents that conform to the shape declared here.
 | Command | Schema |
 |---------|--------|
 | `oahu-cli config get [<key>] --json` | [`config.schema.json`](./config.schema.json) |
+| `oahu-cli auth status --json` | [`auth-status.schema.json`](./auth-status.schema.json) |
+| `oahu-cli library list --json` | [`library-list.schema.json`](./library-list.schema.json) |
+| `oahu-cli library show <asin> --json` | [`library-show.schema.json`](./library-show.schema.json) |
 | `oahu-cli queue list --json` | [`queue-list.schema.json`](./queue-list.schema.json) |
 | `oahu-cli history list --json` | [`history-list.schema.json`](./history-list.schema.json) |
 | `oahu-cli history show <id> --json` | [`history-show.schema.json`](./history-show.schema.json) |
@@ -16,6 +19,5 @@ Every document includes a top-level `_schemaVersion` string. The current
 version is `"1"`. Bumping the version is a **breaking change**; additive
 fields are not.
 
-Schemas for the deferred `auth status`, `library list`, `library show`, and
-`history retry` commands land alongside their implementations in phases 4b
-and 4c.
+Schemas for the deferred `history retry`, `download`, and `convert`
+commands land alongside their implementations in phase 4c.

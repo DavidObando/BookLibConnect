@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oahu.invalid/cli-schemas/v1/auth-status.schema.json",
+  "title": "oahu-cli auth status",
+  "type": "object",
+  "required": ["_schemaVersion", "resource", "count", "items"],
+  "properties": {
+    "_schemaVersion": { "type": "string", "const": "1" },
+    "resource": { "type": "string", "const": "auth-status" },
+    "count": { "type": "integer", "minimum": 0 },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["profileAlias", "region", "accountId", "isExpired", "isActive"],
+        "properties": {
+          "profileAlias": { "type": "string" },
+          "region": { "type": "string", "enum": ["us", "uk", "de", "fr", "jp", "it", "au", "in", "ca", "es", "br"] },
+          "accountId": { "type": "string" },
+          "accountName": { "type": ["string", "null"] },
+          "deviceName": { "type": ["string", "null"] },
+          "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+          "isExpired": { "type": "boolean" },
+          "isActive": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

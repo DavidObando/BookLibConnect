@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oahu.invalid/cli-schemas/v1/library-list.schema.json",
+  "title": "oahu-cli library list",
+  "type": "object",
+  "required": ["_schemaVersion", "resource", "count", "items"],
+  "properties": {
+    "_schemaVersion": { "type": "string", "const": "1" },
+    "resource": { "type": "string", "const": "library-list" },
+    "count": { "type": "integer", "minimum": 0 },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/libraryItem" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "libraryItem": {
+      "type": "object",
+      "required": ["asin", "title", "authors", "narrators", "isAvailable", "hasMultiplePartFiles"],
+      "properties": {
+        "asin": { "type": "string" },
+        "title": { "type": "string" },
+        "subtitle": { "type": ["string", "null"] },
+        "authors": { "type": "array", "items": { "type": "string" } },
+        "narrators": { "type": "array", "items": { "type": "string" } },
+        "series": { "type": ["string", "null"] },
+        "seriesPosition": { "type": ["number", "null"] },
+        "runtimeMinutes": { "type": ["integer", "null"] },
+        "purchaseDate": { "type": ["string", "null"], "format": "date-time" },
+        "isAvailable": { "type": "boolean" },
+        "hasMultiplePartFiles": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
