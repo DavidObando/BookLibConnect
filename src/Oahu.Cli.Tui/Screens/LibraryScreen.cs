@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Oahu.Cli.App.Library;
 using Oahu.Cli.App.Models;
 using Oahu.Cli.Tui.Shell;
@@ -25,7 +26,10 @@ public sealed class LibraryScreen : ITabScreen
     private int cursor;
     private int scrollOffset;
     private bool loaded;
+    private bool loading;
+    private Task? loadTask;
     private bool searchMode;
+    private int spinnerTick;
 
     public LibraryScreen(AppShellState state, Func<ILibraryService> libraryServiceFactory)
     {
@@ -36,6 +40,8 @@ public sealed class LibraryScreen : ITabScreen
     public string Title => "Library";
 
     public char NumberKey => '2';
+
+    public bool IsLoading => loading;
 
     public int Cursor => cursor;
 
@@ -65,6 +71,20 @@ public sealed class LibraryScreen : ITabScreen
     public IRenderable Render(int width, int height)
     {
         EnsureLoaded();
+
+        // Check if background load completed
+        if (loading && loadTask is not null && loadTask.IsCompleted)
+        {
+            loading = false;
+            loadTask = null;
+        }
+
+        // Show loading spinner while data is being fetched
+        if (loading)
+        {
+            return RenderLoadingSpinner();
+        }
+
         var lines = new List<IRenderable>();
 
         var primary = Tokens.Tokens.TextPrimary.Value.ToMarkup();
@@ -198,7 +218,7 @@ public sealed class LibraryScreen : ITabScreen
         return false;
     }
 
-    /// <summary>Load library items.</summary>
+    /// <summary>Load library items synchronously (used by tests and explicit refresh).</summary>
     public void Reload()
     {
         try
@@ -206,20 +226,56 @@ public sealed class LibraryScreen : ITabScreen
             var lib = libraryServiceFactory();
             allItems = lib.ListAsync().GetAwaiter().GetResult();
             loaded = true;
+            loading = false;
             ApplyFilter();
         }
         catch
         {
+            loaded = true;
+            loading = false;
             // Swallow to keep TUI stable.
         }
     }
 
     internal void EnsureLoaded()
     {
-        if (!loaded)
+        if (!loaded && !loading)
         {
-            Reload();
+            loading = true;
+            loadTask = Task.Run(() =>
+            {
+                try
+                {
+                    var lib = libraryServiceFactory();
+                    var items = lib.ListAsync().GetAwaiter().GetResult();
+                    allItems = items;
+                    loaded = true;
+                    ApplyFilter();
+                }
+                catch
+                {
+                    loaded = true;
+                    // Swallow to keep TUI stable.
+                }
+                finally
+                {
+                    loading = false;
+                }
+            });
         }
+    }
+
+    private IRenderable RenderLoadingSpinner()
+    {
+        spinnerTick++;
+        var spinChars = new[] { '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' };
+        var ch = spinChars[spinnerTick % spinChars.Length];
+        var b = Tokens.Tokens.Brand.Value.ToMarkup();
+        var s = Tokens.Tokens.TextSecondary.Value.ToMarkup();
+        return new Padder(new Rows(new IRenderable[]
+        {
+            new Markup($"[{b}]{ch}[/] [{s}]Loading library…[/]"),
+        })).Padding(2, 1, 2, 1);
     }
 
     private void ApplyFilter()

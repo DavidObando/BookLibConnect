@@ -35,6 +35,24 @@ public sealed class AppShell
     {
         /// <summary>Block until a key is available, then return it. Return null to signal EOF (exit).</summary>
         ConsoleKeyInfo? ReadKey();
+
+        /// <summary>
+        /// Try to read a key within <paramref name="millisecondsTimeout"/> ms.
+        /// Returns false (and key = default) if no key was pressed before the timeout.
+        /// Default implementation falls back to blocking <see cref="ReadKey"/>.
+        /// </summary>
+        bool TryReadKey(int millisecondsTimeout, out ConsoleKeyInfo key)
+        {
+            // Default: blocking read (for tests / simple readers).
+            var result = ReadKey();
+            if (result is null)
+            {
+                key = default;
+                return false;
+            }
+            key = result.Value;
+            return true;
+        }
     }
 
     private readonly IAnsiConsole console;
@@ -48,6 +66,7 @@ public sealed class AppShell
     private DateTimeOffset? toastShownAt;
     private IModal? activeModal;
     private TuiCallbackBroker? activeBroker;
+    private bool needsTimedRefresh;
 
     public AppShell(IAnsiConsole console, AppShellOptions? options = null)
     {
@@ -106,6 +125,25 @@ public sealed class AppShell
         {
             // Poll for broker modal requests before blocking for input.
             PollBroker();
+
+            if (needsTimedRefresh)
+            {
+                // When a screen is loading, use a timed read so the render
+                // loop can re-render the spinner (~100ms ticks).
+                if (keyReader.TryReadKey(100, out var timedKey))
+                {
+                    var timedAction = Dispatch(timedKey);
+                    switch (timedAction)
+                    {
+                        case ShellAction.Exit:
+                            return 0;
+                        case ShellAction.ExitSigInt:
+                            return 130;
+                    }
+                }
+                Render();
+                continue;
+            }
 
             var key = keyReader.ReadKey();
             if (key is null)
@@ -283,7 +321,9 @@ public sealed class AppShell
         // Leave room for chrome (header + tabs + spacers + hint bar = ~6 rows).
         var bodyHeight = Math.Max(5, height - 6);
 
-        AltScreen.Clear();
+        // Cursor-home (no erase) — overwrite the previous frame in-place
+        // to avoid the visible blank flash that full-screen Clear() caused.
+        AltScreen.Home();
 
         // Header.
         var headerText = BuildHeader(width);
@@ -328,6 +368,13 @@ public sealed class AppShell
         {
             BuildHintBar(screen).Write(console);
         }
+
+        // Erase anything below the new frame (handles shorter content than previous).
+        AltScreen.EraseToEnd();
+
+        // If the active screen is loading data, switch to a timed poll so
+        // the spinner animates and the UI stays responsive.
+        needsTimedRefresh = screen.IsLoading || (activeBroker?.HasPending ?? false);
     }
 
     private string BuildHeader(int width)
@@ -422,6 +469,30 @@ public sealed class AppShell
             {
                 // Stdin redirected mid-flight — treat as EOF.
                 return null;
+            }
+        }
+
+        public bool TryReadKey(int millisecondsTimeout, out ConsoleKeyInfo key)
+        {
+            try
+            {
+                var deadline = Environment.TickCount64 + millisecondsTimeout;
+                while (Environment.TickCount64 < deadline)
+                {
+                    if (Console.KeyAvailable)
+                    {
+                        key = Console.ReadKey(intercept: true);
+                        return true;
+                    }
+                    System.Threading.Thread.Sleep(10);
+                }
+                key = default;
+                return false;
+            }
+            catch (InvalidOperationException)
+            {
+                key = default;
+                return false;
             }
         }
     }

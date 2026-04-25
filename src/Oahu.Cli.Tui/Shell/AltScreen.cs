@@ -21,6 +21,12 @@ public static class AltScreen
     /// <summary>Move cursor to (1,1) and clear screen — used when redrawing without leaving alt-screen.</summary>
     public const string ClearSequence = "\u001b[H\u001b[2J";
 
+    /// <summary>Move cursor to (1,1) without clearing — for flicker-free repaints.</summary>
+    public const string HomeSequence = "\u001b[H";
+
+    /// <summary>Erase from cursor to end of screen — cleans up leftover lines after a shorter frame.</summary>
+    public const string EraseToEndSequence = "\u001b[J";
+
     public static void Enter(TextWriter? writer = null)
     {
         var w = writer ?? Console.Out;
@@ -55,6 +61,36 @@ public static class AltScreen
         try
         {
             w.Write(ClearSequence);
+            w.Flush();
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    /// <summary>Move cursor to (1,1) without clearing for flicker-free redraw.</summary>
+    public static void Home(TextWriter? writer = null)
+    {
+        var w = writer ?? Console.Out;
+        try
+        {
+            w.Write(HomeSequence);
+            w.Flush();
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    /// <summary>Erase from cursor to end of screen — call after rendering to clean leftover lines.</summary>
+    public static void EraseToEnd(TextWriter? writer = null)
+    {
+        var w = writer ?? Console.Out;
+        try
+        {
+            w.Write(EraseToEndSequence);
             w.Flush();
         }
         catch

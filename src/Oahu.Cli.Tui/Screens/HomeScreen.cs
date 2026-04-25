@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Oahu.Cli.App.Auth;
 using Oahu.Cli.App.Library;
 using Oahu.Cli.Tui.Shell;
@@ -19,8 +20,11 @@ public sealed class HomeScreen : ITabScreen
     private readonly Func<ILibraryService> libraryServiceFactory;
 
     private bool loaded;
+    private bool loading;
+    private Task? loadTask;
     private int libraryCount;
     private string? accountName;
+    private int spinnerTick;
 
     public HomeScreen(AppShellState state, Func<IAuthService> authServiceFactory, Func<ILibraryService> libraryServiceFactory)
     {
@@ -32,6 +36,8 @@ public sealed class HomeScreen : ITabScreen
     public string Title => "Home";
 
     public char NumberKey => '1';
+
+    public bool IsLoading => loading;
 
     /// <summary>Event raised when the user picks the "sign in" action.</summary>
     public Action? OnSignInRequested { get; set; }
@@ -50,6 +56,15 @@ public sealed class HomeScreen : ITabScreen
 
     public IRenderable Render(int width, int height)
     {
+        EnsureLoaded();
+
+        // Check if background load completed
+        if (loading && loadTask is not null && loadTask.IsCompleted)
+        {
+            loading = false;
+            loadTask = null;
+        }
+
         var lines = new List<IRenderable>();
 
         var primary = Tokens.Tokens.TextPrimary.Value.ToMarkup();
@@ -68,7 +83,17 @@ public sealed class HomeScreen : ITabScreen
                 lines.Add(new Markup($"[{secondary}]{Markup.Escape(accountName)}[/]"));
             }
             lines.Add(new Markup(string.Empty));
-            lines.Add(new Markup($"[{secondary}]Library: {libraryCount} title{(libraryCount == 1 ? "" : "s")}[/]"));
+            if (loading)
+            {
+                spinnerTick++;
+                var spinChars = new[] { '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' };
+                var ch = spinChars[spinnerTick % spinChars.Length];
+                lines.Add(new Markup($"[{brand}]{ch}[/] [{secondary}]Loading…[/]"));
+            }
+            else
+            {
+                lines.Add(new Markup($"[{secondary}]Library: {libraryCount} title{(libraryCount == 1 ? "" : "s")}[/]"));
+            }
             lines.Add(new Markup(string.Empty));
             lines.Add(new Markup($"[{tertiary}]Quick actions:[/]"));
             lines.Add(new Markup($"  [{brand}]2[/] [{secondary}]Browse library[/]"));
@@ -104,7 +129,7 @@ public sealed class HomeScreen : ITabScreen
         return false;
     }
 
-    /// <summary>Refresh the summary data from the services.</summary>
+    /// <summary>Refresh the summary data from the services (synchronous, for tests).</summary>
     public void Refresh()
     {
         try
@@ -120,19 +145,48 @@ public sealed class HomeScreen : ITabScreen
             var items = lib.ListAsync().GetAwaiter().GetResult();
             libraryCount = items.Count;
             loaded = true;
+            loading = false;
         }
         catch
         {
+            loaded = true;
+            loading = false;
             // Swallow — the TUI must not crash.
         }
     }
 
-    /// <summary>Lazy-load data on first render.</summary>
+    /// <summary>Lazy-load data on first render (non-blocking).</summary>
     internal void EnsureLoaded()
     {
-        if (!loaded)
+        if (!loaded && !loading)
         {
-            Refresh();
+            loading = true;
+            loadTask = Task.Run(() =>
+            {
+                try
+                {
+                    var auth = authServiceFactory();
+                    var session = auth.GetActiveAsync().GetAwaiter().GetResult();
+                    if (session is not null)
+                    {
+                        accountName = session.AccountName;
+                    }
+
+                    var lib = libraryServiceFactory();
+                    var items = lib.ListAsync().GetAwaiter().GetResult();
+                    libraryCount = items.Count;
+                    loaded = true;
+                }
+                catch
+                {
+                    loaded = true;
+                    // Swallow — the TUI must not crash.
+                }
+                finally
+                {
+                    loading = false;
+                }
+            });
         }
     }
 }
