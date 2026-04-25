@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Oahu.Cli.Tui.Auth;
 using Oahu.Cli.Tui.Logging;
 using Oahu.Cli.Tui.Screens;
@@ -322,62 +323,73 @@ public sealed class AppShell
         // Leave room for chrome (header + tabs + spacers + hint bar = ~6 rows).
         var bodyHeight = Math.Max(5, height - 6);
 
-        // Cursor-home (no erase) — overwrite the previous frame in-place
-        // to avoid the visible blank flash that full-screen Clear() caused.
-        // Exception: when the active tab changed, do a full clear so the
-        // previous screen's longer content doesn't linger below.
-        if (activeTab != lastRenderedTab)
-        {
-            AltScreen.Clear();
-            lastRenderedTab = activeTab;
-        }
-        else
-        {
-            AltScreen.Home();
-        }
+        // Move cursor to (1,1). Single atomic position; no full-screen erase.
+        AltScreen.Home();
+        lastRenderedTab = activeTab;
 
-        // Header.
-        var headerText = BuildHeader(width);
-        console.Write(new Markup(headerText));
-        console.WriteLine();
-        console.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
-
-        // Tabs.
-        new TabStrip
+        // When writing to a real terminal, wrap the console's output so that
+        // every newline is preceded by \e[K (erase to end of line). This
+        // prevents residual characters when a shorter line overwrites a
+        // longer one from the previous frame (e.g., PageUp/PageDown).
+        var originalOut = console.Profile.Out;
+        var isTerminal = originalOut.IsTerminal;
+        if (isTerminal)
         {
-            Titles = tabs.Select(t => t.Title).ToArray(),
-            ActiveIndex = activeTab,
-            UseAscii = options.UseAscii,
-        }.Write(console);
-        console.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
-
-        // Body: modal > logs > tab screen.
-        if (activeModal is not null)
-        {
-            console.Write(activeModal.Render(width, bodyHeight));
-        }
-        else if (logsOpen && options.LogBuffer is { } buf)
-        {
-            console.Write(RenderLogsOverlay(buf, width, bodyHeight));
-        }
-        else
-        {
-            console.Write(screen.Render(width, bodyHeight));
+            console.Profile.Out = new LineCleaningOutput(originalOut);
         }
 
-        // Hint bar — global + per-screen + toast.
-        console.WriteLine();
-        console.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
-
-        if (toast is not null)
+        try
         {
-            var c = Tokens.Tokens.StatusWarning.Value.ToMarkup();
-            console.Write(new Markup($"[{c}] ! {Markup.Escape(toast)}[/]"));
+            // Header.
+            var headerText = BuildHeader(width);
+            console.Write(new Markup(headerText));
             console.WriteLine();
+            console.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
+
+            // Tabs.
+            new TabStrip
+            {
+                Titles = tabs.Select(t => t.Title).ToArray(),
+                ActiveIndex = activeTab,
+                UseAscii = options.UseAscii,
+            }.Write(console);
+            console.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
+
+            // Body: modal > logs > tab screen.
+            if (activeModal is not null)
+            {
+                console.Write(activeModal.Render(width, bodyHeight));
+            }
+            else if (logsOpen && options.LogBuffer is { } buf)
+            {
+                console.Write(RenderLogsOverlay(buf, width, bodyHeight));
+            }
+            else
+            {
+                console.Write(screen.Render(width, bodyHeight));
+            }
+
+            // Hint bar — global + per-screen + toast.
+            console.WriteLine();
+            console.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
+
+            if (toast is not null)
+            {
+                var c = Tokens.Tokens.StatusWarning.Value.ToMarkup();
+                console.Write(new Markup($"[{c}] ! {Markup.Escape(toast)}[/]"));
+                console.WriteLine();
+            }
+            else
+            {
+                BuildHintBar(screen).Write(console);
+            }
         }
-        else
+        finally
         {
-            BuildHintBar(screen).Write(console);
+            if (isTerminal)
+            {
+                console.Profile.Out = originalOut;
+            }
         }
 
         // Erase anything below the new frame (handles shorter content than previous).
@@ -520,6 +532,89 @@ public enum ShellAction
 
     /// <summary>Ctrl+C exit, return code 130.</summary>
     ExitSigInt,
+}
+
+/// <summary>
+/// Wraps an <see cref="IAnsiConsoleOutput"/> so that every newline written by Spectre
+/// is preceded by the ANSI EL (Erase in Line) sequence <c>\e[K</c>. This prevents
+/// residual characters when a shorter line overwrites a longer one during
+/// flicker-free <c>Home()</c>-based repaints.
+/// </summary>
+internal sealed class LineCleaningOutput : IAnsiConsoleOutput
+{
+    private readonly IAnsiConsoleOutput inner;
+    private readonly LineCleaningWriter wrapper;
+
+    public LineCleaningOutput(IAnsiConsoleOutput inner)
+    {
+        this.inner = inner;
+        wrapper = new LineCleaningWriter(inner.Writer);
+    }
+
+    public TextWriter Writer => wrapper;
+
+    public bool IsTerminal => inner.IsTerminal;
+
+    public int Width => inner.Width;
+
+    public int Height => inner.Height;
+
+    public void SetEncoding(Encoding encoding) => inner.SetEncoding(encoding);
+}
+
+/// <summary>
+/// A <see cref="TextWriter"/> decorator that injects <c>\e[K</c> before every
+/// <c>\n</c> character, erasing to the end of the terminal line before advancing.
+/// </summary>
+internal sealed class LineCleaningWriter : TextWriter
+{
+    private const string EraseToEol = "\u001b[K";
+    private readonly TextWriter inner;
+
+    public LineCleaningWriter(TextWriter inner)
+    {
+        this.inner = inner;
+    }
+
+    public override Encoding Encoding => inner.Encoding;
+
+    public override void Write(char value)
+    {
+        if (value == '\n')
+        {
+            inner.Write(EraseToEol);
+        }
+        inner.Write(value);
+    }
+
+    public override void Write(string? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+        inner.Write(value.Replace("\n", $"{EraseToEol}\n"));
+    }
+
+    public override void Write(char[] buffer, int index, int count)
+    {
+        // Fast path: if no newlines, write directly.
+        var span = new ReadOnlySpan<char>(buffer, index, count);
+        if (!span.Contains('\n'))
+        {
+            inner.Write(buffer, index, count);
+            return;
+        }
+        Write(new string(buffer, index, count));
+    }
+
+    public override void WriteLine(string? value)
+    {
+        Write(value);
+        Write('\n');
+    }
+
+    public override void Flush() => inner.Flush();
 }
 
 /// <summary>Creates modal overlays from broker challenge requests.</summary>
