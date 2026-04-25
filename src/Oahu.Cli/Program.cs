@@ -35,6 +35,11 @@ public static class Program
         try
         {
             var parseResult = root.Parse(args);
+            var rewriteCode = Commands.ParseErrorRewriter.RewriteIfNeeded(parseResult, CliEnvironment.Error);
+            if (rewriteCode is int code)
+            {
+                return code;
+            }
             return await parseResult.InvokeAsync().ConfigureAwait(false);
         }
         catch (OperationCanceledException)

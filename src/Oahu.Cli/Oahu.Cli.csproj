@@ -18,7 +18,7 @@
     <Description>Oahu CLI: command-mode + TUI front end for the Oahu Audible toolkit.</Description>
 
     <!-- New project; existing StyleCop documentation rules would generate a wall of warnings. Suppress doc-only rules here. -->
-    <NoWarn>$(NoWarn);CS1591;SA0001;SA1600;SA1601;SA1602;SA1611;SA1615;SA1623;SA1629;SA1633;SA1652;SA1201;SA1502;SA1513;SA1515;SA1516</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;SA0001;SA1600;SA1601;SA1602;SA1611;SA1615;SA1623;SA1629;SA1633;SA1652;SA1201;SA1202;SA1502;SA1513;SA1515;SA1516</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
