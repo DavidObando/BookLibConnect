@@ -25,6 +25,7 @@ internal static class HistoryCommand
         var cmd = new Command("history", "Inspect completed job history.");
         cmd.Subcommands.Add(CreateList(resolveGlobals));
         cmd.Subcommands.Add(CreateShow(resolveGlobals));
+        cmd.Subcommands.Add(CreateRetry(resolveGlobals));
         return cmd;
     }
 
@@ -38,6 +39,7 @@ internal static class HistoryCommand
         ["completedAt"] = record.CompletedAt,
         ["errorMessage"] = record.ErrorMessage,
         ["profileAlias"] = record.ProfileAlias,
+        ["quality"] = record.Quality?.ToString(),
     };
 
     private static Command CreateList(Func<ParseResult, GlobalOptions> resolveGlobals)
@@ -134,6 +136,48 @@ internal static class HistoryCommand
     }
 
     public static string HistoryPath() => Path.Combine(CliPaths.SharedUserDataDir, "history.jsonl");
+
+    private static Command CreateRetry(Func<ParseResult, GlobalOptions> resolveGlobals)
+    {
+        var idArg = new Argument<string>("jobId") { Description = "Id of a past job to resubmit." };
+        var c = new Command(
+            "retry",
+            "Resubmit a past job as a brand-new download. Reuses the recorded ASIN, title, and quality (if known); a fresh job id is assigned.")
+        { idArg };
+        c.SetAction(async (parse, ct) =>
+        {
+            var globals = resolveGlobals(parse);
+            var id = parse.GetValue(idArg)!;
+            var store = new JsonlHistoryStore(HistoryPath());
+            JobRecord? hit = null;
+            await foreach (var rec in store.ReadAllAsync(ct).ConfigureAwait(false))
+            {
+                if (string.Equals(rec.Id, id, StringComparison.OrdinalIgnoreCase))
+                {
+                    hit = rec;
+                    break;
+                }
+            }
+            if (hit is null)
+            {
+                CliEnvironment.Error.WriteLine($"oahu-cli: no history record with id '{id}'.");
+                return 1;
+            }
+
+            var request = new JobRequest
+            {
+                Asin = hit.Asin,
+                Title = hit.Title,
+                ProfileAlias = hit.ProfileAlias,
+                Quality = hit.Quality ?? DownloadQuality.High,
+            };
+
+            var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
+            var jobService = CliServiceFactory.JobServiceFactory();
+            return await DownloadCommand.RunAsync(jobService, new[] { request }, writer, ct).ConfigureAwait(false);
+        });
+        return c;
+    }
 
     private static bool StatusMatches(JobPhase phase, string? wanted)
     {

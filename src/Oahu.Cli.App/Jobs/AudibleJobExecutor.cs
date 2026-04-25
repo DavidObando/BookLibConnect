@@ -120,6 +120,8 @@ public sealed class AudibleJobExecutor : IJobExecutor
         Action<Conversion> onState = c => translator.OnStateChanged(c);
 
         var settings = downloadSettingsFactory();
+        // Honour per-job quality without mutating the GUI-shared settings.
+        var jobSettings = new PerJobDownloadSettings(settings, MapQuality(request.Quality));
         var context = new CliCancellation(cancellationToken);
 
         // Run the actual job in the background; the foreach below pulls the
@@ -129,7 +131,7 @@ public sealed class AudibleJobExecutor : IJobExecutor
             {
                 try
                 {
-                    using var job = new DownloadDecryptJob<CliCancellation>(api, settings, onState);
+                    using var job = new DownloadDecryptJob<CliCancellation>(api, jobSettings, onState);
                     await job.DownloadDecryptAndConvertAsync(
                         new[] { conversion },
                         progress,
@@ -210,6 +212,14 @@ public sealed class AudibleJobExecutor : IJobExecutor
             }
         }
     }
+
+    private static EDownloadQuality MapQuality(DownloadQuality q) => q switch
+    {
+        DownloadQuality.Normal => EDownloadQuality.Normal,
+        DownloadQuality.High => EDownloadQuality.High,
+        DownloadQuality.Extreme => EDownloadQuality.Extreme,
+        _ => EDownloadQuality.High,
+    };
 
     /// <summary>
     /// Translates Core's per-conversion <see cref="ProgressMessage"/> +
