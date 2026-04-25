@@ -29,7 +29,7 @@ namespace Oahu.Cli.Commands;
 ///   <c>2</c> usage error (handled by <see cref="ParseErrorRewriter"/>).
 ///   <c>3</c> no active profile / auth required (surfaced by the executor).
 /// </summary>
-internal static class DownloadCommand
+public static class DownloadCommand
 {
     public const string UpdateResource = "download-update";
     public const string SummaryResource = "download-summary";
@@ -53,6 +53,14 @@ internal static class DownloadCommand
         {
             Description = "Drain the shared download queue instead of taking ASIN positionals.",
         };
+        var exportOpt = new Option<string?>("--export")
+        {
+            Description = "Post-decrypt export: 'none' (default) or 'aax'.",
+        };
+        var outputDirOpt = new Option<string?>("--output-dir")
+        {
+            Description = "Override the export directory (only used with --export aax).",
+        };
 
         var cmd = new Command("download", "Download (and decrypt) one or more audiobooks by ASIN.")
         {
@@ -60,6 +68,8 @@ internal static class DownloadCommand
             qualityOpt,
             profileOpt,
             fromQueueOpt,
+            exportOpt,
+            outputDirOpt,
         };
 
         cmd.SetAction(async (parse, ct) =>
@@ -69,6 +79,8 @@ internal static class DownloadCommand
             var fromQueue = parse.GetValue(fromQueueOpt);
             var profile = parse.GetValue(profileOpt);
             var qualityRaw = parse.GetValue(qualityOpt);
+            var exportRaw = parse.GetValue(exportOpt);
+            var outputDir = parse.GetValue(outputDirOpt);
 
             DownloadQuality? quality = null;
             if (!string.IsNullOrEmpty(qualityRaw))
@@ -82,7 +94,25 @@ internal static class DownloadCommand
                 quality = parsed;
             }
 
-            var requests = await ResolveRequestsAsync(positional, fromQueue, profile, quality, ct).ConfigureAwait(false);
+            bool exportToAax = false;
+            if (!string.IsNullOrEmpty(exportRaw))
+            {
+                switch (exportRaw.ToLowerInvariant())
+                {
+                    case "none":
+                        exportToAax = false;
+                        break;
+                    case "aax":
+                        exportToAax = true;
+                        break;
+                    default:
+                        CliEnvironment.Error.WriteLine(
+                            $"oahu-cli: --export '{exportRaw}' is not valid. Use one of: none|aax.");
+                        return 2;
+                }
+            }
+
+            var requests = await ResolveRequestsAsync(positional, fromQueue, profile, quality, exportToAax, outputDir, ct).ConfigureAwait(false);
             if (requests.Count == 0)
             {
                 if (fromQueue)
@@ -105,7 +135,7 @@ internal static class DownloadCommand
         return cmd;
     }
 
-    internal static async Task<int> RunAsync(
+    public static async Task<int> RunAsync(
         IJobService jobService,
         IReadOnlyList<JobRequest> requests,
         IOutputWriter writer,
@@ -284,11 +314,13 @@ internal static class DownloadCommand
         bool fromQueue,
         string? profileAlias,
         DownloadQuality? quality,
+        bool exportToAax,
+        string? outputDir,
         CancellationToken cancellationToken)
     {
         if (fromQueue)
         {
-            return ResolveFromQueueAsync(profileAlias, quality, cancellationToken);
+            return ResolveFromQueueAsync(profileAlias, quality, exportToAax, outputDir, cancellationToken);
         }
 
         var inputs = ExpandStdin(positional)
@@ -300,7 +332,7 @@ internal static class DownloadCommand
         var list = new List<JobRequest>(inputs.Length);
         foreach (var asin in inputs)
         {
-            list.Add(BuildRequest(asin, asin, profileAlias, quality));
+            list.Add(BuildRequest(asin, asin, profileAlias, quality, exportToAax, outputDir));
         }
         return Task.FromResult<IReadOnlyList<JobRequest>>(list);
     }
@@ -308,6 +340,8 @@ internal static class DownloadCommand
     private static async Task<IReadOnlyList<JobRequest>> ResolveFromQueueAsync(
         string? profileAlias,
         DownloadQuality? quality,
+        bool exportToAax,
+        string? outputDir,
         CancellationToken cancellationToken)
     {
         var queuePath = QueueCommand.QueuePath();
@@ -316,17 +350,19 @@ internal static class DownloadCommand
         var list = new List<JobRequest>(entries.Count);
         foreach (var e in entries)
         {
-            list.Add(BuildRequest(e.Asin, string.IsNullOrEmpty(e.Title) ? e.Asin : e.Title, profileAlias ?? e.ProfileAlias, quality ?? e.Quality));
+            list.Add(BuildRequest(e.Asin, string.IsNullOrEmpty(e.Title) ? e.Asin : e.Title, profileAlias ?? e.ProfileAlias, quality ?? e.Quality, exportToAax, outputDir));
         }
         return list;
     }
 
-    private static JobRequest BuildRequest(string asin, string title, string? profileAlias, DownloadQuality? quality) => new()
+    private static JobRequest BuildRequest(string asin, string title, string? profileAlias, DownloadQuality? quality, bool exportToAax, string? outputDir) => new()
     {
         Asin = asin,
         Title = title,
         ProfileAlias = profileAlias,
         Quality = quality ?? DownloadQuality.High,
+        ExportToAax = exportToAax,
+        OutputDir = outputDir,
     };
 
     private static IEnumerable<string> ExpandStdin(string[] inputs)

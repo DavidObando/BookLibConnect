@@ -18,7 +18,7 @@ namespace Oahu.Cli.Commands;
 /// hidden / experimental flag) — we wire it as a regular but undocumented subcommand
 /// here so System.CommandLine can still surface it via tab completion in dev shells.
 /// </summary>
-internal static class UiPreviewCommand
+public static class UiPreviewCommand
 {
     public static Command Create(Func<ParseResult, GlobalOptions> resolveGlobals)
     {

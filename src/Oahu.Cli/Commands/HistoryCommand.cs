@@ -16,7 +16,7 @@ namespace Oahu.Cli.Commands;
 /// <c>oahu-cli history list|show</c>. <c>retry</c> is wired in phase 4c when the
 /// real job executor lands.
 /// </summary>
-internal static class HistoryCommand
+public static class HistoryCommand
 {
     public const string SchemaResource = "history";
 

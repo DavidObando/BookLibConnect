@@ -38,20 +38,23 @@ public sealed class AudibleJobExecutor : IJobExecutor
 {
     private readonly Func<AudibleClient> clientFactory;
     private readonly Func<IDownloadSettings> downloadSettingsFactory;
+    private readonly Func<IExportSettings> exportSettingsFactory;
     private readonly ILogger logger;
 
     public AudibleJobExecutor(ILogger<AudibleJobExecutor>? logger = null)
-        : this(() => CoreEnvironment.Client, () => CoreEnvironment.Settings.DownloadSettings, logger)
+        : this(() => CoreEnvironment.Client, () => CoreEnvironment.Settings.DownloadSettings, () => CoreEnvironment.Settings.ExportSettings, logger)
     {
     }
 
-    internal AudibleJobExecutor(
+    public AudibleJobExecutor(
         Func<AudibleClient> clientFactory,
         Func<IDownloadSettings> downloadSettingsFactory,
+        Func<IExportSettings>? exportSettingsFactory = null,
         ILogger<AudibleJobExecutor>? logger = null)
     {
         this.clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
         this.downloadSettingsFactory = downloadSettingsFactory ?? throw new ArgumentNullException(nameof(downloadSettingsFactory));
+        this.exportSettingsFactory = exportSettingsFactory ?? (() => CoreEnvironment.Settings.ExportSettings);
         this.logger = logger ?? NullLogger<AudibleJobExecutor>.Instance;
     }
 
@@ -124,6 +127,33 @@ public sealed class AudibleJobExecutor : IJobExecutor
         var jobSettings = new PerJobDownloadSettings(settings, MapQuality(request.Quality));
         var context = new CliCancellation(cancellationToken);
 
+        // If AAX export was requested, build a per-job IExportSettings,
+        // construct the AaxExporter, and forward the convertAction to the job.
+        // The translator is told whether convert is enabled so terminal phase
+        // mapping accounts for the extra Muxing → Exported step.
+        ConvertDelegate<CliCancellation>? convertAction = null;
+        if (request.ExportToAax)
+        {
+            var exportInner = exportSettingsFactory();
+            var jobExport = new PerJobExportSettings(exportInner, exportToAax: true, exportDirectory: request.OutputDir);
+            if (string.IsNullOrEmpty(jobExport.ExportDirectory))
+            {
+                yield return new JobUpdate
+                {
+                    JobId = request.Id,
+                    Phase = JobPhase.Failed,
+                    Message = "AAX export requested but no export directory is configured. Pass --output-dir or set ExportSettings.ExportDirectory.",
+                };
+                yield break;
+            }
+            translator.SetConvertEnabled();
+            var exporter = new AaxExporter(jobExport, jobSettings);
+            convertAction = (book, ctx, callback) =>
+            {
+                exporter.Export(book, new SimpleConversionContext(null, ctx.CancellationToken), callback);
+            };
+        }
+
         // Run the actual job in the background; the foreach below pulls the
         // translated updates from the channel.
         Task runTask = Task.Run(
@@ -136,7 +166,7 @@ public sealed class AudibleJobExecutor : IJobExecutor
                         new[] { conversion },
                         progress,
                         context,
-                        convertAction: null).ConfigureAwait(false);
+                        convertAction).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -197,7 +227,10 @@ public sealed class AudibleJobExecutor : IJobExecutor
         {
             // Determine the outcome from the final Conversion state.
             var final = conversion.State;
-            if (final is EConversionState.LocalUnlocked or EConversionState.Exported or EConversionState.Converted)
+            bool succeeded = request.ExportToAax
+                ? final is EConversionState.Exported or EConversionState.Converted
+                : final is EConversionState.LocalUnlocked or EConversionState.Exported or EConversionState.Converted;
+            if (succeeded)
             {
                 yield return new JobUpdate { JobId = request.Id, Phase = JobPhase.Completed };
             }
@@ -237,12 +270,15 @@ public sealed class AudibleJobExecutor : IJobExecutor
         private JobPhase current = JobPhase.Licensing;
         private int downloadPermille;
         private int decryptPercent;
+        private bool convertEnabled;
 
         public ProgressTranslator(string jobId, ChannelWriter<JobUpdate> writer)
         {
             this.jobId = jobId;
             this.writer = writer;
         }
+
+        public void SetConvertEnabled() => convertEnabled = true;
 
         public void Emit(JobPhase phase, double? progress = null, string? message = null)
         {
@@ -332,12 +368,34 @@ public sealed class AudibleJobExecutor : IJobExecutor
                         }
                         break;
                     case EConversionState.LocalUnlocked:
+                        // Without convert: this is the terminal success state.
+                        // With convert: just an intermediate; the exporter will move us to Converting → Exported.
+                        if (!convertEnabled && current is not JobPhase.Completed)
+                        {
+                            current = JobPhase.Completed;
+                            writer.TryWrite(new JobUpdate { JobId = jobId, Phase = JobPhase.Completed });
+                        }
+                        break;
+                    case EConversionState.Converting:
+                        if (current != JobPhase.Muxing)
+                        {
+                            current = JobPhase.Muxing;
+                            writer.TryWrite(new JobUpdate { JobId = jobId, Phase = JobPhase.Muxing, Progress = 0 });
+                        }
+                        break;
                     case EConversionState.Exported:
                     case EConversionState.Converted:
                         if (current is not JobPhase.Completed)
                         {
                             current = JobPhase.Completed;
                             writer.TryWrite(new JobUpdate { JobId = jobId, Phase = JobPhase.Completed });
+                        }
+                        break;
+                    case EConversionState.ConversionError:
+                        if (current is not JobPhase.Failed)
+                        {
+                            current = JobPhase.Failed;
+                            writer.TryWrite(new JobUpdate { JobId = jobId, Phase = JobPhase.Failed, Message = "AAX export failed" });
                         }
                         break;
                     case EConversionState.LicenseDenied:

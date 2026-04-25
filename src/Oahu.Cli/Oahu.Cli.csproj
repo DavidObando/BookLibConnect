@@ -33,8 +33,4 @@
     <ProjectReference Include="..\Oahu.Cli.Tui\Oahu.Cli.Tui.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="Oahu.Cli.Tests" />
-  </ItemGroup>
-
 </Project>

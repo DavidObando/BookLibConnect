@@ -16,7 +16,7 @@ namespace Oahu.Cli.App.Auth;
 /// <see cref="NonInteractiveCallbackException"/> the underlying Core operation
 /// receives the same exception and surfaces it to the CLI.
 /// </summary>
-internal static class CallbackBridge
+public static class CallbackBridge
 {
     public static Callbacks ToCoreCallbacks(IAuthCallbackBroker broker, CancellationToken cancellationToken)
     {

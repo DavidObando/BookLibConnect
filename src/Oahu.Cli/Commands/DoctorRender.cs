@@ -11,7 +11,7 @@ namespace Oahu.Cli.Commands;
 /// Separated from <see cref="DoctorCommand"/> so it can be unit-tested without
 /// going through System.CommandLine.
 /// </summary>
-internal static class DoctorRender
+public static class DoctorRender
 {
     public static void Pretty(DoctorReport report, GlobalOptions globals)
     {

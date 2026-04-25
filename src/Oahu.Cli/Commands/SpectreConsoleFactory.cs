@@ -7,7 +7,7 @@ namespace Oahu.Cli.Commands;
 /// that obeys both the user's <c>--no-color</c> / <c>NO_COLOR</c> preference and
 /// the auto-degrade-on-non-TTY rule from §9 of the design doc.
 /// </summary>
-internal static class SpectreConsoleFactory
+public static class SpectreConsoleFactory
 {
     public static IAnsiConsole Create(GlobalOptions globals)
     {

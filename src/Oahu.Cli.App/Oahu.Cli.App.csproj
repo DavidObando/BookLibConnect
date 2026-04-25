@@ -22,10 +22,4 @@
     <ProjectReference Include="..\Oahu.SystemManagement\Oahu.SystemManagement.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="Oahu.Cli" />
-    <InternalsVisibleTo Include="Oahu.Cli.Tui" />
-    <InternalsVisibleTo Include="Oahu.Cli.Tests" />
-  </ItemGroup>
-
 </Project>

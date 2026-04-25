@@ -15,7 +15,7 @@ namespace Oahu.Cli.Commands;
 /// <summary>
 /// <c>oahu-cli config get|set|path</c> — inspect and update the user's CLI config.
 /// </summary>
-internal static class ConfigCommand
+public static class ConfigCommand
 {
     /// <summary>Stable string keys (kebab-case) exposed to users via <c>config get/set</c>.</summary>
     public static readonly IReadOnlyList<string> Keys = new[]

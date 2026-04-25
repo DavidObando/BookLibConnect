@@ -23,7 +23,7 @@ namespace Oahu.Cli.Commands;
 /// Exit codes (per design §10): <c>0</c> success, <c>3</c> auth required/failed,
 /// <c>2</c> usage error (caught earlier by <see cref="ParseErrorRewriter"/>).
 /// </summary>
-internal static class AuthCommand
+public static class AuthCommand
 {
     public const string SchemaResource = "auth-status";
 

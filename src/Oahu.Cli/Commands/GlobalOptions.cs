@@ -4,7 +4,7 @@ namespace Oahu.Cli.Commands;
 /// Globally-applicable flags resolved from the root command and made available
 /// to every subcommand.
 /// </summary>
-internal sealed class GlobalOptions
+public sealed class GlobalOptions
 {
     public bool Quiet { get; init; }
 

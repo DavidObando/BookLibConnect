@@ -185,7 +185,7 @@ public static class CoreEnvironment
     /// root must orchestrate that via <see cref="Initialize"/> in a fresh
     /// process.
     /// </summary>
-    internal static void ResetForTests()
+    public static void ResetForTests()
     {
         lock (Lock)
         {

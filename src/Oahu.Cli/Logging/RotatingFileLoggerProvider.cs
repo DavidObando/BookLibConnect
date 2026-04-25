@@ -58,7 +58,7 @@ public sealed class RotatingFileLoggerProvider : ILoggerProvider
         }
     }
 
-    internal void Write(string category, LogLevel level, EventId eventId, string message, Exception? exception)
+    public void Write(string category, LogLevel level, EventId eventId, string message, Exception? exception)
     {
         if (level < minimumLevel || disposed)
         {
@@ -86,7 +86,7 @@ public sealed class RotatingFileLoggerProvider : ILoggerProvider
         }
     }
 
-    internal LogLevel MinimumLevel => minimumLevel;
+    public LogLevel MinimumLevel => minimumLevel;
 
     private static string FormatLine(DateTimeOffset ts, LogLevel level, string category, EventId eventId, string message, Exception? exception)
     {

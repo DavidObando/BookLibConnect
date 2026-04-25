@@ -16,7 +16,7 @@ namespace Oahu.Cli.App.Jobs;
 /// the same process.
 /// </para>
 /// </summary>
-internal sealed class PerJobDownloadSettings : IDownloadSettings
+public sealed class PerJobDownloadSettings : IDownloadSettings
 {
     private readonly IDownloadSettings inner;
     private readonly EDownloadQuality quality;

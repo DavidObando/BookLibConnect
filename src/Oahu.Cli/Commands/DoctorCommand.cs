@@ -10,7 +10,7 @@ namespace Oahu.Cli.Commands;
 /// <summary>
 /// <c>oahu-cli doctor</c> — environment self-checks.
 /// </summary>
-internal static class DoctorCommand
+public static class DoctorCommand
 {
     public static Command Create(Func<ParseResult, GlobalOptions> resolveGlobals, Func<ILoggerFactory> loggerFactory)
     {
