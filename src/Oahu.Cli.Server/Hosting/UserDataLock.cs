@@ -82,19 +82,6 @@ public sealed class UserDataLock : IDisposable
         return null;
     }
 
-    private static bool IsRunning(int pid)
-    {
-        try
-        {
-            using var p = Process.GetProcessById(pid);
-            return !p.HasExited;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     public void Dispose()
     {
         var s = stream;
@@ -111,6 +98,19 @@ public sealed class UserDataLock : IDisposable
         catch
         {
             // best-effort cleanup.
+        }
+    }
+
+    private static bool IsRunning(int pid)
+    {
+        try
+        {
+            using var p = Process.GetProcessById(pid);
+            return !p.HasExited;
+        }
+        catch
+        {
+            return false;
         }
     }
 }

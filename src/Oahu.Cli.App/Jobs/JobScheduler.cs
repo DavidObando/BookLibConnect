@@ -114,20 +114,6 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
     public IAsyncEnumerable<JobRecord> ReadHistoryAsync(CancellationToken cancellationToken = default) =>
         history?.ReadAllAsync(cancellationToken) ?? EmptyHistory(cancellationToken);
 
-    private static JobSnapshot Snapshot(JobLifecycle lc) => new()
-    {
-        JobId = lc.Request.Id,
-        Asin = lc.Request.Asin,
-        Title = lc.Request.Title,
-        Phase = lc.LastPhase,
-        Progress = lc.LastProgress,
-        Message = lc.LastMessage,
-        StartedAt = lc.StartedAt,
-        UpdatedAt = lc.LastUpdatedAt,
-        Quality = lc.Request.Quality,
-        ProfileAlias = lc.Request.ProfileAlias,
-    };
-
     public async ValueTask DisposeAsync()
     {
         work.Writer.TryComplete();
@@ -146,6 +132,20 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
         }
         shutdownCts.Dispose();
     }
+
+    private static JobSnapshot Snapshot(JobLifecycle lc) => new()
+    {
+        JobId = lc.Request.Id,
+        Asin = lc.Request.Asin,
+        Title = lc.Request.Title,
+        Phase = lc.LastPhase,
+        Progress = lc.LastProgress,
+        Message = lc.LastMessage,
+        StartedAt = lc.StartedAt,
+        UpdatedAt = lc.LastUpdatedAt,
+        Quality = lc.Request.Quality,
+        ProfileAlias = lc.Request.ProfileAlias,
+    };
 
     private async Task WorkerLoopAsync()
     {

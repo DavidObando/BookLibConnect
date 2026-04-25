@@ -56,7 +56,6 @@ public sealed class OahuTools
     }
 
     // ---- AUTH ------------------------------------------------------------
-
     [OahuCapability(CapabilityClass.Safe)]
     public async Task<object> AuthStatusAsync(CancellationToken ct = default)
     {
@@ -70,7 +69,6 @@ public sealed class OahuTools
     }
 
     // ---- LIBRARY ---------------------------------------------------------
-
     [OahuCapability(CapabilityClass.Safe)]
     public async Task<object> LibraryListAsync(string? filter = null, int? limit = null, CancellationToken ct = default)
     {
@@ -108,7 +106,6 @@ public sealed class OahuTools
     }
 
     // ---- QUEUE -----------------------------------------------------------
-
     [OahuCapability(CapabilityClass.Safe)]
     public async Task<object> QueueListAsync(CancellationToken ct = default)
     {
@@ -189,7 +186,6 @@ public sealed class OahuTools
     }
 
     // ---- JOBS / DOWNLOAD -------------------------------------------------
-
     [OahuCapability(CapabilityClass.Expensive)]
     public async Task<object> DownloadAsync(string[] asins, string? quality = null, string? profile = null, bool exportToAax = false, string? outputDir = null, CancellationToken ct = default)
     {
@@ -263,7 +259,6 @@ public sealed class OahuTools
     }
 
     // ---- HISTORY ---------------------------------------------------------
-
     [OahuCapability(CapabilityClass.Safe)]
     public async Task<object> HistoryListAsync(int? limit = null, CancellationToken ct = default)
     {
@@ -301,7 +296,6 @@ public sealed class OahuTools
     // history_delete deferred to post-1.0 (would need rewrite-then-rename of jsonl).
 
     // ---- DOCTOR ----------------------------------------------------------
-
     [OahuCapability(CapabilityClass.Safe)]
     public async Task<object> DoctorAsync(CancellationToken ct = default)
     {
@@ -322,7 +316,6 @@ public sealed class OahuTools
     }
 
     // ---- CONFIG ----------------------------------------------------------
-
     [OahuCapability(CapabilityClass.Safe)]
     public async Task<object> ConfigGetAsync(string? key = null, CancellationToken ct = default)
     {
@@ -353,7 +346,6 @@ public sealed class OahuTools
     }
 
     // ---- helpers ---------------------------------------------------------
-
     private static object ToAuth(AuthSession s) => new
     {
         profileAlias = s.ProfileAlias,
@@ -402,7 +394,7 @@ public sealed class OahuTools
         profileAlias = s.ProfileAlias,
     };
 
-    public static object ToHistory(JobRecord r) => new
+    private static object ToHistory(JobRecord r) => new
     {
         id = r.Id,
         asin = r.Asin,
