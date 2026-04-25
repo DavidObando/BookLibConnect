@@ -61,6 +61,7 @@ public sealed class AppShell
     private readonly CtrlCState ctrlC;
 
     private int activeTab;
+    private int lastRenderedTab = -1;
     private bool logsOpen;
     private string? toast;
     private DateTimeOffset? toastShownAt;
@@ -323,7 +324,17 @@ public sealed class AppShell
 
         // Cursor-home (no erase) — overwrite the previous frame in-place
         // to avoid the visible blank flash that full-screen Clear() caused.
-        AltScreen.Home();
+        // Exception: when the active tab changed, do a full clear so the
+        // previous screen's longer content doesn't linger below.
+        if (activeTab != lastRenderedTab)
+        {
+            AltScreen.Clear();
+            lastRenderedTab = activeTab;
+        }
+        else
+        {
+            AltScreen.Home();
+        }
 
         // Header.
         var headerText = BuildHeader(width);
