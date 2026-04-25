@@ -1,0 +1,37 @@
+using System.IO;
+using Oahu.Cli.App.Paths;
+
+namespace Oahu.Cli.App.Models;
+
+/// <summary>
+/// User-tunable settings for the CLI. Loaded from / saved to <c>config.json</c> via
+/// <c>IConfigService</c>. New fields must default to sensible values so the file
+/// stays forward-compatible without a migration.
+/// </summary>
+public sealed record OahuConfig
+{
+    public string DownloadDirectory { get; init; } = CliPaths.DefaultDownloadDir;
+
+    public DownloadQuality DefaultQuality { get; init; } = DownloadQuality.High;
+
+    public int MaxParallelJobs { get; init; } = 1;
+
+    public bool KeepEncryptedFiles { get; init; }
+
+    public bool MultiPartDownload { get; init; }
+
+    public bool ExportToAax { get; init; }
+
+    public string ExportDirectory { get; init; } = "";
+
+    public string? DefaultProfileAlias { get; init; }
+
+    /// <summary>
+    /// When true, the credentials store falls back to a passphrase-protected file when no native keyring is available.
+    /// Off by default — the design's stance is "fail closed" rather than silently store secrets in a file.
+    /// </summary>
+    public bool AllowEncryptedFileCredentials { get; init; }
+
+    /// <summary>Default config used the first time the CLI runs (no file on disk yet).</summary>
+    public static OahuConfig Default => new();
+}
