@@ -156,6 +156,38 @@ public sealed class CoreAuthService : IAuthService
             ?? throw new InvalidOperationException($"Profile '{profileAlias}' disappeared after refresh.");
     }
 
+    internal static CliRegion ToCliRegion(ERegion region) => region switch
+    {
+        ERegion.Us => CliRegion.Us,
+        ERegion.Uk => CliRegion.Uk,
+        ERegion.De => CliRegion.De,
+        ERegion.Fr => CliRegion.Fr,
+        ERegion.It => CliRegion.It,
+        ERegion.Es => CliRegion.Es,
+        ERegion.Jp => CliRegion.Jp,
+        ERegion.Au => CliRegion.Au,
+        ERegion.Ca => CliRegion.Ca,
+        ERegion.In => CliRegion.In,
+        ERegion.Br => CliRegion.Br,
+        _ => throw new ArgumentOutOfRangeException(nameof(region), region, null),
+    };
+
+    internal static ERegion ToCoreRegion(CliRegion region) => region switch
+    {
+        CliRegion.Us => ERegion.Us,
+        CliRegion.Uk => ERegion.Uk,
+        CliRegion.De => ERegion.De,
+        CliRegion.Fr => ERegion.Fr,
+        CliRegion.It => ERegion.It,
+        CliRegion.Es => ERegion.Es,
+        CliRegion.Jp => ERegion.Jp,
+        CliRegion.Au => ERegion.Au,
+        CliRegion.Ca => ERegion.Ca,
+        CliRegion.In => ERegion.In,
+        CliRegion.Br => ERegion.Br,
+        _ => throw new ArgumentOutOfRangeException(nameof(region), region, null),
+    };
+
     private async Task<IProfileKey?> ResolveKeyByAliasAsync(string profileAlias)
     {
         var aliases = client.GetAccountAliases()?.ToDictionary(a => a.AccountId, a => a.Alias, StringComparer.Ordinal)
@@ -194,6 +226,7 @@ public sealed class CoreAuthService : IAuthService
         {
             return ToSession(ex, aliases);
         }
+
         var alias = aliases.TryGetValue(key.AccountId, out var a) && !string.IsNullOrWhiteSpace(a)
             ? a
             : key.AccountId;
@@ -205,36 +238,4 @@ public sealed class CoreAuthService : IAuthService
             ExpiresAt = null,
         };
     }
-
-    internal static CliRegion ToCliRegion(ERegion region) => region switch
-    {
-        ERegion.Us => CliRegion.Us,
-        ERegion.Uk => CliRegion.Uk,
-        ERegion.De => CliRegion.De,
-        ERegion.Fr => CliRegion.Fr,
-        ERegion.It => CliRegion.It,
-        ERegion.Es => CliRegion.Es,
-        ERegion.Jp => CliRegion.Jp,
-        ERegion.Au => CliRegion.Au,
-        ERegion.Ca => CliRegion.Ca,
-        ERegion.In => CliRegion.In,
-        ERegion.Br => CliRegion.Br,
-        _ => throw new ArgumentOutOfRangeException(nameof(region), region, null),
-    };
-
-    internal static ERegion ToCoreRegion(CliRegion region) => region switch
-    {
-        CliRegion.Us => ERegion.Us,
-        CliRegion.Uk => ERegion.Uk,
-        CliRegion.De => ERegion.De,
-        CliRegion.Fr => ERegion.Fr,
-        CliRegion.It => ERegion.It,
-        CliRegion.Es => ERegion.Es,
-        CliRegion.Jp => ERegion.Jp,
-        CliRegion.Au => ERegion.Au,
-        CliRegion.Ca => ERegion.Ca,
-        CliRegion.In => ERegion.In,
-        CliRegion.Br => ERegion.Br,
-        _ => throw new ArgumentOutOfRangeException(nameof(region), region, null),
-    };
 }

@@ -52,6 +52,10 @@ namespace Oahu.Aux
 
     public static string LogDirectory => Path.Combine(LocalApplDirectory, "log");
 
+    public static string UserName { get; } = Environment.UserName;
+
+    public static string UserDirectoryRoot { get; } = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
     /// <summary>
     /// Override the assembly-derived <see cref="ApplName"/> so that all path
     /// derivatives (<see cref="LocalApplDirectory"/>, <see cref="SettingsDirectory"/>,
@@ -69,12 +73,9 @@ namespace Oahu.Aux
       {
         throw new ArgumentException("name must not be null or empty", nameof(name));
       }
+
       ApplName = name;
     }
-
-    public static string UserName { get; } = Environment.UserName;
-
-    public static string UserDirectoryRoot { get; } = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
     private static T GetAttribute<T>() where T : Attribute
     {

@@ -134,22 +134,6 @@ public static class CoreEnvironment
     }
 
     /// <summary>
-    /// Test hook: drop singletons so the next access reconstructs them. Does
-    /// NOT undo <see cref="ApplEnv.OverrideApplName"/> — once set, the path
-    /// override persists for the process. Tests that need a different shared
-    /// root must orchestrate that via <see cref="Initialize"/> in a fresh
-    /// process.
-    /// </summary>
-    internal static void ResetForTests()
-    {
-        lock (Lock)
-        {
-            client = null;
-            settings = null;
-        }
-    }
-
-    /// <summary>
     /// If <see cref="AudibleClient.ProfileKey"/> is null, attempts to load the
     /// "active" profile recorded by the GUI in
     /// <c>UserSettings.DownloadSettings.Profile</c>. Returns <see langword="true"/>
@@ -175,6 +159,22 @@ public static class CoreEnvironment
         // returning true (i.e. "use any cached alias").
         var loaded = await c.ConfigFromFileAsync(aliasKey, _ => true).ConfigureAwait(false);
         return loaded is not null;
+    }
+
+    /// <summary>
+    /// Test hook: drop singletons so the next access reconstructs them. Does
+    /// NOT undo <see cref="ApplEnv.OverrideApplName"/> — once set, the path
+    /// override persists for the process. Tests that need a different shared
+    /// root must orchestrate that via <see cref="Initialize"/> in a fresh
+    /// process.
+    /// </summary>
+    internal static void ResetForTests()
+    {
+        lock (Lock)
+        {
+            client = null;
+            settings = null;
+        }
     }
 
     private static void EnsureInitialized()

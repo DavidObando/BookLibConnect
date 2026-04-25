@@ -240,8 +240,6 @@ namespace Oahu.Core
 
   class Configuration
   {
-    private static string ConfigDir => Path.Combine(ApplEnv.LocalApplDirectory, "config");
-
     private List<Profile> profiles;
 
     public IReadOnlyList<Profile> Profiles => profiles;
@@ -249,6 +247,8 @@ namespace Oahu.Core
     public bool Existed { get; private set; }
 
     public bool IsEncrypted { get; private set; }
+
+    private static string ConfigDir => Path.Combine(ApplEnv.LocalApplDirectory, "config");
 
     public IProfile AddOrReplace(Profile profile)
     {

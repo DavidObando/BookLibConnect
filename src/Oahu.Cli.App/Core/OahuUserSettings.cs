@@ -31,5 +31,5 @@ public class OahuUserSettings : IUserSettings, IInitSettings
         ExportSettings.ChangedSettings += OnChangedSettings;
     }
 
-    private void OnChangedSettings(object sender, EventArgs e) => this.Save();
+    private void OnChangedSettings(object? sender, EventArgs e) => this.Save();
 }
