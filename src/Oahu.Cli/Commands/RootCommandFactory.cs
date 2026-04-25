@@ -94,6 +94,8 @@ internal static class RootCommandFactory
         root.Subcommands.Add(DoctorCommand.Create(ResolveGlobals, loggerFactory));
         root.Subcommands.Add(UiPreviewCommand.Create(ResolveGlobals));
         root.Subcommands.Add(ConfigCommand.Create(ResolveGlobals));
+        root.Subcommands.Add(AuthCommand.Create(ResolveGlobals));
+        root.Subcommands.Add(LibraryCommand.Create(ResolveGlobals));
         root.Subcommands.Add(QueueCommand.Create(ResolveGlobals));
         root.Subcommands.Add(HistoryCommand.Create(ResolveGlobals));
         root.Subcommands.Add(CompletionCommand.Create());

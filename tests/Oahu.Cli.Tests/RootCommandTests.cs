@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Oahu.Cli.Tests;
 
+[Collection("EnvVarSerial")]
 public class RootCommandTests
 {
     [Fact]
