@@ -25,6 +25,7 @@ public sealed class LibraryScreen : ITabScreen
     private IReadOnlyList<LibraryItem> filtered = Array.Empty<LibraryItem>();
     private int cursor;
     private int scrollOffset;
+    private int lastListHeight = 20;
     private bool loaded;
     private bool loading;
     private Task? loadTask;
@@ -62,6 +63,7 @@ public sealed class LibraryScreen : ITabScreen
             {
                 yield return new("/", "search");
                 yield return new("↑↓", "navigate");
+                yield return new("PgUp/Dn", "page");
                 yield return new("Space", "select");
                 yield return new("a", "select all");
             }
@@ -116,6 +118,7 @@ public sealed class LibraryScreen : ITabScreen
 
         // Visible rows
         var listHeight = Math.Max(1, height - lines.Count - 2);
+        lastListHeight = listHeight;
         AdjustScroll(listHeight);
 
         var end = Math.Min(scrollOffset + listHeight, filtered.Count);
@@ -170,6 +173,18 @@ public sealed class LibraryScreen : ITabScreen
             case ConsoleKey.DownArrow:
             case ConsoleKey.J:
                 cursor = Math.Min(filtered.Count - 1, Math.Max(0, cursor + 1));
+                return true;
+            case ConsoleKey.PageUp:
+                cursor = Math.Max(0, cursor - lastListHeight);
+                return true;
+            case ConsoleKey.PageDown:
+                cursor = Math.Min(filtered.Count - 1, Math.Max(0, cursor + lastListHeight));
+                return true;
+            case ConsoleKey.Home:
+                cursor = 0;
+                return true;
+            case ConsoleKey.End:
+                cursor = Math.Max(0, filtered.Count - 1);
                 return true;
             case ConsoleKey.Spacebar:
                 if (cursor >= 0 && cursor < filtered.Count)
