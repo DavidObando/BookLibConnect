@@ -134,6 +134,23 @@ public static class CoreEnvironment
     }
 
     /// <summary>
+    /// Returns the long-lived <see cref="OahuUserSettings"/> singleton (loaded
+    /// from the GUI-shared <c>usersettings.json</c>). Triggers initialization
+    /// of <see cref="Client"/> on first access so the settings file is
+    /// hydrated. Used by the job pipeline (<c>AudibleJobExecutor</c>) to read
+    /// <see cref="OahuUserSettings.DownloadSettings"/> and
+    /// <see cref="OahuUserSettings.ExportSettings"/>.
+    /// </summary>
+    public static OahuUserSettings Settings
+    {
+        get
+        {
+            _ = Client; // forces lazy load.
+            return settings!;
+        }
+    }
+
+    /// <summary>
     /// If <see cref="AudibleClient.ProfileKey"/> is null, attempts to load the
     /// "active" profile recorded by the GUI in
     /// <c>UserSettings.DownloadSettings.Profile</c>. Returns <see langword="true"/>

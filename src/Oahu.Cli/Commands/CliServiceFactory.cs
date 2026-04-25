@@ -1,25 +1,31 @@
 using System;
+using System.IO;
 using Oahu.Cli.App.Auth;
 using Oahu.Cli.App.Core;
+using Oahu.Cli.App.Jobs;
 using Oahu.Cli.App.Library;
+using Oahu.Cli.App.Paths;
 
 namespace Oahu.Cli.Commands;
 
 /// <summary>
-/// Service-resolution seam for the auth and library commands.
+/// Service-resolution seam for the auth/library/job commands.
 ///
 /// 4b.1 wired both to the in-memory <see cref="FakeAuthService"/> /
 /// <see cref="FakeLibraryService"/>. 4b.2 swaps the defaults to the
 /// Core-backed wrappers (<see cref="CoreAuthService"/> /
 /// <see cref="CoreLibraryService"/>) that talk to <c>Oahu.Core.AudibleClient</c>
-/// against the GUI-shared profile config and library cache. Tests override
-/// the factories to inject seeded fakes.
+/// against the GUI-shared profile config and library cache. 4c.1 adds
+/// <see cref="JobServiceFactory"/> backed by <see cref="JobScheduler"/> +
+/// <see cref="AudibleJobExecutor"/>. Tests override the factories to inject
+/// seeded fakes.
 /// </summary>
 internal static class CliServiceFactory
 {
     private static readonly object Lock = new();
     private static IAuthService? authSingleton;
     private static ILibraryService? librarySingleton;
+    private static IJobService? jobSingleton;
 
     public static Func<IAuthService> AuthServiceFactory { get; set; } = () =>
     {
@@ -37,6 +43,30 @@ internal static class CliServiceFactory
         }
     };
 
+    /// <summary>
+    /// Resolves the process-singleton <see cref="IJobService"/>. Default:
+    /// <see cref="JobScheduler"/> with <see cref="AudibleJobExecutor"/> and a
+    /// <see cref="JsonlHistoryStore"/> at the same <c>history.jsonl</c> path
+    /// the <c>history</c> command reads from. Tests override this factory to
+    /// inject <c>FakeJobExecutor</c>.
+    /// </summary>
+    public static Func<IJobService> JobServiceFactory { get; set; } = () =>
+    {
+        lock (Lock)
+        {
+            if (jobSingleton is not null)
+            {
+                return jobSingleton;
+            }
+
+            var historyPath = Path.Combine(CliPaths.SharedUserDataDir, "history.jsonl");
+            Directory.CreateDirectory(Path.GetDirectoryName(historyPath)!);
+            var history = new JsonlHistoryStore(historyPath);
+            jobSingleton = new JobScheduler(new AudibleJobExecutor(), history);
+            return jobSingleton;
+        }
+    };
+
     /// <summary>Test hook: drop cached singletons so the next resolve produces a fresh instance.</summary>
     public static void Reset()
     {
@@ -44,6 +74,11 @@ internal static class CliServiceFactory
         {
             authSingleton = null;
             librarySingleton = null;
+            if (jobSingleton is IAsyncDisposable iad)
+            {
+                _ = iad.DisposeAsync().AsTask();
+            }
+            jobSingleton = null;
         }
     }
 }

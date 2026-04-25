@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oahu.invalid/cli-schemas/v1/download-update.schema.json",
+  "title": "oahu-cli download (per-update)",
+  "type": "object",
+  "required": ["_schemaVersion", "resource", "jobId", "asin", "title", "phase", "timestamp"],
+  "properties": {
+    "_schemaVersion": { "type": "string", "const": "1" },
+    "resource": { "type": "string", "const": "download-update" },
+    "jobId": { "type": "string" },
+    "asin": { "type": "string" },
+    "title": { "type": "string" },
+    "phase": {
+      "type": "string",
+      "enum": ["Queued", "Licensing", "Downloading", "Decrypting", "Muxing", "Completed", "Failed", "Canceled"]
+    },
+    "progress": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "message": { "type": ["string", "null"] },
+    "timestamp": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

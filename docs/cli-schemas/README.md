@@ -13,11 +13,13 @@ documents that conform to the shape declared here.
 | `oahu-cli queue list --json` | [`queue-list.schema.json`](./queue-list.schema.json) |
 | `oahu-cli history list --json` | [`history-list.schema.json`](./history-list.schema.json) |
 | `oahu-cli history show <id> --json` | [`history-show.schema.json`](./history-show.schema.json) |
+| `oahu-cli download <asin>... --json` (per-update) | [`download-update.schema.json`](./download-update.schema.json) |
+| `oahu-cli download <asin>... --json` (final summary) | [`download-summary.schema.json`](./download-summary.schema.json) |
 | `oahu-cli doctor --json` | [`doctor.schema.json`](./doctor.schema.json) |
 
 Every document includes a top-level `_schemaVersion` string. The current
 version is `"1"`. Bumping the version is a **breaking change**; additive
 fields are not.
 
-Schemas for the deferred `history retry`, `download`, and `convert`
-commands land alongside their implementations in phase 4c.
+Schemas for the deferred `history retry` and `convert` commands land
+alongside their implementations in phase 4c.2.
