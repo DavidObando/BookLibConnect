@@ -50,6 +50,16 @@ internal static class RootCommandFactory
         {
             Description = "Minimum log level: trace|debug|information|warning|error|critical|none.",
         };
+        var jsonOpt = new Option<bool>("--json")
+        {
+            Description = "Emit machine-readable JSON output (auto-implies non-pretty rendering).",
+            Recursive = true,
+        };
+        var plainOpt = new Option<bool>("--plain")
+        {
+            Description = "Emit plain text output (tab-separated, no colour). Auto-applied on non-TTY stdout.",
+            Recursive = true,
+        };
 
         var root = new RootCommand("Oahu CLI — command-mode + TUI front end for the Oahu Audible toolkit.");
         root.Options.Add(quietOpt);
@@ -59,6 +69,8 @@ internal static class RootCommandFactory
         root.Options.Add(configDirOpt);
         root.Options.Add(logDirOpt);
         root.Options.Add(logLevelOpt);
+        root.Options.Add(jsonOpt);
+        root.Options.Add(plainOpt);
 
         GlobalOptions ResolveGlobals(ParseResult pr) => new()
         {
@@ -69,6 +81,8 @@ internal static class RootCommandFactory
             ConfigDirOverride = pr.GetValue(configDirOpt),
             LogDirOverride = pr.GetValue(logDirOpt),
             LogLevelOverride = pr.GetValue(logLevelOpt),
+            Json = pr.GetValue(jsonOpt),
+            Plain = pr.GetValue(plainOpt),
         };
 
         // Default action — invoked when the user types `oahu-cli` with no subcommand.
@@ -79,6 +93,10 @@ internal static class RootCommandFactory
         root.Subcommands.Add(TuiCommand.Create());
         root.Subcommands.Add(DoctorCommand.Create(ResolveGlobals, loggerFactory));
         root.Subcommands.Add(UiPreviewCommand.Create(ResolveGlobals));
+        root.Subcommands.Add(ConfigCommand.Create(ResolveGlobals));
+        root.Subcommands.Add(QueueCommand.Create(ResolveGlobals));
+        root.Subcommands.Add(HistoryCommand.Create(ResolveGlobals));
+        root.Subcommands.Add(CompletionCommand.Create());
 
         return root;
     }

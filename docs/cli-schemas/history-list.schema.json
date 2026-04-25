@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oahu.invalid/cli-schemas/v1/history-list.schema.json",
+  "title": "oahu-cli history list",
+  "type": "object",
+  "required": ["_schemaVersion", "resource", "count", "items"],
+  "properties": {
+    "_schemaVersion": { "type": "string", "const": "1" },
+    "resource": { "type": "string", "const": "history" },
+    "count": { "type": "integer", "minimum": 0 },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/record" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "record": {
+      "type": "object",
+      "required": ["id", "asin", "title", "status", "startedAt", "completedAt"],
+      "properties": {
+        "id": { "type": "string" },
+        "asin": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "string", "enum": ["Completed", "Failed", "Canceled"] },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "errorMessage": { "type": ["string", "null"] },
+        "profileAlias": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

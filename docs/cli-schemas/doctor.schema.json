@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oahu.invalid/cli-schemas/v1/doctor.schema.json",
+  "title": "oahu-cli doctor",
+  "description": "Schema for `oahu-cli doctor --json`. The shape mirrors what is rendered by the existing pretty/JSON writers in DoctorRender.",
+  "type": "object",
+  "required": ["_schemaVersion", "hasErrors", "hasWarnings", "checks"],
+  "properties": {
+    "_schemaVersion": { "type": ["integer", "string"] },
+    "hasErrors": { "type": "boolean" },
+    "hasWarnings": { "type": "boolean" },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "severity", "message"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "severity": { "type": "string", "enum": ["ok", "warn", "error"] },
+          "message": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": true
+}

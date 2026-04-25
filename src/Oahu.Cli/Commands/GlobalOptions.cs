@@ -19,4 +19,8 @@ internal sealed class GlobalOptions
     public string? LogDirOverride { get; init; }
 
     public string? LogLevelOverride { get; init; }
+
+    public bool Json { get; init; }
+
+    public bool Plain { get; init; }
 }
