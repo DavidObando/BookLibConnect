@@ -59,7 +59,9 @@ public class WidgetSnapshotTests : IDisposable
     {
         var c = NewConsole();
         new HintBar().Write(c);
-        Assert.Equal(Environment.NewLine, c.Output);
+
+        // Spectre TestConsole always emits "\n" regardless of host OS.
+        Assert.Equal("\n", c.Output);
     }
 
     [Fact]
