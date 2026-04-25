@@ -37,7 +37,13 @@ public sealed class UserDataLockTests
         {
             first.Acquire();
             Assert.True(File.Exists(path));
-            var pid = File.ReadAllText(path).Trim();
+
+            // The lock holder opens the file ReadWrite, so a concurrent reader
+            // must permit FileShare.Write. File.ReadAllText doesn't, hence the
+            // explicit FileStream + StreamReader here.
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var sr = new StreamReader(fs);
+            var pid = sr.ReadToEnd().Trim();
             Assert.Equal(Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture), pid);
         }
         Assert.False(File.Exists(path));
