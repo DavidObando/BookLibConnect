@@ -97,6 +97,7 @@ internal static class RootCommandFactory
         root.Subcommands.Add(AuthCommand.Create(ResolveGlobals));
         root.Subcommands.Add(LibraryCommand.Create(ResolveGlobals));
         root.Subcommands.Add(QueueCommand.Create(ResolveGlobals));
+        root.Subcommands.Add(DownloadCommand.Create(ResolveGlobals));
         root.Subcommands.Add(HistoryCommand.Create(ResolveGlobals));
         root.Subcommands.Add(CompletionCommand.Create());
 
