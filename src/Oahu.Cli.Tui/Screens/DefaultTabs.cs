@@ -1,14 +1,18 @@
 using System;
 using System.Collections.Generic;
+using Oahu.Cli.App.Auth;
+using Oahu.Cli.App.Config;
+using Oahu.Cli.App.Library;
 using Oahu.Cli.Tui.Shell;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
 namespace Oahu.Cli.Tui.Screens;
 
-/// <summary>The six default tabs shipped in Phase 6.</summary>
+/// <summary>The six default tabs.</summary>
 public static class DefaultTabs
 {
+    /// <summary>Create placeholder tabs (Phase 6 fallback).</summary>
     public static IReadOnlyList<ITabScreen> Create() => new ITabScreen[]
     {
         new PlaceholderScreen
@@ -54,12 +58,50 @@ public static class DefaultTabs
             Body = "Edit configuration, switch theme, manage profiles.",
         },
     };
+
+    /// <summary>
+    /// Create real tabs with services wired in. Home, Library, and Settings
+    /// get real implementations; Queue, Jobs, History remain placeholders
+    /// until Phase 8.
+    /// </summary>
+    public static IReadOnlyList<ITabScreen> CreateReal(
+        AppShellState state,
+        Func<IAuthService> authServiceFactory,
+        Func<ILibraryService> libraryServiceFactory,
+        Func<IConfigService> configServiceFactory)
+    {
+        return new ITabScreen[]
+        {
+            new HomeScreen(state, authServiceFactory, libraryServiceFactory),
+            new LibraryScreen(state, libraryServiceFactory),
+            new PlaceholderScreen
+            {
+                Title = "Queue",
+                NumberKey = '3',
+                Heading = "Queue",
+                Body = "Ordered list of jobs waiting to run; reorder, remove, start.",
+            },
+            new PlaceholderScreen
+            {
+                Title = "Jobs",
+                NumberKey = '4',
+                Heading = "Jobs",
+                Body = "Live in-flight jobs, with download / decrypt / mux / export progress.",
+            },
+            new PlaceholderScreen
+            {
+                Title = "History",
+                NumberKey = '5',
+                Heading = "History",
+                Body = "Completed and failed jobs; re-run, view error, open file.",
+            },
+            new SettingsScreen(configServiceFactory),
+        };
+    }
 }
 
 /// <summary>
-/// Phase 6 placeholder screens. Each is a simple "this is the X tab"
-/// rendering wrapped in the same body Panel; phases 7 and 8 swap them
-/// for the real implementations.
+/// Placeholder screens for tabs not yet implemented.
 /// </summary>
 internal sealed class PlaceholderScreen : ITabScreen
 {

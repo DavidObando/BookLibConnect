@@ -32,4 +32,10 @@ public interface ITabScreen
 
     /// <summary>Hints contributed by this screen (mixed into the global hint bar).</summary>
     IEnumerable<KeyValuePair<string, string?>> Hints { get; }
+
+    /// <summary>
+    /// True when the screen is loading data asynchronously. The shell
+    /// switches to a timed-poll input loop so the spinner animates.
+    /// </summary>
+    bool IsLoading => false;
 }

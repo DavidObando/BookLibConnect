@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Oahu.Cli.Tui.Auth;
 using Oahu.Cli.Tui.Logging;
 using Oahu.Cli.Tui.Screens;
 using Oahu.Cli.Tui.Widgets;
@@ -14,18 +15,15 @@ namespace Oahu.Cli.Tui.Shell;
 /// The top-level TUI controller, per design §3.4 / §6 / §10 and the TUI-exploration §1.
 ///
 /// Phase 6 deliverable: an empty-but-navigable shell.
+/// Phase 7 additions: modal overlays, mutable header state, broker polling.
 ///
 ///   • Header (app name, profile/region, activity verb, version)
 ///   • Tab strip (Home, Library, Queue, Jobs, History, Settings)
-///   • Body (delegated to <see cref="ITabScreen.Render"/>)
+///   • Body (delegated to <see cref="ITabScreen.Render"/>, or a modal overlay)
 ///   • Pinned hint bar (global + per-screen hints)
 ///   • Logs overlay (toggled with <c>L</c>)
 ///   • Progressive Ctrl+C state machine
 ///   • Alt-screen entry / exit with full restoration on crash
-///
-/// Real screens for sign-in, library, jobs, etc. land in phases 7 and 8;
-/// this class is a stable container that they plug into via
-/// <see cref="ITabScreen"/>.
 /// </summary>
 public sealed class AppShell
 {
@@ -37,6 +35,24 @@ public sealed class AppShell
     {
         /// <summary>Block until a key is available, then return it. Return null to signal EOF (exit).</summary>
         ConsoleKeyInfo? ReadKey();
+
+        /// <summary>
+        /// Try to read a key within <paramref name="millisecondsTimeout"/> ms.
+        /// Returns false (and key = default) if no key was pressed before the timeout.
+        /// Default implementation falls back to blocking <see cref="ReadKey"/>.
+        /// </summary>
+        bool TryReadKey(int millisecondsTimeout, out ConsoleKeyInfo key)
+        {
+            // Default: blocking read (for tests / simple readers).
+            var result = ReadKey();
+            if (result is null)
+            {
+                key = default;
+                return false;
+            }
+            key = result.Value;
+            return true;
+        }
     }
 
     private readonly IAnsiConsole console;
@@ -45,9 +61,13 @@ public sealed class AppShell
     private readonly CtrlCState ctrlC;
 
     private int activeTab;
+    private int lastRenderedTab = -1;
     private bool logsOpen;
     private string? toast;
     private DateTimeOffset? toastShownAt;
+    private IModal? activeModal;
+    private TuiCallbackBroker? activeBroker;
+    private bool needsTimedRefresh;
 
     public AppShell(IAnsiConsole console, AppShellOptions? options = null)
     {
@@ -68,6 +88,32 @@ public sealed class AppShell
 
     public IReadOnlyList<ITabScreen> Tabs => tabs;
 
+    public IModal? ActiveModal => activeModal;
+
+    /// <summary>Show a modal overlay. Keys route to the modal until it completes.</summary>
+    public void ShowModal(IModal modal)
+    {
+        activeModal = modal ?? throw new ArgumentNullException(nameof(modal));
+    }
+
+    /// <summary>Dismiss the active modal.</summary>
+    public void DismissModal()
+    {
+        activeModal = null;
+    }
+
+    /// <summary>Set a broker to poll for modal requests from background auth.</summary>
+    public void SetBroker(TuiCallbackBroker? broker) => activeBroker = broker;
+
+    /// <summary>Switch to a specific tab by index.</summary>
+    public void SwitchTab(int index)
+    {
+        if (index >= 0 && index < tabs.Count)
+        {
+            activeTab = index;
+        }
+    }
+
     /// <summary>
     /// Run the shell against an injected key reader. Returns the process exit code
     /// (always <c>0</c> for a clean quit; <c>130</c> for a Ctrl+C exit).
@@ -78,6 +124,28 @@ public sealed class AppShell
         Render();
         while (true)
         {
+            // Poll for broker modal requests before blocking for input.
+            PollBroker();
+
+            if (needsTimedRefresh)
+            {
+                // When a screen is loading, use a timed read so the render
+                // loop can re-render the spinner (~100ms ticks).
+                if (keyReader.TryReadKey(100, out var timedKey))
+                {
+                    var timedAction = Dispatch(timedKey);
+                    switch (timedAction)
+                    {
+                        case ShellAction.Exit:
+                            return 0;
+                        case ShellAction.ExitSigInt:
+                            return 130;
+                    }
+                }
+                Render();
+                continue;
+            }
+
             var key = keyReader.ReadKey();
             if (key is null)
             {
@@ -114,11 +182,18 @@ public sealed class AppShell
         var isCtrlC = key.Key == ConsoleKey.C && (key.Modifiers & ConsoleModifiers.Control) != 0;
         if (isCtrlC)
         {
+            // If a modal is open, first Ctrl+C dismisses it.
+            if (activeModal is not null)
+            {
+                DismissModal();
+                ctrlC.Reset();
+                return ShellAction.Continue;
+            }
+
             switch (ctrlC.OnPress())
             {
                 case CtrlCAction.CancelActiveJob:
                 case CtrlCAction.CloseDialog:
-                    // Phase 6 has no active jobs / dialogs; fall through to prompt.
                     toast = "Press Ctrl+C again to quit · Esc to stay";
                     toastShownAt = DateTimeOffset.UtcNow;
                     return ShellAction.Continue;
@@ -129,6 +204,23 @@ public sealed class AppShell
                 case CtrlCAction.Exit:
                     return ShellAction.ExitSigInt;
             }
+        }
+
+        // Modal overlay gets keys first.
+        if (activeModal is not null)
+        {
+            if (key.Key == ConsoleKey.Escape)
+            {
+                DismissModal();
+                return ShellAction.Continue;
+            }
+            activeModal.HandleKey(key);
+            if (activeModal.IsComplete)
+            {
+                // The caller (sign-in flow, etc.) reads the result.
+                // Modal stays accessible via ActiveModal until explicitly dismissed.
+            }
+            return ShellAction.Continue;
         }
 
         // Logs overlay swallows its own input first.
@@ -154,6 +246,15 @@ public sealed class AppShell
                 ctrlC.Reset();
                 return ShellAction.Continue;
             }
+        }
+
+        // Delegate to the active screen FIRST — when a screen is capturing
+        // input (e.g. search mode, text editing) it returns true and global
+        // navigation keys are suppressed. If the screen doesn't consume the
+        // key, fall through to the global handlers below.
+        if (tabs[activeTab].HandleKey(key))
+        {
+            return ShellAction.Continue;
         }
 
         // Number keys 1..9 jump to that tab.
@@ -190,13 +291,27 @@ public sealed class AppShell
                 break;
         }
 
-        // Delegate to the active screen.
-        if (tabs[activeTab].HandleKey(key))
-        {
-            return ShellAction.Continue;
-        }
-
         return ShellAction.Continue;
+    }
+
+    private void PollBroker()
+    {
+        if (activeBroker is null)
+        {
+            return;
+        }
+        if (activeModal is not null)
+        {
+            return;
+        }
+        if (activeBroker.TryDequeue(out var request) && request is not null)
+        {
+            var modal = ModalFactory.CreateFromChallenge(request);
+            if (modal is not null)
+            {
+                ShowModal(modal);
+            }
+        }
     }
 
     private void Render()
@@ -206,14 +321,40 @@ public sealed class AppShell
         var height = Math.Max(10, console.Profile.Height);
         // Leave room for chrome (header + tabs + spacers + hint bar = ~6 rows).
         var bodyHeight = Math.Max(5, height - 6);
+        lastRenderedTab = activeTab;
 
-        AltScreen.Clear();
+        // Choose rendering target. In a real terminal, render to a string
+        // buffer so we can inject \e[K (erase-to-end-of-line) before every
+        // newline and write the whole frame atomically — no flicker and no
+        // residual characters from longer previous lines.
+        // In tests (stdout redirected), render through the injected console
+        // so that test assertions on console.Output keep working.
+        var useBuffer = !Console.IsOutputRedirected;
+        StringWriter? sw = null;
+        IAnsiConsole target;
+
+        if (useBuffer)
+        {
+            sw = new StringWriter();
+            target = AnsiConsole.Create(new AnsiConsoleSettings
+            {
+                Ansi = AnsiSupport.Yes,
+                ColorSystem = ColorSystemSupport.TrueColor,
+                Out = new AnsiConsoleOutput(sw),
+                Interactive = InteractionSupport.No,
+            });
+            target.Profile.Width = width;
+        }
+        else
+        {
+            target = console;
+        }
 
         // Header.
         var headerText = BuildHeader(width);
-        console.Write(new Markup(headerText));
-        console.WriteLine();
-        console.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
+        target.Write(new Markup(headerText));
+        target.WriteLine();
+        target.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
 
         // Tabs.
         new TabStrip
@@ -221,33 +362,50 @@ public sealed class AppShell
             Titles = tabs.Select(t => t.Title).ToArray(),
             ActiveIndex = activeTab,
             UseAscii = options.UseAscii,
-        }.Write(console);
-        console.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
+        }.Write(target);
+        target.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
 
-        // Body (or logs overlay).
-        if (logsOpen && options.LogBuffer is { } buf)
+        // Body: modal > logs > tab screen.
+        if (activeModal is not null)
         {
-            console.Write(RenderLogsOverlay(buf, width, bodyHeight));
+            target.Write(activeModal.Render(width, bodyHeight));
+        }
+        else if (logsOpen && options.LogBuffer is { } buf)
+        {
+            target.Write(RenderLogsOverlay(buf, width, bodyHeight));
         }
         else
         {
-            console.Write(screen.Render(width, bodyHeight));
+            target.Write(screen.Render(width, bodyHeight));
         }
 
         // Hint bar — global + per-screen + toast.
-        console.WriteLine();
-        console.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
+        target.WriteLine();
+        target.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
 
         if (toast is not null)
         {
             var c = Tokens.Tokens.StatusWarning.Value.ToMarkup();
-            console.Write(new Markup($"[{c}] ! {Markup.Escape(toast)}[/]"));
-            console.WriteLine();
+            target.Write(new Markup($"[{c}] ! {Markup.Escape(toast)}[/]"));
+            target.WriteLine();
         }
         else
         {
-            BuildHintBar(screen).Write(console);
+            BuildHintBar(screen).Write(target);
         }
+
+        if (useBuffer && sw is not null)
+        {
+            // Inject \e[K before every \n so each line clears trailing chars,
+            // then write \e[H (home) + frame + \e[K\e[J (erase rest) atomically.
+            var frame = sw.ToString().Replace("\n", "\u001b[K\n");
+            Console.Out.Write($"\u001b[H{frame}\u001b[K\u001b[J");
+            Console.Out.Flush();
+        }
+
+        // If the active screen is loading data, switch to a timed poll so
+        // the spinner animates and the UI stays responsive.
+        needsTimedRefresh = screen.IsLoading || (activeBroker?.HasPending ?? false);
     }
 
     private string BuildHeader(int width)
@@ -257,13 +415,24 @@ public sealed class AppShell
         var tertiary = Tokens.Tokens.TextTertiary.Value.ToMarkup();
         var brand = Tokens.Tokens.Brand.Value.ToMarkup();
 
-        var profile = string.IsNullOrEmpty(options.Profile)
-            ? "(not signed in)"
-            : !string.IsNullOrEmpty(options.Region)
-                ? $"{options.Profile}@{options.Region}"
-                : options.Profile;
+        string profile;
+        string verb;
 
-        var verb = options.ActivityVerb?.Invoke();
+        if (options.State is { } st)
+        {
+            profile = st.ProfileDisplay;
+            verb = st.ActivityVerb;
+        }
+        else
+        {
+            profile = string.IsNullOrEmpty(options.Profile)
+                ? "(not signed in)"
+                : !string.IsNullOrEmpty(options.Region)
+                    ? $"{options.Profile}@{options.Region}"
+                    : options.Profile;
+            verb = options.ActivityVerb?.Invoke() ?? "idle";
+        }
+
         if (string.IsNullOrEmpty(verb))
         {
             verb = "idle";
@@ -333,6 +502,30 @@ public sealed class AppShell
                 return null;
             }
         }
+
+        public bool TryReadKey(int millisecondsTimeout, out ConsoleKeyInfo key)
+        {
+            try
+            {
+                var deadline = Environment.TickCount64 + millisecondsTimeout;
+                while (Environment.TickCount64 < deadline)
+                {
+                    if (Console.KeyAvailable)
+                    {
+                        key = Console.ReadKey(intercept: true);
+                        return true;
+                    }
+                    System.Threading.Thread.Sleep(10);
+                }
+                key = default;
+                return false;
+            }
+            catch (InvalidOperationException)
+            {
+                key = default;
+                return false;
+            }
+        }
     }
 }
 
@@ -347,4 +540,101 @@ public enum ShellAction
 
     /// <summary>Ctrl+C exit, return code 130.</summary>
     ExitSigInt,
+}
+
+/// <summary>Creates modal overlays from broker challenge requests.</summary>
+internal static class ModalFactory
+{
+    public static IModal? CreateFromChallenge(ModalRequest request)
+    {
+        return request.Challenge switch
+        {
+            App.Auth.ExternalLoginChallenge ext => new ExternalLoginModalAdapter(ext.LoginUri, request),
+            App.Auth.MfaChallenge => new ChallengeModalAdapter(
+                new ChallengeModal { Title = "MFA Required", Instructions = "Enter the code sent to your device:" },
+                request),
+            App.Auth.CvfChallenge => new ChallengeModalAdapter(
+                new ChallengeModal { Title = "Verification Required", Instructions = "Enter the verification code:" },
+                request),
+            App.Auth.CaptchaChallenge => new ChallengeModalAdapter(
+                new ChallengeModal { Title = "CAPTCHA Required", Instructions = "Enter the text shown in the CAPTCHA:" },
+                request),
+            App.Auth.ApprovalChallenge => new ChallengeModalAdapter(
+                new ChallengeModal { Title = "Approval Required", Instructions = "Approve the sign-in on your trusted device, then press Enter.", ApprovalOnly = true },
+                request),
+            _ => null,
+        };
+    }
+
+    /// <summary>Wraps ExternalLoginModal and sets the completion source when done.</summary>
+    private sealed class ExternalLoginModalAdapter : IModal
+    {
+        private readonly ExternalLoginModal inner;
+        private readonly ModalRequest request;
+
+        public ExternalLoginModalAdapter(Uri loginUri, ModalRequest request)
+        {
+            inner = new ExternalLoginModal(loginUri);
+            this.request = request;
+        }
+
+        public bool IsComplete => inner.IsComplete;
+
+        public bool WasCancelled => inner.WasCancelled;
+
+        public IRenderable Render(int width, int height) => inner.Render(width, height);
+
+        public bool HandleKey(ConsoleKeyInfo key)
+        {
+            var result = inner.HandleKey(key);
+            if (inner.IsComplete)
+            {
+                if (inner.WasCancelled)
+                {
+                    request.Completion.TrySetCanceled();
+                }
+                else if (inner.Result is not null)
+                {
+                    request.Completion.TrySetResult(inner.Result.ToString());
+                }
+            }
+            return result;
+        }
+    }
+
+    /// <summary>Wraps ChallengeModal and sets the completion source when done.</summary>
+    private sealed class ChallengeModalAdapter : IModal
+    {
+        private readonly ChallengeModal inner;
+        private readonly ModalRequest request;
+
+        public ChallengeModalAdapter(ChallengeModal inner, ModalRequest request)
+        {
+            this.inner = inner;
+            this.request = request;
+        }
+
+        public bool IsComplete => inner.IsComplete;
+
+        public bool WasCancelled => inner.WasCancelled;
+
+        public IRenderable Render(int width, int height) => inner.Render(width, height);
+
+        public bool HandleKey(ConsoleKeyInfo key)
+        {
+            var result = inner.HandleKey(key);
+            if (inner.IsComplete)
+            {
+                if (inner.WasCancelled)
+                {
+                    request.Completion.TrySetCanceled();
+                }
+                else if (inner.Result is not null)
+                {
+                    request.Completion.TrySetResult(inner.Result);
+                }
+            }
+            return result;
+        }
+    }
 }
