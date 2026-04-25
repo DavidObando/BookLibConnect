@@ -30,6 +30,16 @@ public static class RootCommandFactory
         {
             Description = "Enable verbose logging to stderr.",
         };
+        var forceOpt = new Option<bool>("--force", "-f")
+        {
+            Description = "Bypass safety prompts on destructive commands (e.g. queue clear, auth logout).",
+            Recursive = true,
+        };
+        var dryRunOpt = new Option<bool>("--dry-run", "-n")
+        {
+            Description = "Print what the command would do, then exit without making changes.",
+            Recursive = true,
+        };
         var noColorOpt = new Option<bool>("--no-color")
         {
             Description = "Disable ANSI colour output (also honours the NO_COLOR env var).",
@@ -64,6 +74,8 @@ public static class RootCommandFactory
         var root = new RootCommand("Oahu CLI — command-mode + TUI front end for the Oahu Audible toolkit.");
         root.Options.Add(quietOpt);
         root.Options.Add(verboseOpt);
+        root.Options.Add(forceOpt);
+        root.Options.Add(dryRunOpt);
         root.Options.Add(noColorOpt);
         root.Options.Add(asciiOpt);
         root.Options.Add(configDirOpt);
@@ -76,6 +88,8 @@ public static class RootCommandFactory
         {
             Quiet = pr.GetValue(quietOpt),
             Verbose = pr.GetValue(verboseOpt),
+            Force = pr.GetValue(forceOpt),
+            DryRun = pr.GetValue(dryRunOpt),
             ForceNoColor = pr.GetValue(noColorOpt),
             UseAscii = pr.GetValue(asciiOpt) || string.Equals(Environment.GetEnvironmentVariable("OAHU_ASCII_ICONS"), "1", StringComparison.Ordinal),
             ConfigDirOverride = pr.GetValue(configDirOpt),

@@ -47,6 +47,10 @@ public static class ConvertCommand
         {
             Description = "Profile alias to use (defaults to the active profile).",
         };
+        var concurrencyOpt = new Option<int?>("--concurrency")
+        {
+            Description = "Maximum parallel jobs (default: 1). Must be >= 1.",
+        };
 
         var cmd = new Command(
             "convert",
@@ -55,6 +59,7 @@ public static class ConvertCommand
             asinArg,
             outputDirOpt,
             profileOpt,
+            concurrencyOpt,
         };
 
         cmd.SetAction(async (parse, ct) =>
@@ -63,6 +68,12 @@ public static class ConvertCommand
             var asins = parse.GetValue(asinArg) ?? Array.Empty<string>();
             var outputDir = parse.GetValue(outputDirOpt);
             var profile = parse.GetValue(profileOpt);
+            var concurrency = parse.GetValue(concurrencyOpt);
+            if (concurrency is { } cVal && cVal < 1)
+            {
+                CliEnvironment.Error.WriteLine("oahu-cli: --concurrency must be >= 1.");
+                return 2;
+            }
 
             var distinct = asins
                 .Select(s => s.Trim())
@@ -89,6 +100,17 @@ public static class ConvertCommand
                 .ToList();
 
             var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
+
+            if (globals.DryRun)
+            {
+                DownloadCommand.EmitDryRunPlan(writer, requests);
+                return 0;
+            }
+
+            if (concurrency is { } cParallelism)
+            {
+                CliServiceFactory.OverrideMaxParallelism = cParallelism;
+            }
             var jobService = CliServiceFactory.JobServiceFactory();
             return await DownloadCommand.RunAsync(jobService, requests, writer, ct).ConfigureAwait(false);
         });

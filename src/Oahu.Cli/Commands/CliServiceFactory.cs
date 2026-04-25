@@ -44,6 +44,14 @@ public static class CliServiceFactory
     };
 
     /// <summary>
+    /// Per-invocation override for <see cref="JobScheduler"/> parallelism.
+    /// Set <i>before</i> the first call to <see cref="JobServiceFactory"/> resolves
+    /// the singleton (e.g. by a command's SetAction handler before invoking
+    /// <c>RunAsync</c>). Reset by <see cref="Reset"/>.
+    /// </summary>
+    public static int? OverrideMaxParallelism { get; set; }
+
+    /// <summary>
     /// Resolves the process-singleton <see cref="IJobService"/>. Default:
     /// <see cref="JobScheduler"/> with <see cref="AudibleJobExecutor"/> and a
     /// <see cref="JsonlHistoryStore"/> at the same <c>history.jsonl</c> path
@@ -62,7 +70,10 @@ public static class CliServiceFactory
             var historyPath = Path.Combine(CliPaths.SharedUserDataDir, "history.jsonl");
             Directory.CreateDirectory(Path.GetDirectoryName(historyPath)!);
             var history = new JsonlHistoryStore(historyPath);
-            jobSingleton = new JobScheduler(new AudibleJobExecutor(), history);
+            var options = OverrideMaxParallelism is { } p
+                ? new JobSchedulerOptions { MaxParallelism = p }
+                : null;
+            jobSingleton = new JobScheduler(new AudibleJobExecutor(), history, options);
             return jobSingleton;
         }
     };
@@ -79,6 +90,7 @@ public static class CliServiceFactory
                 _ = iad.DisposeAsync().AsTask();
             }
             jobSingleton = null;
+            OverrideMaxParallelism = null;
         }
     }
 }

@@ -61,6 +61,10 @@ public static class DownloadCommand
         {
             Description = "Override the export directory (only used with --export aax).",
         };
+        var concurrencyOpt = new Option<int?>("--concurrency")
+        {
+            Description = "Maximum parallel downloads (default: 1). Must be >= 1.",
+        };
 
         var cmd = new Command("download", "Download (and decrypt) one or more audiobooks by ASIN.")
         {
@@ -70,6 +74,7 @@ public static class DownloadCommand
             fromQueueOpt,
             exportOpt,
             outputDirOpt,
+            concurrencyOpt,
         };
 
         cmd.SetAction(async (parse, ct) =>
@@ -81,6 +86,12 @@ public static class DownloadCommand
             var qualityRaw = parse.GetValue(qualityOpt);
             var exportRaw = parse.GetValue(exportOpt);
             var outputDir = parse.GetValue(outputDirOpt);
+            var concurrency = parse.GetValue(concurrencyOpt);
+            if (concurrency is { } cVal && cVal < 1)
+            {
+                CliEnvironment.Error.WriteLine("oahu-cli: --concurrency must be >= 1.");
+                return 2;
+            }
 
             DownloadQuality? quality = null;
             if (!string.IsNullOrEmpty(qualityRaw))
@@ -127,12 +138,47 @@ public static class DownloadCommand
             }
 
             var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
+
+            if (globals.DryRun)
+            {
+                EmitDryRunPlan(writer, requests);
+                return 0;
+            }
+
+            if (concurrency is { } cParallelism)
+            {
+                CliServiceFactory.OverrideMaxParallelism = cParallelism;
+            }
             var jobService = CliServiceFactory.JobServiceFactory();
 
             return await RunAsync(jobService, requests, writer, ct).ConfigureAwait(false);
         });
 
         return cmd;
+    }
+
+    public static void EmitDryRunPlan(IOutputWriter writer, IReadOnlyList<JobRequest> requests)
+    {
+        var rows = new List<IReadOnlyDictionary<string, object?>>(requests.Count);
+        foreach (var r in requests)
+        {
+            rows.Add(new Dictionary<string, object?>
+            {
+                ["asin"] = r.Asin,
+                ["title"] = r.Title,
+                ["quality"] = r.Quality.ToString(),
+                ["profile"] = r.ProfileAlias,
+                ["exportToAax"] = r.ExportToAax,
+                ["outputDir"] = r.OutputDir,
+            });
+        }
+        writer.WriteCollection("download-plan", rows, new[]
+        {
+            new OutputColumn("asin", "ASIN"),
+            new OutputColumn("title", "TITLE"),
+            new OutputColumn("quality", "QUALITY"),
+            new OutputColumn("exportToAax", "EXPORT"),
+        });
     }
 
     public static async Task<int> RunAsync(
@@ -218,6 +264,11 @@ public static class DownloadCommand
 
         if (writer.Context.Format == OutputFormat.Json)
         {
+            // --quiet on JSON: still emit the final summary, but suppress per-update lines.
+            if (writer.Context.Quiet)
+            {
+                return;
+            }
             writer.WriteResource(UpdateResource, new Dictionary<string, object?>
             {
                 ["jobId"] = u.JobId,
