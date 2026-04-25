@@ -51,6 +51,35 @@ public sealed record JobUpdate
     public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
 }
 
+/// <summary>
+/// Latest-known status of an in-flight job. Returned by <c>IJobService.GetSnapshotAsync</c> /
+/// <c>ListActiveAsync</c> so HTTP/MCP clients can poll progress without missing the early
+/// <c>Queued</c>/<c>Licensing</c> updates that may fire before they connect.
+/// </summary>
+public sealed record JobSnapshot
+{
+    public required string JobId { get; init; }
+
+    public required string Asin { get; init; }
+
+    public required string Title { get; init; }
+
+    public required JobPhase Phase { get; init; }
+
+    public double? Progress { get; init; }
+
+    public string? Message { get; init; }
+
+    public required DateTimeOffset StartedAt { get; init; }
+
+    /// <summary>Timestamp of the most recent <see cref="JobUpdate"/> applied to this snapshot.</summary>
+    public required DateTimeOffset UpdatedAt { get; init; }
+
+    public DownloadQuality? Quality { get; init; }
+
+    public string? ProfileAlias { get; init; }
+}
+
 /// <summary>Snapshot persisted to <c>history.jsonl</c> when a job leaves a terminal state.</summary>
 public sealed record JobRecord
 {

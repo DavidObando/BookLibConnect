@@ -24,6 +24,16 @@ public interface IJobService
     /// <summary>Cooperatively cancel a running or queued job. Returns true if the job was found.</summary>
     bool Cancel(string jobId);
 
+    /// <summary>
+    /// Latest-known status of one in-flight job, or null if the job is unknown to the
+    /// scheduler (either it has already reached a terminal state and rolled to history,
+    /// or the id was never submitted). Lets HTTP/MCP clients poll without subscribing.
+    /// </summary>
+    JobSnapshot? GetSnapshot(string jobId);
+
+    /// <summary>Latest-known status of every job currently tracked by the scheduler.</summary>
+    IReadOnlyList<JobSnapshot> ListActive();
+
     /// <summary>Read the on-disk history (terminal-state job records).</summary>
     IAsyncEnumerable<JobRecord> ReadHistoryAsync(CancellationToken cancellationToken = default);
 }

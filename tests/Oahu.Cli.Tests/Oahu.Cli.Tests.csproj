@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\Oahu.Cli\Oahu.Cli.csproj" />
     <ProjectReference Include="..\..\src\Oahu.Cli.App\Oahu.Cli.App.csproj" />
     <ProjectReference Include="..\..\src\Oahu.Cli.Tui\Oahu.Cli.Tui.csproj" />
+    <ProjectReference Include="..\..\src\Oahu.Cli.Server\Oahu.Cli.Server.csproj" />
   </ItemGroup>
 
 </Project>

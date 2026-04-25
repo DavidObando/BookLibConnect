@@ -114,6 +114,7 @@ public static class RootCommandFactory
         root.Subcommands.Add(DownloadCommand.Create(ResolveGlobals));
         root.Subcommands.Add(ConvertCommand.Create(ResolveGlobals));
         root.Subcommands.Add(HistoryCommand.Create(ResolveGlobals));
+        root.Subcommands.Add(ServeCommand.Create(ResolveGlobals));
         root.Subcommands.Add(CompletionCommand.Create());
 
         return root;

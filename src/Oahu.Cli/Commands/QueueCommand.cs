@@ -47,7 +47,7 @@ public static class QueueCommand
         c.SetAction(async (parse, ct) =>
         {
             var globals = resolveGlobals(parse);
-            var svc = new JsonFileQueueService(QueuePath());
+            var svc = CliServiceFactory.QueueServiceFactory();
             var items = await svc.ListAsync(ct).ConfigureAwait(false);
             var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
             var rows = new List<IReadOnlyDictionary<string, object?>>(items.Count);
@@ -80,7 +80,7 @@ public static class QueueCommand
             var globals = resolveGlobals(parse);
             var asins = parse.GetValue(asinArg) ?? Array.Empty<string>();
             var title = parse.GetValue(titleOpt);
-            var svc = new JsonFileQueueService(QueuePath());
+            var svc = CliServiceFactory.QueueServiceFactory();
             var added = 0;
             var skipped = 0;
 
@@ -125,7 +125,7 @@ public static class QueueCommand
         {
             var globals = resolveGlobals(parse);
             var asins = parse.GetValue(asinArg) ?? Array.Empty<string>();
-            var svc = new JsonFileQueueService(QueuePath());
+            var svc = CliServiceFactory.QueueServiceFactory();
             var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
 
             if (globals.DryRun)
@@ -186,7 +186,7 @@ public static class QueueCommand
         {
             var globals = resolveGlobals(parse);
             var force = globals.Force;
-            var svc = new JsonFileQueueService(QueuePath());
+            var svc = CliServiceFactory.QueueServiceFactory();
             var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
 
             if (globals.DryRun)
