@@ -15,9 +15,9 @@ public static class RootCommandFactory
 {
     /// <summary>
     /// Hook for tests / Phase 6+: replace this delegate to launch the real TUI shell.
-    /// The default implementation calls <see cref="TuiCommand.Run"/>.
+    /// The default implementation calls <see cref="TuiCommand.Run(GlobalOptions)"/>.
     /// </summary>
-    public static Func<int> TuiEntryPoint { get; set; } = TuiCommand.Run;
+    public static Func<GlobalOptions, int> TuiEntryPoint { get; set; } = TuiCommand.Run;
 
     public static RootCommand Create(Func<ILoggerFactory> loggerFactory)
     {
@@ -76,6 +76,11 @@ public static class RootCommandFactory
             Description = "Emit plain text output (tab-separated, no colour). Auto-applied on non-TTY stdout.",
             Recursive = true,
         };
+        var themeOpt = new Option<string?>("--theme")
+        {
+            Description = "Override the TUI theme for this invocation (Default | Mono | HighContrast | Colorblind).",
+            Recursive = true,
+        };
 
         // --json and --plain are mutually exclusive renderers.
         jsonOpt.Validators.Add(result =>
@@ -98,6 +103,7 @@ public static class RootCommandFactory
         root.Options.Add(logLevelOpt);
         root.Options.Add(jsonOpt);
         root.Options.Add(plainOpt);
+        root.Options.Add(themeOpt);
 
         GlobalOptions ResolveGlobals(ParseResult pr) => new()
         {
@@ -112,14 +118,15 @@ public static class RootCommandFactory
             LogLevelOverride = pr.GetValue(logLevelOpt),
             Json = pr.GetValue(jsonOpt),
             Plain = pr.GetValue(plainOpt),
+            ThemeOverride = pr.GetValue(themeOpt),
         };
 
         // Default action — invoked when the user types `oahu-cli` with no subcommand.
         // Per design §3.1, that means: enter TUI mode (or show a clear error if not a TTY).
-        root.SetAction(_ => TuiEntryPoint());
+        root.SetAction(parse => TuiEntryPoint(ResolveGlobals(parse)));
 
         // Subcommands.
-        root.Subcommands.Add(TuiCommand.Create());
+        root.Subcommands.Add(TuiCommand.Create(ResolveGlobals));
         root.Subcommands.Add(DoctorCommand.Create(ResolveGlobals, loggerFactory));
         root.Subcommands.Add(UiPreviewCommand.Create(ResolveGlobals));
         root.Subcommands.Add(ConfigCommand.Create(ResolveGlobals));

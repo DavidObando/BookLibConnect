@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Oahu.Cli.App.Library;
 using Oahu.Cli.App.Models;
+using Oahu.Cli.App.Queue;
 using Oahu.Cli.Tui.Shell;
 using Spectre.Console;
 using Spectre.Console.Rendering;
@@ -18,6 +19,7 @@ public sealed class LibraryScreen : ITabScreen
 {
     private readonly AppShellState state;
     private readonly Func<ILibraryService> libraryServiceFactory;
+    private readonly Func<IQueueService>? queueServiceFactory;
     private readonly HashSet<string> selected = new(StringComparer.Ordinal);
     private readonly TextInput searchInput = new() { Label = "/", MaxLength = 128 };
 
@@ -32,10 +34,22 @@ public sealed class LibraryScreen : ITabScreen
     private bool searchMode;
     private int spinnerTick;
 
+    private IAppShellNavigator? navigator;
+    private Task? enqueueTask;
+
     public LibraryScreen(AppShellState state, Func<ILibraryService> libraryServiceFactory)
+        : this(state, libraryServiceFactory, queueServiceFactory: null)
+    {
+    }
+
+    public LibraryScreen(
+        AppShellState state,
+        Func<ILibraryService> libraryServiceFactory,
+        Func<IQueueService>? queueServiceFactory)
     {
         this.state = state ?? throw new ArgumentNullException(nameof(state));
         this.libraryServiceFactory = libraryServiceFactory ?? throw new ArgumentNullException(nameof(libraryServiceFactory));
+        this.queueServiceFactory = queueServiceFactory;
     }
 
     public string Title => "Library";
@@ -66,8 +80,17 @@ public sealed class LibraryScreen : ITabScreen
                 yield return new("PgUp/Dn", "page");
                 yield return new("Space", "select");
                 yield return new("a", "select all");
+                if (queueServiceFactory is not null)
+                {
+                    yield return new("q", "enqueue");
+                }
             }
         }
+    }
+
+    public void OnActivated(IAppShellNavigator navigator)
+    {
+        this.navigator = navigator;
     }
 
     public IRenderable Render(int width, int height)
@@ -222,6 +245,8 @@ public sealed class LibraryScreen : ITabScreen
                     return true;
                 }
                 break;
+            case ConsoleKey.Q when key.Modifiers == 0:
+                return EnqueueSelection();
         }
 
         if (key.KeyChar == '/')
@@ -280,6 +305,96 @@ public sealed class LibraryScreen : ITabScreen
         }
     }
 
+    /// <summary>Background task spawned by <c>q</c>; exposed for tests.</summary>
+    internal Task? PendingEnqueue => enqueueTask;
+
+    /// <summary>
+    /// Enqueue the currently-selected items (or the cursor item when no
+    /// multi-selection is active) into the persistent queue and switch to
+    /// the Queue tab. No-op when no queue service was wired in.
+    /// </summary>
+    private bool EnqueueSelection()
+    {
+        if (queueServiceFactory is null)
+        {
+            return false;
+        }
+
+        IReadOnlyList<LibraryItem> targets;
+        if (selected.Count > 0)
+        {
+            var byAsin = filtered.Concat(allItems)
+                .GroupBy(i => i.Asin, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+            targets = selected
+                .Where(byAsin.ContainsKey)
+                .Select(a => byAsin[a])
+                .ToArray();
+        }
+        else if (cursor >= 0 && cursor < filtered.Count)
+        {
+            targets = new[] { filtered[cursor] };
+        }
+        else
+        {
+            return true;
+        }
+
+        if (targets.Count == 0)
+        {
+            return true;
+        }
+
+        var snapshot = targets;
+        var nav = navigator;
+        enqueueTask = Task.Run(async () =>
+        {
+            var added = 0;
+            var skipped = 0;
+            try
+            {
+                var queue = queueServiceFactory();
+                foreach (var item in snapshot)
+                {
+                    var entry = new QueueEntry
+                    {
+                        Asin = item.Asin,
+                        Title = item.Title,
+                    };
+                    if (await queue.AddAsync(entry).ConfigureAwait(false))
+                    {
+                        added++;
+                    }
+                    else
+                    {
+                        skipped++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                nav?.ShowToast($"Enqueue failed: {ex.Message}");
+                return;
+            }
+
+            var msg = (added, skipped) switch
+            {
+                (0, 0) => "Nothing to enqueue.",
+                (_, 0) => $"Enqueued {added} {Pluralize(added, "title", "titles")}.",
+                (0, _) => $"Already in queue ({skipped} skipped).",
+                _ => $"Enqueued {added} · {skipped} already in queue.",
+            };
+            nav?.ShowToast(msg);
+            if (added > 0)
+            {
+                nav?.SwitchToTab('3');
+            }
+        });
+
+        selected.Clear();
+        return true;
+    }
+
     private IRenderable RenderLoadingSpinner()
     {
         spinnerTick++;
@@ -335,4 +450,7 @@ public sealed class LibraryScreen : ITabScreen
 
     private static string Truncate(string s, int max) =>
         s.Length <= max ? s : s[..(max - 1)] + "…";
+
+    private static string Pluralize(int n, string singular, string plural) =>
+        n == 1 ? singular : plural;
 }

@@ -77,7 +77,7 @@ public static class DefaultTabs
         return new ITabScreen[]
         {
             new HomeScreen(state, authServiceFactory, libraryServiceFactory),
-            new LibraryScreen(state, libraryServiceFactory),
+            new LibraryScreen(state, libraryServiceFactory, queueServiceFactory),
             new QueueScreen(queueServiceFactory, jobServiceFactory),
             new JobsScreen(jobServiceFactory),
             new HistoryScreen(jobServiceFactory),

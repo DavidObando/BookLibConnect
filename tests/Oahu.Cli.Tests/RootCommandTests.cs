@@ -39,6 +39,7 @@ public class RootCommandTests
         Assert.Contains("--config-dir", names);
         Assert.Contains("--log-dir", names);
         Assert.Contains("--log-level", names);
+        Assert.Contains("--theme", names);
     }
 
     [Fact]

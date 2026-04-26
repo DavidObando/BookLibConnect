@@ -78,6 +78,56 @@ public class SettingsScreenTests : IDisposable
         Assert.NotNull(r);
     }
 
+    [Fact]
+    public void Cycle_Theme_Updates_Config_And_Live_Theme()
+    {
+        var svc = new FakeConfigService();
+        var screen = new SettingsScreen(() => svc);
+        screen.Reload();
+
+        // Move cursor to the Theme row (index 7).
+        for (var i = 0; i < 7; i++)
+        {
+            screen.HandleKey(Key('j', ConsoleKey.J));
+        }
+        Assert.Equal(7, screen.CursorIndex);
+
+        var startName = Theme.Current.Name;
+
+        // First cycle from "default" (null) → next available theme.
+        screen.HandleKey(Key(' ', ConsoleKey.Spacebar));
+        Assert.NotEqual(startName, Theme.Current.Name);
+
+        // Persist and confirm.
+        screen.Save();
+        Assert.NotNull(svc.Saved);
+        Assert.Equal(Theme.Current.Name, svc.Saved!.Theme);
+    }
+
+    [Fact]
+    public void Cycle_Theme_Wraps_Through_All_Available_Themes()
+    {
+        var svc = new FakeConfigService();
+        var screen = new SettingsScreen(() => svc);
+        screen.Reload();
+        for (var i = 0; i < 7; i++)
+        {
+            screen.HandleKey(Key('j', ConsoleKey.J));
+        }
+
+        var seen = new System.Collections.Generic.HashSet<string>();
+        for (var i = 0; i < Theme.Available.Count + 1; i++)
+        {
+            screen.HandleKey(Key(' ', ConsoleKey.Spacebar));
+            seen.Add(Theme.Current.Name);
+        }
+        // After cycling through all available, every name has been visited.
+        foreach (var t in Theme.Available)
+        {
+            Assert.Contains(t.Name, seen);
+        }
+    }
+
     private sealed class FakeConfigService : IConfigService
     {
         public string Path => "<memory>";

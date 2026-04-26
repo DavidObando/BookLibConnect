@@ -30,6 +30,14 @@ public sealed record OahuConfig
     public string? DefaultProfileAlias { get; init; }
 
     /// <summary>
+    /// Name of the active TUI theme (case-insensitive). Null/empty means "use the built-in
+    /// default". Validated against <c>Oahu.Cli.Tui.Themes.Theme.AvailableNames()</c> when set
+    /// via <c>oahu-cli config set theme</c>; the TUI silently falls back to the default if
+    /// the persisted value is unknown so a stale config never wedges startup.
+    /// </summary>
+    public string? Theme { get; init; }
+
+    /// <summary>
     /// When true, the credentials store falls back to a passphrase-protected file when no native keyring is available.
     /// Off by default — the design's stance is "fail closed" rather than silently store secrets in a file.
     /// </summary>

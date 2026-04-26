@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Oahu.Cli.App.Config;
 using Oahu.Cli.App.Models;
 using Oahu.Cli.Tui.Shell;
+using Oahu.Cli.Tui.Themes;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
@@ -14,11 +16,8 @@ namespace Oahu.Cli.Tui.Screens;
 /// </summary>
 public sealed class SettingsScreen : ITabScreen
 {
-    private readonly Func<IConfigService> configServiceFactory;
-    private OahuConfig config = OahuConfig.Default;
-    private bool loaded;
-    private int cursor;
-    private string? toast;
+    private const int ThemeFieldIndex = 7;
+    private const string DefaultThemeName = "Default";
 
     // Editable fields in display order.
     private static readonly string[] FieldNames =
@@ -30,7 +29,14 @@ public sealed class SettingsScreen : ITabScreen
         "Multi-part download",
         "Export to AAX",
         "Export directory",
+        "Theme",
     };
+
+    private readonly Func<IConfigService> configServiceFactory;
+    private OahuConfig config = OahuConfig.Default;
+    private bool loaded;
+    private int cursor;
+    private string? toast;
 
     public SettingsScreen(Func<IConfigService> configServiceFactory)
     {
@@ -162,8 +168,32 @@ public sealed class SettingsScreen : ITabScreen
             3 => config with { KeepEncryptedFiles = !config.KeepEncryptedFiles },
             4 => config with { MultiPartDownload = !config.MultiPartDownload },
             5 => config with { ExportToAax = !config.ExportToAax },
+            ThemeFieldIndex => CycleTheme(config),
             _ => config,
         };
+
+        if (cursor == ThemeFieldIndex)
+        {
+            // Apply immediately so the user sees the new palette take effect
+            // even before pressing 's' to persist.
+            try
+            {
+                Theme.Use(config.Theme ?? DefaultThemeName);
+            }
+            catch
+            {
+                // Defensive: should be impossible since CycleTheme only uses known names.
+            }
+        }
+    }
+
+    private static OahuConfig CycleTheme(OahuConfig cfg)
+    {
+        var names = Theme.AvailableNames().ToArray();
+        var current = cfg.Theme ?? DefaultThemeName;
+        var idx = Array.FindIndex(names, n => string.Equals(n, current, StringComparison.OrdinalIgnoreCase));
+        var next = names[(idx + 1) % names.Length];
+        return cfg with { Theme = next };
     }
 
     private string[] GetFieldValues()
@@ -177,6 +207,7 @@ public sealed class SettingsScreen : ITabScreen
             config.MultiPartDownload ? "on" : "off",
             config.ExportToAax ? "on" : "off",
             string.IsNullOrEmpty(config.ExportDirectory) ? "(none)" : config.ExportDirectory,
+            config.Theme ?? $"{DefaultThemeName} (default)",
         };
     }
 }

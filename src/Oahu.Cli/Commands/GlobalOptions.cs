@@ -27,4 +27,10 @@ public sealed class GlobalOptions
     public bool Json { get; init; }
 
     public bool Plain { get; init; }
+
+    /// <summary>
+    /// Optional theme name from the <c>--theme</c> root flag. When set it overrides
+    /// the persisted <c>OahuConfig.Theme</c> for the lifetime of the process.
+    /// </summary>
+    public string? ThemeOverride { get; init; }
 }
