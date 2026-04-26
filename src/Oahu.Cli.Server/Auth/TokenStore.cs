@@ -16,6 +16,9 @@ namespace Oahu.Cli.Server.Auth;
 /// </summary>
 public sealed class TokenStore
 {
+    private readonly object cacheLock = new();
+    private string? cached;
+
     /// <summary>Public for tests; production callers should use the no-arg constructor.</summary>
     public TokenStore(string? path = null)
     {
@@ -23,6 +26,27 @@ public sealed class TokenStore
     }
 
     public string Path { get; }
+
+    /// <summary>
+    /// Returns the cached token if any has been read this process; otherwise
+    /// reads (or creates) once and caches. Loopback HTTP middleware calls this on every
+    /// request, so avoid hitting the disk per-request and avoid the cold-start race in
+    /// <see cref="ReadOrCreate"/> (two concurrent ReadOrCreate calls could each see the
+    /// file as missing and write twice).
+    /// </summary>
+    public string GetCached()
+    {
+        var v = cached;
+        if (v is not null)
+        {
+            return v;
+        }
+        lock (cacheLock)
+        {
+            cached ??= ReadOrCreate();
+            return cached;
+        }
+    }
 
     /// <summary>Creates the token if missing; otherwise returns the existing value (and validates the file mode).</summary>
     public string ReadOrCreate()
@@ -49,7 +73,12 @@ public sealed class TokenStore
     {
         var dir = System.IO.Path.GetDirectoryName(Path)!;
         Directory.CreateDirectory(dir);
-        return WriteNew(Path);
+        var token = WriteNew(Path);
+        lock (cacheLock)
+        {
+            cached = token;
+        }
+        return token;
     }
 
     /// <summary>Constant-time comparison to defeat trivial timing oracles.</summary>

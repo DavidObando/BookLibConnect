@@ -41,20 +41,33 @@ public sealed class ToolDispatcher
         }
         catch (UnauthorizedAccessException)
         {
-            audit.Write(transport, principal, toolName, args, "denied", sw.ElapsedMilliseconds);
+            SafeAudit(transport, principal, toolName, args, "denied", sw.ElapsedMilliseconds);
             throw;
         }
 
         try
         {
             var result = await body().ConfigureAwait(false);
-            audit.Write(transport, principal, toolName, args, "ok", sw.ElapsedMilliseconds);
+            SafeAudit(transport, principal, toolName, args, "ok", sw.ElapsedMilliseconds);
             return result;
         }
         catch (Exception)
         {
-            audit.Write(transport, principal, toolName, args, "error", sw.ElapsedMilliseconds);
+            SafeAudit(transport, principal, toolName, args, "error", sw.ElapsedMilliseconds);
             throw;
+        }
+    }
+
+    private void SafeAudit(string transport, string principal, string toolName, IReadOnlyDictionary<string, object?>? args, string outcome, long latencyMs)
+    {
+        try
+        {
+            audit.Write(transport, principal, toolName, args, outcome, latencyMs);
+        }
+        catch
+        {
+            // The original tool result/exception must surface — never let an audit
+            // failure mask the actual outcome the caller cares about.
         }
     }
 }

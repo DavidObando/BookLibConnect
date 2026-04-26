@@ -17,10 +17,42 @@ public static class HttpEndpoints
 {
     public static void Map(WebApplication app)
     {
+        // Body-size limit middleware: protect against accidental/runaway POST bodies.
+        // Tool payloads are small; cap at 256 KB.
+        const long maxBodyBytes = 256L * 1024L;
+        app.Use(async (ctx, next) =>
+        {
+            if (ctx.Request.ContentLength is long len && len > maxBodyBytes)
+            {
+                ctx.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
+                await ctx.Response.WriteAsync("{\"error\":\"payload_too_large\"}").ConfigureAwait(false);
+                return;
+            }
+            await next(ctx).ConfigureAwait(false);
+        });
+
+        // Map a few common framework exceptions to clean 4xx responses so the
+        // generic dev exception page doesn't leak stack traces over the wire.
+        app.Use(async (ctx, next) =>
+        {
+            try
+            {
+                await next(ctx).ConfigureAwait(false);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                if (!ctx.Response.HasStarted)
+                {
+                    ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await ctx.Response.WriteAsync($"{{\"error\":\"forbidden\",\"message\":{System.Text.Json.JsonSerializer.Serialize(ex.Message)}}}").ConfigureAwait(false);
+                }
+            }
+        });
+
         // Bearer-token middleware: every request must present a matching Authorization header.
         app.Use(async (ctx, next) =>
         {
-            var token = ctx.RequestServices.GetRequiredService<TokenStore>().ReadOrCreate();
+            var token = ctx.RequestServices.GetRequiredService<TokenStore>().GetCached();
             var auth = ctx.Request.Headers["Authorization"].ToString();
             const string prefix = "Bearer ";
             if (!auth.StartsWith(prefix, StringComparison.Ordinal) ||
@@ -85,31 +117,49 @@ public static class HttpEndpoints
             ctx.Response.Headers.CacheControl = "no-cache";
             ctx.Response.Headers["X-Accel-Buffering"] = "no";
 
-            // Send a snapshot of currently-active jobs first so reconnecting clients
-            // do not miss the early Queued/Licensing updates that already fired.
-            foreach (var snap in jobs.ListActive())
+            // Subscribe BEFORE taking the snapshot so we don't lose updates that
+            // fire in the race window between snapshot and subscribe. We then
+            // emit the snapshot, then drain the stream.
+            var stream = jobs.ObserveAll(ct).GetAsyncEnumerator(ct);
+            try
             {
-                await WriteSseAsync(ctx, "snapshot", new
+                foreach (var snap in jobs.ListActive())
                 {
-                    jobId = snap.JobId,
-                    asin = snap.Asin,
-                    title = snap.Title,
-                    phase = snap.Phase.ToString(),
-                    progress = snap.Progress,
-                    message = snap.Message,
-                }, ct).ConfigureAwait(false);
-            }
+                    await WriteSseAsync(ctx, "snapshot", new
+                    {
+                        jobId = snap.JobId,
+                        asin = snap.Asin,
+                        title = snap.Title,
+                        phase = snap.Phase.ToString(),
+                        progress = snap.Progress,
+                        message = snap.Message,
+                    }, ct).ConfigureAwait(false);
+                }
 
-            await foreach (var u in jobs.ObserveAll(ct).ConfigureAwait(false))
-            {
-                await WriteSseAsync(ctx, "update", new
+                while (await stream.MoveNextAsync().ConfigureAwait(false))
                 {
-                    jobId = u.JobId,
-                    phase = u.Phase.ToString(),
-                    progress = u.Progress,
-                    message = u.Message,
-                    timestamp = u.Timestamp,
-                }, ct).ConfigureAwait(false);
+                    var u = stream.Current;
+                    await WriteSseAsync(ctx, "update", new
+                    {
+                        jobId = u.JobId,
+                        phase = u.Phase.ToString(),
+                        progress = u.Progress,
+                        message = u.Message,
+                        timestamp = u.Timestamp,
+                    }, ct).ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // client disconnected — normal
+            }
+            catch (System.IO.IOException)
+            {
+                // client closed connection mid-write
+            }
+            finally
+            {
+                await stream.DisposeAsync().ConfigureAwait(false);
             }
         });
 

@@ -125,7 +125,6 @@ public sealed class AudibleJobExecutor : IJobExecutor
         var settings = downloadSettingsFactory();
         // Honour per-job quality without mutating the GUI-shared settings.
         var jobSettings = new PerJobDownloadSettings(settings, MapQuality(request.Quality));
-        var context = new CliCancellation(cancellationToken);
 
         // If AAX export was requested, build a per-job IExportSettings,
         // construct the AaxExporter, and forward the convertAction to the job.
@@ -146,6 +145,31 @@ public sealed class AudibleJobExecutor : IJobExecutor
                 };
                 yield break;
             }
+
+            // Pre-flight the export directory so muxing failures don't surface as a
+            // cryptic I/O error after a long download. We CreateDirectory (idempotent)
+            // and surface a clear message on failure.
+            string? exportDirError = null;
+            try
+            {
+                System.IO.Directory.CreateDirectory(jobExport.ExportDirectory);
+            }
+            catch (Exception ex)
+            {
+                exportDirError = $"Cannot create export directory '{jobExport.ExportDirectory}': {ex.Message}";
+            }
+
+            if (exportDirError is not null)
+            {
+                yield return new JobUpdate
+                {
+                    JobId = request.Id,
+                    Phase = JobPhase.Failed,
+                    Message = exportDirError,
+                };
+                yield break;
+            }
+
             translator.SetConvertEnabled();
             var exporter = new AaxExporter(jobExport, jobSettings);
             convertAction = (book, ctx, callback) =>
@@ -153,6 +177,12 @@ public sealed class AudibleJobExecutor : IJobExecutor
                 exporter.Export(book, new SimpleConversionContext(null, ctx.CancellationToken), callback);
             };
         }
+
+        // Linked CTS so we can cancel the background task even if the consumer
+        // abandons the IAsyncEnumerable without canceling cancellationToken
+        // directly. We always observe runTask in the finally below.
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var linkedToken = linkedCts.Token;
 
         // Run the actual job in the background; the foreach below pulls the
         // translated updates from the channel.
@@ -165,7 +195,7 @@ public sealed class AudibleJobExecutor : IJobExecutor
                     await job.DownloadDecryptAndConvertAsync(
                         new[] { conversion },
                         progress,
-                        context,
+                        new CliCancellation(linkedToken),
                         convertAction).ConfigureAwait(false);
                 }
                 finally
@@ -173,36 +203,51 @@ public sealed class AudibleJobExecutor : IJobExecutor
                     channel.Writer.TryComplete();
                 }
             },
-            cancellationToken);
+            linkedToken);
 
         bool seenTerminal = false;
-        while (await channel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
-        {
-            while (channel.Reader.TryRead(out var update))
-            {
-                yield return update;
-                if (update.Phase is JobPhase.Completed or JobPhase.Failed or JobPhase.Canceled)
-                {
-                    seenTerminal = true;
-                }
-            }
-        }
-
-        // The producer task may have thrown; surface that as Failed (unless we
-        // were canceled, which the scheduler handles separately).
         Exception? runError = null;
         bool canceled = false;
         try
         {
-            await runTask.ConfigureAwait(false);
+            while (await channel.Reader.WaitToReadAsync(linkedToken).ConfigureAwait(false))
+            {
+                while (channel.Reader.TryRead(out var update))
+                {
+                    yield return update;
+                    if (update.Phase is JobPhase.Completed or JobPhase.Failed or JobPhase.Canceled)
+                    {
+                        seenTerminal = true;
+                    }
+                }
+            }
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        finally
         {
-            canceled = true;
-        }
-        catch (Exception ex)
-        {
-            runError = ex;
+            // Always observe runTask so a thrown background exception is not "unobserved".
+            // Cancelling the linked CTS first makes sure the underlying job tears down
+            // promptly when the consumer abandons us before terminal phase.
+            try
+            {
+                linkedCts.Cancel();
+            }
+            catch
+            {
+                // already disposed / racing — best effort
+            }
+            try
+            {
+                await runTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                canceled = cancellationToken.IsCancellationRequested;
+            }
+            catch (Exception ex)
+            {
+                runError = ex;
+                logger.LogError(ex, "Background job task threw for {Asin} ({Title}).", request.Asin, request.Title);
+            }
         }
 
         if (canceled)
@@ -213,7 +258,6 @@ public sealed class AudibleJobExecutor : IJobExecutor
 
         if (runError is not null)
         {
-            logger.LogError(runError, "Download failed for {Asin} ({Title}).", request.Asin, request.Title);
             yield return new JobUpdate
             {
                 JobId = request.Id,

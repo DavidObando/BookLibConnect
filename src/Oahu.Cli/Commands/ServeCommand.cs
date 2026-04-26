@@ -27,7 +27,7 @@ namespace Oahu.Cli.Commands;
 /// </summary>
 public static class ServeCommand
 {
-    public const int LockedExitCode = 4;
+    public const int LockedExitCode = 6;
 
     public static Command Create(Func<ParseResult, GlobalOptions> resolveGlobals)
     {

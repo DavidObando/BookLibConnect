@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Oahu.Cli.App.Models;
 
 namespace Oahu.Cli.App.Jobs;
@@ -18,10 +20,12 @@ public sealed class JsonlHistoryStore
     private readonly string path;
     private readonly object writeLock = new();
     private readonly JsonSerializerOptions options;
+    private readonly ILogger logger;
 
-    public JsonlHistoryStore(string path)
+    public JsonlHistoryStore(string path, ILogger<JsonlHistoryStore>? logger = null)
     {
         this.path = path;
+        this.logger = logger ?? NullLogger<JsonlHistoryStore>.Instance;
         options = new JsonSerializerOptions(AtomicFile.DefaultJsonOptions)
         {
             WriteIndented = false,
@@ -61,6 +65,7 @@ public sealed class JsonlHistoryStore
             FileMode.Open,
             FileAccess.Read,
             FileShare.ReadWrite | FileShare.Delete));
+        var lineNumber = 0;
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -69,6 +74,7 @@ public sealed class JsonlHistoryStore
             {
                 yield break;
             }
+            lineNumber++;
             if (string.IsNullOrWhiteSpace(line))
             {
                 continue;
@@ -79,9 +85,16 @@ public sealed class JsonlHistoryStore
             {
                 rec = JsonSerializer.Deserialize<JobRecord>(line, options);
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
                 // Skip torn records; the design's "append-only" guarantee tolerates a single torn tail line.
+                // Still surface the issue so operators can detect repeated corruption.
+                logger.LogWarning(
+                    ex,
+                    "Skipping malformed history record at {Path}:{LineNumber}: {Reason}",
+                    path,
+                    lineNumber,
+                    ex.Message);
             }
             if (rec is not null)
             {

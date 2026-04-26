@@ -21,6 +21,7 @@ public sealed class LinuxSecretToolCredentialStore : ICredentialStore
     private const string SchemaService = "service";
     private const string SchemaAccount = "account";
     private const string DefaultService = "oahu-cli";
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
 
     private readonly string serviceName;
     private readonly string secretTool;
@@ -95,6 +96,13 @@ public sealed class LinuxSecretToolCredentialStore : ICredentialStore
         {
             psi.ArgumentList.Add(a);
         }
+
+        // Bound the wait so a hung secret-service daemon (e.g., DBus stuck, KWallet
+        // prompt that nobody answers) cannot deadlock the CLI forever.
+        using var timeoutCts = new CancellationTokenSource(DefaultTimeout);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+        var token = linkedCts.Token;
+
         Process proc;
         try
         {
@@ -109,13 +117,65 @@ public sealed class LinuxSecretToolCredentialStore : ICredentialStore
         {
             if (stdin is not null)
             {
-                await proc.StandardInput.WriteAsync(stdin.AsMemory(), ct).ConfigureAwait(false);
-                proc.StandardInput.Close();
+                try
+                {
+                    await proc.StandardInput.WriteAsync(stdin.AsMemory(), token).ConfigureAwait(false);
+                }
+                finally
+                {
+                    // Close stdin even if WriteAsync threw; otherwise secret-tool blocks
+                    // forever waiting for EOF and the WaitForExit below times out.
+                    try
+                    {
+                        proc.StandardInput.Close();
+                    }
+                    catch
+                    {
+                        // best-effort
+                    }
+                }
             }
-            var stdoutTask = proc.StandardOutput.ReadToEndAsync(ct);
-            var stderrTask = proc.StandardError.ReadToEndAsync(ct);
-            await proc.WaitForExitAsync(ct).ConfigureAwait(false);
-            return (proc.ExitCode, await stdoutTask.ConfigureAwait(false), await stderrTask.ConfigureAwait(false));
+            var stdoutTask = proc.StandardOutput.ReadToEndAsync(token);
+            var stderrTask = proc.StandardError.ReadToEndAsync(token);
+            try
+            {
+                await proc.WaitForExitAsync(token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                try
+                {
+                    if (!proc.HasExited)
+                    {
+                        proc.Kill(entireProcessTree: true);
+                    }
+                }
+                catch
+                {
+                    // best-effort
+                }
+                throw;
+            }
+
+            string stdout;
+            string stderr;
+            try
+            {
+                stdout = await stdoutTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                stdout = string.Empty;
+            }
+            try
+            {
+                stderr = await stderrTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                stderr = string.Empty;
+            }
+            return (proc.ExitCode, stdout, stderr);
         }
     }
 }

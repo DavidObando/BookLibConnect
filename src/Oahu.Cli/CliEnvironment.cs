@@ -101,8 +101,7 @@ public static class CliEnvironment
     /// </summary>
     public static void RunRestore()
     {
-        var local = restoreAction;
-        restoreAction = null;
+        var local = System.Threading.Interlocked.Exchange(ref restoreAction, null);
         try
         {
             local?.Invoke();

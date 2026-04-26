@@ -29,7 +29,7 @@ public sealed class PrettyOutputWriter : IOutputWriter
         {
             grid.AddRow(Markup.Escape(kv.Key), Markup.Escape(Format(kv.Value)));
         }
-        console.Write(grid);
+        SafeWrite(() => console.Write(grid));
     }
 
     public void WriteCollection(
@@ -39,7 +39,7 @@ public sealed class PrettyOutputWriter : IOutputWriter
     {
         if (rows.Count == 0)
         {
-            console.MarkupLine("[grey](no items)[/]");
+            SafeWrite(() => console.MarkupLine("[grey](no items)[/]"));
             return;
         }
 
@@ -52,7 +52,7 @@ public sealed class PrettyOutputWriter : IOutputWriter
         {
             table.AddRow(columns.Select(c => Markup.Escape(Format(row.TryGetValue(c.Key, out var v) ? v : null))).ToArray());
         }
-        console.Write(table);
+        SafeWrite(() => console.Write(table));
     }
 
     public void WriteMessage(string message)
@@ -61,7 +61,7 @@ public sealed class PrettyOutputWriter : IOutputWriter
         {
             return;
         }
-        console.WriteLine(message);
+        SafeWrite(() => console.WriteLine(message));
     }
 
     public void WriteSuccess(string message)
@@ -70,7 +70,23 @@ public sealed class PrettyOutputWriter : IOutputWriter
         {
             return;
         }
-        console.MarkupLine($"[green]✓[/] {Markup.Escape(message)}");
+        SafeWrite(() => console.MarkupLine($"[green]✓[/] {Markup.Escape(message)}"));
+    }
+
+    private static void SafeWrite(System.Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (System.IO.IOException)
+        {
+            // Broken pipe — downstream closed.
+        }
+        catch (System.ObjectDisposedException)
+        {
+            // Console torn down.
+        }
     }
 
     private static string Format(object? value) => value switch

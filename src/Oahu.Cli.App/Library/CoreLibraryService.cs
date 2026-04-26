@@ -76,9 +76,32 @@ public sealed class CoreLibraryService : ILibraryService
         cancellationToken.ThrowIfCancellationRequested();
 
         await CoreEnvironment.EnsureProfileLoadedAsync().ConfigureAwait(false);
+
+        // Switch to the requested profile if it's not the active one. The CLI lets
+        // any signed-in alias be sync'd; without this, SyncAsync silently sync'd
+        // whichever profile the GUI happened to have last activated, even when the
+        // caller passed a different alias.
+        var aliases = client.GetAccountAliases()?.ToDictionary(a => a.AccountId, a => a.Alias, StringComparer.Ordinal)
+            ?? new Dictionary<string, string>(StringComparer.Ordinal);
+        var activeKey = client.ProfileKey;
+        var activeAlias = activeKey is not null && aliases.TryGetValue(activeKey.AccountId, out var aliasForActive)
+            ? aliasForActive
+            : null;
+
+        if (!string.Equals(activeAlias, profileAlias, StringComparison.Ordinal))
+        {
+            var profiles = await client.GetProfilesAsync().ConfigureAwait(false);
+            var key = profiles?.FirstOrDefault(p =>
+                aliases.TryGetValue(p.AccountId, out var alias) &&
+                string.Equals(alias, profileAlias, StringComparison.Ordinal))
+                ?? throw new InvalidOperationException(
+                    $"No profile with alias '{profileAlias}'. Sign in with `oahu-cli auth login` first.");
+            await client.ChangeProfileAsync(key, aliasChanged: false).ConfigureAwait(false);
+        }
+
         var api = client.Api
             ?? throw new InvalidOperationException(
-                $"No active profile. Sign in with `oahu-cli auth login` before sync.");
+                $"Failed to load profile '{profileAlias}' for sync.");
 
         // resync=true forces a full library refresh; the CLI surface does not
         // (yet) distinguish full vs incremental, so we do a full pull every
@@ -118,9 +141,12 @@ public sealed class CoreLibraryService : ILibraryService
         if (seriesEntry is not null)
         {
             // SeriesBook.BookNumber may be 0 (unset); SubNumber is optional.
+            // We use a /1000 offset so SubNumber up to 999 maps unambiguously
+            // (e.g. Book 1, SubNumber 5 -> 1.005), avoiding collision when
+            // SubNumber >= 10 (the previous /10 formula made 1.12 == 2.2).
             if (seriesEntry.SubNumber.HasValue)
             {
-                seriesPosition = seriesEntry.BookNumber + (seriesEntry.SubNumber.Value / 10.0);
+                seriesPosition = seriesEntry.BookNumber + (seriesEntry.SubNumber.Value / 1000.0);
             }
             else if (seriesEntry.BookNumber > 0)
             {

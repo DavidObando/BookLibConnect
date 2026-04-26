@@ -124,7 +124,9 @@ public static class ServerHost
         catch (InvalidOperationException ex)
         {
             await Console.Error.WriteLineAsync(ex.Message).ConfigureAwait(false);
-            return 4;
+            // Exit 6 = single-instance lock contention (per design §10).
+            // Exit 4 is reserved for Audible API errors.
+            return 6;
         }
 
         // Ensure the token file exists if HTTP is enabled (so we fail fast on permission issues too).
@@ -137,7 +139,8 @@ public static class ServerHost
             catch (Exception ex)
             {
                 await Console.Error.WriteLineAsync($"oahu-cli serve: token init failed: {ex.Message}").ConfigureAwait(false);
-                return 4;
+                // Exit 5 = config / setup failure (token file unwritable, permissions, etc).
+                return 5;
             }
         }
 

@@ -37,6 +37,7 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
     private readonly Task[] workers;
     private readonly ConcurrentDictionary<Guid, Channel<JobUpdate>> subscribers = new();
     private readonly ConcurrentDictionary<string, JobLifecycle> jobs = new();
+    private int disposed;
 
     public JobScheduler(
         IJobExecutor executor,
@@ -72,7 +73,33 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
         }
 
         await Publish(new JobUpdate { JobId = request.Id, Phase = JobPhase.Queued }).ConfigureAwait(false);
-        await work.Writer.WriteAsync(request, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await work.Writer.WriteAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            // Channel write failed (caller cancellation, channel completed during shutdown, etc.).
+            // Roll back the lifecycle so it doesn't linger forever with no worker to drive it.
+            if (jobs.TryRemove(request.Id, out var orphan))
+            {
+                try
+                {
+                    await Publish(new JobUpdate
+                    {
+                        JobId = request.Id,
+                        Phase = JobPhase.Canceled,
+                        Message = "Submission canceled before queueing.",
+                    }).ConfigureAwait(false);
+                }
+                catch
+                {
+                    // best-effort
+                }
+                orphan.Cts.Dispose();
+            }
+            throw;
+        }
     }
 
     public IAsyncEnumerable<JobUpdate> ObserveAll(CancellationToken cancellationToken = default)
@@ -116,8 +143,19 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref disposed, 1) != 0)
+        {
+            return;
+        }
         work.Writer.TryComplete();
-        shutdownCts.Cancel();
+        try
+        {
+            shutdownCts.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // already disposed
+        }
         try
         {
             await Task.WhenAll(workers).ConfigureAwait(false);
@@ -129,6 +167,10 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
         foreach (var sub in subscribers.Values)
         {
             sub.Writer.TryComplete();
+        }
+        foreach (var (_, lc) in jobs)
+        {
+            lc.Cts.Dispose();
         }
         shutdownCts.Dispose();
     }
@@ -206,7 +248,10 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
         }
         finally
         {
-            jobs.TryRemove(request.Id, out _);
+            if (jobs.TryRemove(request.Id, out var removed))
+            {
+                removed.Cts.Dispose();
+            }
             history?.Append(new JobRecord
             {
                 Id = request.Id,
@@ -235,15 +280,22 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
             lc.LastMessage = update.Message ?? lc.LastMessage;
             lc.LastUpdatedAt = update.Timestamp;
         }
-        foreach (var (_, ch) in subscribers)
+        foreach (var (key, ch) in subscribers)
         {
             // Per-subscriber backpressure: drop oldest rather than stall the worker.
             // (Subscribers wanting reliable delivery must keep up with their channel.)
+            // The channel is configured DropOldest, so TryWrite should always succeed
+            // unless the writer was already completed. If it failed, the subscriber is
+            // gone (its iterator finished/disposed) — drop it from the map and move on.
+            // We never block the worker on a slow/dead observer.
             if (!ch.Writer.TryWrite(update))
             {
-                await ch.Writer.WriteAsync(update).ConfigureAwait(false);
+                subscribers.TryRemove(key, out _);
+                ch.Writer.TryComplete();
             }
         }
+
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     private (Channel<JobUpdate> Channel, Guid Key) RegisterSubscriber()

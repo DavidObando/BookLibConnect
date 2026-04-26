@@ -24,7 +24,7 @@ public sealed record SignInResult
 /// Runs the auth call on a background task; the broker posts modal requests
 /// that the AppShell picks up in its input loop.
 /// </summary>
-public sealed class SignInFlow
+public sealed class SignInFlow : IDisposable
 {
     private readonly IAuthService authService;
     private readonly ILibraryService libraryService;
@@ -119,5 +119,21 @@ public sealed class SignInFlow
     {
         cts?.Cancel();
         state.ActivityVerb = "idle";
+    }
+
+    /// <summary>Disposes the linked CancellationTokenSource. Safe to call multiple times.</summary>
+    public void Dispose()
+    {
+        var local = cts;
+        cts = null;
+        try
+        {
+            local?.Cancel();
+        }
+        catch
+        {
+            // already disposed — safe to ignore
+        }
+        local?.Dispose();
     }
 }

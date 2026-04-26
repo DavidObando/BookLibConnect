@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Oahu.Cli.App.Paths;
 
 namespace Oahu.Cli.App.Models;
@@ -31,6 +34,13 @@ public sealed record OahuConfig
     /// Off by default — the design's stance is "fail closed" rather than silently store secrets in a file.
     /// </summary>
     public bool AllowEncryptedFileCredentials { get; init; }
+
+    /// <summary>
+    /// Captures any JSON properties that were present on disk but are not declared above.
+    /// Preserved across round-trips so a newer CLI can write fields that an older CLI will not erase.
+    /// </summary>
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? ExtraProperties { get; init; }
 
     /// <summary>Default config used the first time the CLI runs (no file on disk yet).</summary>
     public static OahuConfig Default => new();

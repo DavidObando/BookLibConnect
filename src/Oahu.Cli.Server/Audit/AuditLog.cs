@@ -37,8 +37,10 @@ namespace Oahu.Cli.Server.Audit;
 /// </summary>
 public sealed class AuditLog
 {
+    private const int FailureWarnThreshold = 5;
     private static readonly object Sync = new();
     private readonly string path;
+    private int consecutiveFailures;
 
     public AuditLog(string? path = null)
     {
@@ -74,14 +76,31 @@ public sealed class AuditLog
             var line = JsonSerializer.Serialize(entry);
             lock (Sync)
             {
-                using var fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
-                using var sw = new StreamWriter(fs, Encoding.UTF8);
-                sw.WriteLine(line);
+                using (var fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read))
+                using (var sw = new StreamWriter(fs, Encoding.UTF8))
+                {
+                    sw.WriteLine(line);
+                    sw.Flush();
+                    fs.Flush(flushToDisk: true);
+                }
+                Interlocked.Exchange(ref consecutiveFailures, 0);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // best-effort.
+            // Best-effort but surface persistent failures so a wedged disk doesn't go unnoticed.
+            var n = Interlocked.Increment(ref consecutiveFailures);
+            if (n == FailureWarnThreshold || (n > FailureWarnThreshold && n % 50 == 0))
+            {
+                try
+                {
+                    Console.Error.WriteLine($"[oahu-cli audit] {n} consecutive write failures to {path}: {ex.GetType().Name}: {ex.Message}");
+                }
+                catch
+                {
+                    // stderr unavailable — give up silently.
+                }
+            }
         }
     }
 

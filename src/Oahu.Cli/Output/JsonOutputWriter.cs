@@ -42,7 +42,7 @@ public sealed class JsonOutputWriter : IOutputWriter
         {
             obj[kv.Key] = ToNode(kv.Value);
         }
-        writer.WriteLine(obj.ToJsonString(WriteOptions));
+        SafeWrite(() => writer.WriteLine(obj.ToJsonString(WriteOptions)));
     }
 
     public void WriteCollection(
@@ -68,7 +68,7 @@ public sealed class JsonOutputWriter : IOutputWriter
             ["count"] = rows.Count,
             ["items"] = array,
         };
-        writer.WriteLine(obj.ToJsonString(WriteOptions));
+        SafeWrite(() => writer.WriteLine(obj.ToJsonString(WriteOptions)));
     }
 
     public void WriteMessage(string message)
@@ -79,10 +79,26 @@ public sealed class JsonOutputWriter : IOutputWriter
         {
             return;
         }
-        Console.Error.WriteLine(message);
+        SafeWrite(() => Console.Error.WriteLine(message));
     }
 
     public void WriteSuccess(string message) => WriteMessage(message);
+
+    private static void SafeWrite(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (IOException)
+        {
+            // Broken pipe — downstream consumer closed the stream.
+        }
+        catch (ObjectDisposedException)
+        {
+            // Output stream torn down.
+        }
+    }
 
     private static JsonNode? ToNode(object? value) => value switch
     {

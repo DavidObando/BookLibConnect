@@ -225,12 +225,27 @@ public static class DownloadCommand
 
         foreach (var req in requests)
         {
-            await jobService.SubmitAsync(req, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await jobService.SubmitAsync(req, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // Submission failure (e.g. scheduler disposed, channel closed). Cancel the
+                // observer so we don't hang waiting for terminals that will never arrive,
+                // and surface the failure for this request.
+                terminals[req.Id] = new JobUpdate { JobId = req.Id, Phase = JobPhase.Failed, Message = ex.Message };
+                observerCts.Cancel();
+            }
         }
 
         try
         {
             await observerTask.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // expected if we cancelled above
         }
         finally
         {
@@ -239,7 +254,8 @@ public static class DownloadCommand
 
         WriteSummary(writer, requests, terminals);
 
-        bool anyFailed = terminals.Values.Any(u => u.Phase is JobPhase.Failed or JobPhase.Canceled);
+        bool anyFailed = terminals.Values.Any(u => u.Phase == JobPhase.Failed);
+        bool anyCanceled = terminals.Values.Any(u => u.Phase == JobPhase.Canceled);
         bool allCompleted = terminals.Count == ids.Count
             && terminals.Values.All(u => u.Phase == JobPhase.Completed);
 
@@ -247,7 +263,16 @@ public static class DownloadCommand
         {
             return 0;
         }
-        return anyFailed ? 1 : 1;
+        if (anyFailed)
+        {
+            return 1;
+        }
+        if (anyCanceled)
+        {
+            // 130 = SIGINT-style termination per design §10.
+            return 130;
+        }
+        return 1;
     }
 
     private static bool IsTerminal(JobPhase p) =>
@@ -422,9 +447,24 @@ public static class DownloadCommand
         {
             if (input == "-")
             {
-                string? line;
-                while ((line = Console.In.ReadLine()) is not null)
+                // Read entire stdin synchronously up-front. We are inside a synchronous
+                // iterator, but stdin reads are bounded by the user's input — typically
+                // pasted ASIN lists — so this does not introduce noticeable latency.
+                while (true)
                 {
+                    string? line = null;
+                    try
+                    {
+                        line = Console.In.ReadLine();
+                    }
+                    catch (IOException)
+                    {
+                        // Treat torn pipe as EOF.
+                    }
+                    if (line is null)
+                    {
+                        break;
+                    }
                     yield return line;
                 }
             }

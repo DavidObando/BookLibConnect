@@ -75,7 +75,7 @@ public sealed class AppShell : IAppShellNavigator
     private DateTimeOffset? toastShownAt;
     private IModal? activeModal;
     private TuiCallbackBroker? activeBroker;
-    private bool needsTimedRefresh;
+    private volatile bool needsTimedRefresh;
 
     public AppShell(IAnsiConsole console, AppShellOptions? options = null)
     {
@@ -229,6 +229,30 @@ public sealed class AppShell : IAppShellNavigator
                         }
                     }
                     Render();
+                    continue;
+                }
+
+                // When a broker is attached, poll briefly so background-arriving
+                // challenges become visible promptly rather than waiting for the
+                // next user keystroke. Without a broker, fall back to a fully
+                // blocking read so unit tests that drive a fixed key queue exit
+                // cleanly when the queue drains.
+                if (activeBroker is not null)
+                {
+                    if (keyReader.TryReadKey(250, out var idleKey))
+                    {
+                        var idleAction = Dispatch(idleKey);
+                        switch (idleAction)
+                        {
+                            case ShellAction.Continue:
+                                Render();
+                                break;
+                            case ShellAction.Exit:
+                                return 0;
+                            case ShellAction.ExitSigInt:
+                                return 130;
+                        }
+                    }
                     continue;
                 }
 
@@ -413,6 +437,15 @@ public sealed class AppShell : IAppShellNavigator
         {
             return;
         }
+
+        // Auto-dismiss a modal that completed via background means (e.g. broker
+        // resolved externally or its task was cancelled): the AppShell otherwise
+        // would freeze input forever waiting on a modal it can't dismiss.
+        if (activeModal is not null && activeModal.IsComplete)
+        {
+            activeModal = null;
+        }
+
         if (activeModal is not null)
         {
             return;
@@ -423,6 +456,14 @@ public sealed class AppShell : IAppShellNavigator
             if (modal is not null)
             {
                 ShowModal(modal);
+            }
+            else
+            {
+                // Unknown challenge type — fail the awaiter rather than letting
+                // the background auth flow hang forever.
+                request.Completion.TrySetException(
+                    new NotSupportedException(
+                        $"AppShell has no modal for challenge type '{request.Challenge?.GetType().Name ?? "<null>"}'."));
             }
         }
     }

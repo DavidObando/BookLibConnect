@@ -41,6 +41,7 @@ public sealed class ChallengeModal : IModal<string>
             case ConsoleKey.Escape:
                 WasCancelled = true;
                 IsComplete = true;
+                input.Text = string.Empty;
                 return true;
             case ConsoleKey.Enter:
                 if (ApprovalOnly)
@@ -54,6 +55,10 @@ public sealed class ChallengeModal : IModal<string>
                 {
                     Result = text;
                     IsComplete = true;
+                    // Clear the underlying input buffer so the secret doesn't
+                    // sit in memory longer than necessary. The Result string
+                    // is consumed promptly by the caller.
+                    input.Text = string.Empty;
                     return true;
                 }
                 return true;
