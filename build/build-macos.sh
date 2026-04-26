@@ -21,6 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SRC_DIR="$REPO_ROOT/src"
 PROJECT="$SRC_DIR/Oahu.App/Oahu.App.csproj"
+CLI_PROJECT="$SRC_DIR/Oahu.Cli/Oahu.Cli.csproj"
 INFO_PLIST="$SRC_DIR/Oahu.App/Info.plist"
 
 # Parse arguments
@@ -78,6 +79,19 @@ dotnet publish "$PROJECT" \
   -p:PublishTrimmed=false \
   --output "$OUTPUT_DIR/publish"
 
+# Publish oahu-cli into the same folder so it ships alongside the GUI.
+# Shared assemblies (Oahu.*, .NET runtime, etc.) are byte-identical between
+# the two publishes; per-app deps.json/runtimeconfig.json files are named
+# after the assembly so they don't collide (Oahu.* vs oahu-cli.*).
+echo "==> Publishing oahu-cli..."
+dotnet publish "$CLI_PROJECT" \
+  --configuration "$CONFIGURATION" \
+  --runtime "$RUNTIME" \
+  --self-contained true \
+  -p:PublishSingleFile=false \
+  -p:PublishTrimmed=false \
+  --output "$OUTPUT_DIR/publish"
+
 # Build the .app bundle
 APP_BUNDLE="$OUTPUT_DIR/${APP_NAME}.app"
 CONTENTS="$APP_BUNDLE/Contents"
@@ -122,6 +136,9 @@ fi
 
 # Make the executable actually executable
 chmod +x "$MACOS_DIR/$EXECUTABLE_NAME"
+if [[ -f "$MACOS_DIR/oahu-cli" ]]; then
+  chmod +x "$MACOS_DIR/oahu-cli"
+fi
 
 # Code sign the .app bundle
 if [[ -n "$CODESIGN_IDENTITY" ]]; then

@@ -39,6 +39,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 UsePreviousPrivileges=yes
+ChangesEnvironment=yes
 
 ArchitecturesInstallIn64BitMode=x64compatible
 
@@ -57,6 +58,7 @@ en.MyDocFile={#MyAppName}.pdf
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "addtopath"; Description: "Add Oahu install folder to PATH (so 'oahu-cli' works from any terminal)"; GroupDescription: "Command-line access:"
 
 [Files]
 Source: "*.exe"; DestDir: "{app}"
@@ -71,5 +73,97 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppSetupName}}"; Filename: "{uninstallex
 Name: "{autodesktop}\{#MyAppSetupName}"; Filename: "{app}\{#MyProgramExe}"; Tasks: desktopicon
 
 
+[Registry]
+; Add the install dir to PATH so 'oahu-cli' is available from any terminal.
+; Writes to HKLM when running as admin (system-wide), otherwise HKCU (per-user).
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; \
+    ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; \
+    Tasks: addtopath; Check: IsAdminInstallMode and NeedsAddPath(ExpandConstant('{app}'), True); \
+    Flags: preservestringtype
+Root: HKCU; Subkey: "Environment"; \
+    ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; \
+    Tasks: addtopath; Check: (not IsAdminInstallMode) and NeedsAddPath(ExpandConstant('{app}'), False); \
+    Flags: preservestringtype
+
 [Run]
 Filename: "{app}\{#MyProgramExe}"; Description: "{cm:LaunchProgram,{#MyAppSetupName}}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+function NeedsAddPath(Param: string; SystemWide: Boolean): Boolean;
+var
+  OrigPath: string;
+  RootKey: Integer;
+  SubKey: string;
+begin
+  if SystemWide then
+  begin
+    RootKey := HKEY_LOCAL_MACHINE;
+    SubKey := 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment';
+  end
+  else
+  begin
+    RootKey := HKEY_CURRENT_USER;
+    SubKey := 'Environment';
+  end;
+
+  if not RegQueryStringValue(RootKey, SubKey, 'Path', OrigPath) then
+  begin
+    Result := True;
+    exit;
+  end;
+  // Look for the path as a complete entry (between semicolons).
+  Result := Pos(';' + Uppercase(Param) + ';', ';' + Uppercase(OrigPath) + ';') = 0;
+end;
+
+procedure RemoveFromPath(Param: string; SystemWide: Boolean);
+var
+  OrigPath: string;
+  NewPath: string;
+  RootKey: Integer;
+  SubKey: string;
+  P: Integer;
+  Needle: string;
+  Hay: string;
+begin
+  if SystemWide then
+  begin
+    RootKey := HKEY_LOCAL_MACHINE;
+    SubKey := 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment';
+  end
+  else
+  begin
+    RootKey := HKEY_CURRENT_USER;
+    SubKey := 'Environment';
+  end;
+
+  if not RegQueryStringValue(RootKey, SubKey, 'Path', OrigPath) then
+    exit;
+
+  Hay := ';' + Uppercase(OrigPath) + ';';
+  Needle := ';' + Uppercase(Param) + ';';
+  P := Pos(Needle, Hay);
+  if P = 0 then
+    exit;
+
+  // Reconstruct the original-cased value minus the matched entry.
+  NewPath := Copy(';' + OrigPath + ';', 1, P - 1) +
+             Copy(';' + OrigPath + ';', P + Length(Needle), MaxInt);
+  // Strip the leading and trailing sentinels we added.
+  if (Length(NewPath) > 0) and (NewPath[1] = ';') then
+    Delete(NewPath, 1, 1);
+  if (Length(NewPath) > 0) and (NewPath[Length(NewPath)] = ';') then
+    Delete(NewPath, Length(NewPath), 1);
+
+  RegWriteExpandStringValue(RootKey, SubKey, 'Path', NewPath);
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usPostUninstall then
+  begin
+    if IsAdminInstallMode() then
+      RemoveFromPath(ExpandConstant('{app}'), True)
+    else
+      RemoveFromPath(ExpandConstant('{app}'), False);
+  end;
+end;

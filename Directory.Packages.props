@@ -1,0 +1,69 @@
+<Project>
+
+  <!--
+    Central Package Management (CPM).
+
+    All NuGet package versions used in this solution are declared here. Individual
+    project files reference packages by name only:
+
+        <PackageReference Include="Some.Package" />
+
+    To bump a version, edit it once in this file. To add a new package, declare
+    its version here and then reference it from the consuming project(s).
+
+    See: https://learn.microsoft.com/nuget/consume-packages/central-package-management
+  -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Avalonia">
+    <PackageVersion Include="Avalonia" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Controls.DataGrid" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.2.7" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <!-- Pin to patched version to address NU1903 (GHSA-xrw6-gwf8-vvr9 / CVE-2026-39959); pulled in transitively by Avalonia.Desktop on Linux. -->
+    <PackageVersion Include="Tmds.DBus.Protocol" Version="0.21.3" />
+  </ItemGroup>
+
+  <ItemGroup Label="Entity Framework Core">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Microsoft.Extensions">
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.5" />
+  </ItemGroup>
+
+  <ItemGroup Label="System.*">
+    <PackageVersion Include="System.CommandLine" Version="2.0.7" />
+    <PackageVersion Include="System.Management" Version="9.0.4" />
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.7" />
+  </ItemGroup>
+
+  <ItemGroup Label="CLI / TUI / MCP">
+    <PackageVersion Include="ModelContextProtocol" Version="1.2.0" />
+    <PackageVersion Include="Spectre.Console" Version="0.55.2" />
+    <PackageVersion Include="Spectre.Console.Testing" Version="0.55.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="Build / analyzers (injected via src/Directory.Build.props)">
+    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.7.115" />
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+  </ItemGroup>
+
+  <ItemGroup Label="Tests">
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+</Project>
