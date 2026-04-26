@@ -426,6 +426,7 @@ public sealed class OahuTools
         ["DefaultQuality"] = cfg.DefaultQuality.ToString(),
         ["MaxParallelJobs"] = cfg.MaxParallelJobs,
         ["KeepEncryptedFiles"] = cfg.KeepEncryptedFiles,
+        ["Theme"] = cfg.Theme,
     };
 
     private static OahuConfig ApplyConfig(OahuConfig cfg, string key, string value) => key switch
@@ -434,6 +435,7 @@ public sealed class OahuTools
         "DefaultQuality" => cfg with { DefaultQuality = ParseQuality(value) },
         "MaxParallelJobs" => cfg with { MaxParallelJobs = int.Parse(value, System.Globalization.CultureInfo.InvariantCulture) },
         "KeepEncryptedFiles" => cfg with { KeepEncryptedFiles = bool.Parse(value) },
+        "Theme" => cfg with { Theme = string.IsNullOrEmpty(value) ? null : value },
         _ => throw new KeyNotFoundException($"Unknown config key '{key}'."),
     };
 }

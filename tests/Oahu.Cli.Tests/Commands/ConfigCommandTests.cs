@@ -34,6 +34,7 @@ public class ConfigCommandTests
         cfg = ConfigCommand.ApplySetting(cfg, "export-dir", "/tmp/aax");
         cfg = ConfigCommand.ApplySetting(cfg, "default-profile-alias", "main");
         cfg = ConfigCommand.ApplySetting(cfg, "allow-encrypted-file-credentials", "off");
+        cfg = ConfigCommand.ApplySetting(cfg, "theme", "HighContrast");
 
         Assert.Equal("/tmp/foo", cfg.DownloadDirectory);
         Assert.Equal(DownloadQuality.Extreme, cfg.DefaultQuality);
@@ -44,6 +45,28 @@ public class ConfigCommandTests
         Assert.Equal("/tmp/aax", cfg.ExportDirectory);
         Assert.Equal("main", cfg.DefaultProfileAlias);
         Assert.False(cfg.AllowEncryptedFileCredentials);
+        Assert.Equal("HighContrast", cfg.Theme);
+    }
+
+    [Fact]
+    public void ApplySetting_Theme_AcceptsCaseInsensitive_And_NormalizesCasing()
+    {
+        var cfg = ConfigCommand.ApplySetting(OahuConfig.Default, "theme", "highcontrast");
+        Assert.Equal("HighContrast", cfg.Theme);
+    }
+
+    [Fact]
+    public void ApplySetting_Theme_EmptyClearsOverride()
+    {
+        var cfg = OahuConfig.Default with { Theme = "Mono" };
+        cfg = ConfigCommand.ApplySetting(cfg, "theme", string.Empty);
+        Assert.Null(cfg.Theme);
+    }
+
+    [Fact]
+    public void ApplySetting_InvalidThemeThrows()
+    {
+        Assert.Throws<ArgumentException>(() => ConfigCommand.ApplySetting(OahuConfig.Default, "theme", "Solarized"));
     }
 
     [Fact]
