@@ -74,7 +74,9 @@ public static class TuiCommand
             state,
             CliServiceFactory.AuthServiceFactory,
             CliServiceFactory.LibraryServiceFactory,
-            () => CliServiceFactory.ConfigServiceFactory());
+            () => CliServiceFactory.ConfigServiceFactory(),
+            CliServiceFactory.QueueServiceFactory,
+            CliServiceFactory.JobServiceFactory);
 
         // Wire sign-in flow: Home "s" key → region picker → external login → sync
         if (tabs[0] is HomeScreen home)

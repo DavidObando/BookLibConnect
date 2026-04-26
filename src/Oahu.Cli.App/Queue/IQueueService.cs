@@ -15,5 +15,14 @@ public interface IQueueService
 
     Task<bool> RemoveAsync(string asin, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Atomically swap the entry identified by <paramref name="asin"/> with the entry
+    /// at offset <paramref name="delta"/> from its current position (e.g. -1 = up,
+    /// +1 = down). No-op (returns false) if the entry doesn't exist or the move would
+    /// fall off either end of the list. Other entries are preserved exactly,
+    /// including their <c>AddedAt</c> timestamps.
+    /// </summary>
+    Task<bool> MoveAsync(string asin, int delta, CancellationToken cancellationToken = default);
+
     Task ClearAsync(CancellationToken cancellationToken = default);
 }

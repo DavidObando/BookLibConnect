@@ -88,4 +88,52 @@ public class JsonFileQueueServiceTests : IDisposable
         Assert.Empty(await svc.ListAsync());
         Assert.False(File.Exists(tempFile + ".tmp"));
     }
+
+    [Fact]
+    public async Task MoveAsync_Swaps_Adjacent_Entries_And_Persists()
+    {
+        var svc = new JsonFileQueueService(tempFile);
+        await svc.AddAsync(Sample("A1"));
+        await svc.AddAsync(Sample("A2"));
+        await svc.AddAsync(Sample("A3"));
+
+        Assert.True(await svc.MoveAsync("A1", +1));
+        Assert.Equal(new[] { "A2", "A1", "A3" }, (await svc.ListAsync()).Select(e => e.Asin).ToArray());
+
+        Assert.True(await svc.MoveAsync("A3", -1));
+        Assert.Equal(new[] { "A2", "A3", "A1" }, (await svc.ListAsync()).Select(e => e.Asin).ToArray());
+
+        var fresh = new JsonFileQueueService(tempFile);
+        Assert.Equal(new[] { "A2", "A3", "A1" }, (await fresh.ListAsync()).Select(e => e.Asin).ToArray());
+    }
+
+    [Fact]
+    public async Task MoveAsync_Returns_False_At_Boundaries_Or_Unknown()
+    {
+        var svc = new JsonFileQueueService(tempFile);
+        await svc.AddAsync(Sample("A1"));
+        await svc.AddAsync(Sample("A2"));
+
+        Assert.False(await svc.MoveAsync("A1", -1));
+        Assert.False(await svc.MoveAsync("A2", +1));
+        Assert.False(await svc.MoveAsync("missing", +1));
+        Assert.Equal(new[] { "A1", "A2" }, (await svc.ListAsync()).Select(e => e.Asin).ToArray());
+    }
+
+    [Fact]
+    public async Task MoveAsync_Preserves_AddedAt_Of_Other_Entries()
+    {
+        var svc = new JsonFileQueueService(tempFile);
+        var when = DateTimeOffset.UtcNow.AddDays(-1);
+        await svc.AddAsync(new QueueEntry { Asin = "A1", Title = "First", AddedAt = when });
+        await svc.AddAsync(new QueueEntry { Asin = "A2", Title = "Second", AddedAt = when.AddMinutes(10) });
+
+        Assert.True(await svc.MoveAsync("A1", +1));
+
+        var list = await svc.ListAsync();
+        Assert.Equal("A2", list[0].Asin);
+        Assert.Equal(when.AddMinutes(10), list[0].AddedAt);
+        Assert.Equal("A1", list[1].Asin);
+        Assert.Equal(when, list[1].AddedAt);
+    }
 }

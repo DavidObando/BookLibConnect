@@ -66,6 +66,29 @@ public sealed class JsonFileQueueService : IQueueService
         }
     }
 
+    public Task<bool> MoveAsync(string asin, int delta, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(asin);
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (writeLock)
+        {
+            var list = LoadLocked();
+            var idx = list.FindIndex(e => string.Equals(e.Asin, asin, StringComparison.OrdinalIgnoreCase));
+            if (idx < 0)
+            {
+                return Task.FromResult(false);
+            }
+            var target = idx + delta;
+            if (target < 0 || target >= list.Count || target == idx)
+            {
+                return Task.FromResult(false);
+            }
+            (list[idx], list[target]) = (list[target], list[idx]);
+            Persist(list);
+            return Task.FromResult(true);
+        }
+    }
+
     public Task ClearAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
