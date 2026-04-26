@@ -1,5 +1,6 @@
 using System;
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using Oahu.Cli.App.Auth;
 using Oahu.Cli.App.Errors;
 using Oahu.Cli.App.Models;
@@ -8,6 +9,7 @@ using Oahu.Cli.Tui.Auth;
 using Oahu.Cli.Tui.Logging;
 using Oahu.Cli.Tui.Screens;
 using Oahu.Cli.Tui.Shell;
+using Oahu.Cli.Tui.Themes;
 
 namespace Oahu.Cli.Commands;
 
@@ -42,7 +44,20 @@ public static class TuiCommand
         return cmd;
     }
 
-    public static int Run()
+    /// <summary>
+    /// Overload that lets the subcommand share the root's <c>--theme</c> /
+    /// <c>--no-color</c> resolution.
+    /// </summary>
+    public static Command Create(Func<ParseResult, GlobalOptions> resolveGlobals)
+    {
+        var cmd = new Command("tui", "Launch the interactive TUI (full-screen). Equivalent to running `oahu-cli` with no arguments.");
+        cmd.SetAction(parse => Run(resolveGlobals(parse)));
+        return cmd;
+    }
+
+    public static int Run() => Run(new GlobalOptions());
+
+    public static int Run(GlobalOptions globals)
     {
         if (!CliEnvironment.CanEnterTui)
         {
@@ -53,6 +68,12 @@ public static class TuiCommand
             CliEnvironment.Error.WriteLine("  Or run `oahu-cli --help` for the full command set.");
             return TuiHost.NoTtyExitCode;
         }
+
+        // Apply the theme BEFORE building any screens so the first frame uses
+        // the right palette. Precedence: --theme flag > NO_COLOR/--no-color → Mono
+        // > persisted OahuConfig.Theme > Default. Unknown names silently fall
+        // back to Default so a stale config can never wedge startup.
+        ApplyStartupTheme(globals);
 
         var state = new AppShellState();
 
@@ -96,6 +117,74 @@ public static class TuiCommand
         };
 
         return Launcher(opts);
+    }
+
+    /// <summary>
+    /// Resolve the effective theme name and apply it via <see cref="Theme.Use(string)"/>.
+    /// Public for testing — callers normally rely on <see cref="Run(GlobalOptions)"/>.
+    /// </summary>
+    public static string ResolveStartupThemeName(GlobalOptions globals, string? configuredTheme)
+    {
+        // 1. --theme flag wins.
+        if (TryMatchTheme(globals.ThemeOverride, out var explicitName))
+        {
+            return explicitName;
+        }
+
+        // 2. Colour-disabled environments → Mono.
+        if (globals.ForceNoColor || CliEnvironment.NoColorRequested)
+        {
+            return Themes.Mono.Name;
+        }
+
+        // 3. Persisted config value (silently ignored if unknown).
+        if (TryMatchTheme(configuredTheme, out var configured))
+        {
+            return configured;
+        }
+
+        return Themes.Default.Name;
+    }
+
+    private static bool TryMatchTheme(string? candidate, out string resolved)
+    {
+        if (!string.IsNullOrEmpty(candidate))
+        {
+            foreach (var name in Theme.AvailableNames())
+            {
+                if (string.Equals(name, candidate, StringComparison.OrdinalIgnoreCase))
+                {
+                    resolved = name;
+                    return true;
+                }
+            }
+        }
+        resolved = string.Empty;
+        return false;
+    }
+
+    private static void ApplyStartupTheme(GlobalOptions globals)
+    {
+        string? configured = null;
+        try
+        {
+            var cfg = CliServiceFactory.ConfigServiceFactory().LoadAsync().GetAwaiter().GetResult();
+            configured = cfg.Theme;
+        }
+        catch
+        {
+            // Fresh installs / unreadable config → fall back to defaults.
+        }
+
+        var name = ResolveStartupThemeName(globals, configured);
+        try
+        {
+            Theme.Use(name);
+        }
+        catch
+        {
+            Theme.Reset();
+        }
     }
 
     private static string ResolveVersion()

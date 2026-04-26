@@ -30,6 +30,7 @@ public static class ConfigCommand
         "export-dir",
         "default-profile-alias",
         "allow-encrypted-file-credentials",
+        "theme",
     };
 
     public static Command Create(Func<ParseResult, GlobalOptions> resolveGlobals)
@@ -52,6 +53,7 @@ public static class ConfigCommand
         ["export-dir"] = cfg.ExportDirectory,
         ["default-profile-alias"] = cfg.DefaultProfileAlias,
         ["allow-encrypted-file-credentials"] = cfg.AllowEncryptedFileCredentials,
+        ["theme"] = cfg.Theme,
     };
 
     public static OahuConfig ApplySetting(OahuConfig cfg, string key, string value) => key switch
@@ -65,6 +67,7 @@ public static class ConfigCommand
         "export-dir" => cfg with { ExportDirectory = value },
         "default-profile-alias" => cfg with { DefaultProfileAlias = string.IsNullOrEmpty(value) ? null : value },
         "allow-encrypted-file-credentials" => cfg with { AllowEncryptedFileCredentials = ParseBool(value) },
+        "theme" => cfg with { Theme = ParseTheme(value) },
         _ => throw new ArgumentException($"Unknown config key '{key}'. Valid: {string.Join(", ", Keys)}"),
     };
 
@@ -175,4 +178,21 @@ public static class ConfigCommand
     private static int ParsePositive(string s) => int.TryParse(s, out var n) && n > 0
         ? n
         : throw new ArgumentException($"Invalid positive integer '{s}'.");
+
+    private static string? ParseTheme(string s)
+    {
+        if (string.IsNullOrEmpty(s))
+        {
+            return null;
+        }
+        foreach (var name in Oahu.Cli.Tui.Themes.Theme.AvailableNames())
+        {
+            if (string.Equals(name, s, StringComparison.OrdinalIgnoreCase))
+            {
+                return name;
+            }
+        }
+        throw new ArgumentException(
+            $"Invalid theme '{s}'. Valid: {string.Join(", ", Oahu.Cli.Tui.Themes.Theme.AvailableNames())} (or empty to clear).");
+    }
 }
