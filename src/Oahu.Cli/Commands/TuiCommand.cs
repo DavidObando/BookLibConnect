@@ -1,6 +1,7 @@
 using System;
 using System.CommandLine;
 using Oahu.Cli.App.Auth;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.App.Models;
 using Oahu.Cli.Tui;
 using Oahu.Cli.Tui.Auth;
@@ -16,7 +17,8 @@ namespace Oahu.Cli.Commands;
 /// </summary>
 public static class TuiCommand
 {
-    public const int NotImplementedExitCode = 1;
+    /// <summary>Legacy alias for <see cref="ExitCodes.GenericFailure"/>; kept for source compatibility with tests.</summary>
+    public const int NotImplementedExitCode = ExitCodes.GenericFailure;
 
     /// <summary>
     /// Hook for tests / phase 7+ to swap the production launcher with a fake

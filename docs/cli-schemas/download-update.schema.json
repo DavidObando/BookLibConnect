@@ -12,7 +12,7 @@
     "title": { "type": "string" },
     "phase": {
       "type": "string",
-      "enum": ["Queued", "Licensing", "Downloading", "Decrypting", "Muxing", "Completed", "Failed", "Canceled"]
+      "enum": ["Queued", "Licensing", "Downloading", "Decrypting", "Exporting", "Completed", "Failed", "Canceled"]
     },
     "progress": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
     "message": { "type": ["string", "null"] },

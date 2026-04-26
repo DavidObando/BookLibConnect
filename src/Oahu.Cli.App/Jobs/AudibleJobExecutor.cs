@@ -31,7 +31,7 @@ namespace Oahu.Cli.App.Jobs;
 ///
 /// <para>
 /// Phase 4c.1 only handles download + decrypt (<c>convertAction = null</c>).
-/// AAX export ("Muxing") is wired in 4c.2 via the <c>convert</c> command.
+/// AAX export ("Exporting") is wired in 4c.2 via the <c>convert</c> command.
 /// </para>
 /// </summary>
 public sealed class AudibleJobExecutor : IJobExecutor
@@ -63,6 +63,20 @@ public sealed class AudibleJobExecutor : IJobExecutor
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // --no-decrypt: surface a clear error rather than silently decrypting.
+        // The underlying DownloadDecryptJob doesn't currently expose a
+        // download-only mode; tracked separately as a Bucket B follow-up.
+        if (request.NoDecrypt)
+        {
+            yield return new JobUpdate
+            {
+                JobId = request.Id,
+                Phase = JobPhase.Failed,
+                Message = "--no-decrypt is not yet supported by the executor (download-only mode pending Core API support).",
+            };
+            yield break;
+        }
 
         // Make sure the active GUI profile is loaded so the books DB query is
         // scoped to the right account; surfaces the same "no profile" error
@@ -129,19 +143,19 @@ public sealed class AudibleJobExecutor : IJobExecutor
         // If AAX export was requested, build a per-job IExportSettings,
         // construct the AaxExporter, and forward the convertAction to the job.
         // The translator is told whether convert is enabled so terminal phase
-        // mapping accounts for the extra Muxing → Exported step.
+        // mapping accounts for the extra Exporting → Exported step.
         ConvertDelegate<CliCancellation>? convertAction = null;
-        if (request.ExportToAax)
+        if (request.ExportToAax || request.ExportToM4b)
         {
             var exportInner = exportSettingsFactory();
-            var jobExport = new PerJobExportSettings(exportInner, exportToAax: true, exportDirectory: request.OutputDir);
+            var jobExport = new PerJobExportSettings(exportInner, exportToAax: request.ExportToAax, exportDirectory: request.OutputDir);
             if (string.IsNullOrEmpty(jobExport.ExportDirectory))
             {
                 yield return new JobUpdate
                 {
                     JobId = request.Id,
                     Phase = JobPhase.Failed,
-                    Message = "AAX export requested but no export directory is configured. Pass --output-dir or set ExportSettings.ExportDirectory.",
+                    Message = "Export requested but no export directory is configured. Pass --output-dir or set ExportSettings.ExportDirectory.",
                 };
                 yield break;
             }
@@ -171,10 +185,36 @@ public sealed class AudibleJobExecutor : IJobExecutor
             }
 
             translator.SetConvertEnabled();
-            var exporter = new AaxExporter(jobExport, jobSettings);
+            var exporter = request.ExportToAax ? new AaxExporter(jobExport, jobSettings) : null;
+            var capturedExportDir = jobExport.ExportDirectory;
             convertAction = (book, ctx, callback) =>
             {
-                exporter.Export(book, new SimpleConversionContext(null, ctx.CancellationToken), callback);
+                if (exporter is not null)
+                {
+                    exporter.Export(book, new SimpleConversionContext(null, ctx.CancellationToken), callback);
+                }
+
+                // m4b "export" is a copy of the decrypted file to the export
+                // directory: the decrypted artifact already has .m4b extension
+                // (M4B-brand MP4) per Oahu.Core.Properties.Resources.
+                if (request.ExportToM4b)
+                {
+                    try
+                    {
+                        var src = book.Conversion.DownloadFileName + ".m4b";
+                        if (System.IO.File.Exists(src))
+                        {
+                            var dest = System.IO.Path.Combine(
+                                capturedExportDir,
+                                System.IO.Path.GetFileName(src));
+                            System.IO.File.Copy(src, dest, overwrite: true);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "m4b export copy failed for {Asin}.", request.Asin);
+                    }
+                }
             };
         }
 
@@ -421,10 +461,10 @@ public sealed class AudibleJobExecutor : IJobExecutor
                         }
                         break;
                     case EConversionState.Converting:
-                        if (current != JobPhase.Muxing)
+                        if (current != JobPhase.Exporting)
                         {
-                            current = JobPhase.Muxing;
-                            writer.TryWrite(new JobUpdate { JobId = jobId, Phase = JobPhase.Muxing, Progress = 0 });
+                            current = JobPhase.Exporting;
+                            writer.TryWrite(new JobUpdate { JobId = jobId, Phase = JobPhase.Exporting, Progress = 0 });
                         }
                         break;
                     case EConversionState.Exported:

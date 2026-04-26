@@ -22,7 +22,7 @@
           "title": { "type": "string" },
           "status": {
             "type": "string",
-            "enum": ["Queued", "Licensing", "Downloading", "Decrypting", "Muxing", "Completed", "Failed", "Canceled", "Pending"]
+            "enum": ["Queued", "Licensing", "Downloading", "Decrypting", "Exporting", "Completed", "Failed", "Canceled", "Pending"]
           },
           "error": { "type": ["string", "null"] }
         },

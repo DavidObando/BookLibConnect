@@ -4,6 +4,7 @@ using System.CommandLine.Parsing;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Oahu.Cli.App.Doctor;
+using Oahu.Cli.App.Errors;
 
 namespace Oahu.Cli.Commands;
 
@@ -49,7 +50,7 @@ public static class DoctorCommand
             if (parse.GetValue(printConfigOpt))
             {
                 PrintResolvedPaths(parse.GetValue(jsonOpt));
-                return 0;
+                return ExitCodes.Success;
             }
 
             using var lf = loggerFactory();
@@ -75,7 +76,7 @@ public static class DoctorCommand
                 CliEnvironment.Error.WriteLine("--fix is reserved: no auto-repair actions are implemented yet.");
             }
 
-            return report.HasErrors ? 1 : 0;
+            return report.HasErrors ? ExitCodes.GenericFailure : ExitCodes.Success;
         });
 
         return cmd;

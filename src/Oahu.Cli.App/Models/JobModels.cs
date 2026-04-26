@@ -9,7 +9,7 @@ public enum JobPhase
     Licensing,
     Downloading,
     Decrypting,
-    Muxing,
+    Exporting,
     Completed,
     Failed,
     Canceled,
@@ -26,8 +26,22 @@ public sealed record JobRequest
 
     public string? ProfileAlias { get; init; }
 
-    /// <summary>When true, run the AAX exporter ("Muxing" phase) after decrypt.</summary>
+    /// <summary>When true, run the AAX exporter ("Exporting" phase) after decrypt.</summary>
     public bool ExportToAax { get; init; }
+
+    /// <summary>
+    /// When true, also produce a <c>.m4b</c> file via the same exporter. May be
+    /// combined with <see cref="ExportToAax"/> ("both" mode) — design §4.1.
+    /// </summary>
+    public bool ExportToM4b { get; init; }
+
+    /// <summary>
+    /// When true, stop after the LocalLocked phase: the encrypted <c>.aax(c)</c>
+    /// file is left on disk and no decryption is performed. Useful for offline
+    /// archival or manual conversion. Implies <see cref="ExportToAax"/> /
+    /// <see cref="ExportToM4b"/> are ignored.
+    /// </summary>
+    public bool NoDecrypt { get; init; }
 
     /// <summary>Optional override for the export directory (only meaningful when <see cref="ExportToAax"/>).</summary>
     public string? OutputDir { get; init; }

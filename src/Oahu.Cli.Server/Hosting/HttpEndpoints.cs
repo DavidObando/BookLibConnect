@@ -49,6 +49,28 @@ public static class HttpEndpoints
             }
         });
 
+        // Strict-peer middleware: when serving on a Unix socket with --strict-peer,
+        // verify that the connecting client process belongs to the same UID as the
+        // server. Only enforced when both flags are set; on platforms that can't
+        // resolve peer credentials we fail closed (403) rather than silently allow.
+        app.Use(async (ctx, next) =>
+        {
+            var opts = ctx.RequestServices.GetRequiredService<ServerOptions>();
+            if (opts.StrictPeer && !string.IsNullOrEmpty(opts.UnixSocketPath))
+            {
+                var sockFeature = ctx.Features.Get<Microsoft.AspNetCore.Connections.Features.IConnectionSocketFeature>();
+                var peerUid = sockFeature?.Socket is { } sock ? PeerCredentials.TryGetPeerUid(sock) : null;
+                var ourUid = PeerCredentials.GetCurrentUid();
+                if (peerUid is null || ourUid is null || peerUid != ourUid)
+                {
+                    ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await ctx.Response.WriteAsync("{\"error\":\"forbidden\",\"message\":\"peer uid mismatch\"}").ConfigureAwait(false);
+                    return;
+                }
+            }
+            await next(ctx).ConfigureAwait(false);
+        });
+
         // Bearer-token middleware: every request must present a matching Authorization header.
         app.Use(async (ctx, next) =>
         {
@@ -63,6 +85,20 @@ public static class HttpEndpoints
                 await ctx.Response.WriteAsync("{\"error\":\"unauthorized\"}").ConfigureAwait(false);
                 return;
             }
+
+            // Per-token rate limiter (60 req/min, burst 10). Applied after the
+            // bearer check so unauthenticated callers can't exhaust other
+            // callers' buckets, and before route handlers so SSE streams count
+            // exactly one token at connection time.
+            var limiter = ctx.RequestServices.GetRequiredService<TokenBucketRateLimiter>();
+            if (!limiter.TryAcquire(token))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                ctx.Response.Headers["Retry-After"] = "1";
+                await ctx.Response.WriteAsync("{\"error\":\"rate_limited\"}").ConfigureAwait(false);
+                return;
+            }
+
             await next(ctx).ConfigureAwait(false);
         });
 

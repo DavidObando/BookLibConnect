@@ -1,4 +1,5 @@
 using System;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.Tui.Shell;
 using Spectre.Console;
 
@@ -13,7 +14,7 @@ namespace Oahu.Cli.Tui;
 public static class TuiHost
 {
     /// <summary>Exit code returned when the host refuses to enter (non-TTY).</summary>
-    public const int NoTtyExitCode = 2;
+    public const int NoTtyExitCode = ExitCodes.UsageError;
 
     /// <summary>
     /// Run the AppShell against the real <see cref="Console"/>. This switches

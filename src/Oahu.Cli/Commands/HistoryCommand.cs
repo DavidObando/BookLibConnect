@@ -5,6 +5,7 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.App.Jobs;
 using Oahu.Cli.App.Models;
 using Oahu.Cli.App.Paths;
@@ -26,7 +27,81 @@ public static class HistoryCommand
         cmd.Subcommands.Add(CreateList(resolveGlobals));
         cmd.Subcommands.Add(CreateShow(resolveGlobals));
         cmd.Subcommands.Add(CreateRetry(resolveGlobals));
+        cmd.Subcommands.Add(CreateDelete(resolveGlobals));
         return cmd;
+    }
+
+    private static Command CreateDelete(Func<ParseResult, GlobalOptions> resolveGlobals)
+    {
+        var keepOpt = new Option<int?>("--keep") { Description = "Keep at most N most-recent records overall (applied last)." };
+        var beforeOpt = new Option<string?>("--before") { Description = "Delete records completed before this date (yyyy-MM-dd or ISO 8601)." };
+        var asinOpt = new Option<string[]>("--asin") { Description = "Delete records for one or more ASINs.", Arity = ArgumentArity.ZeroOrMore };
+
+        var c = new Command("delete", "Delete records from the history file.") { keepOpt, beforeOpt, asinOpt };
+        c.SetAction(async (parse, ct) =>
+        {
+            var globals = resolveGlobals(parse);
+            var keep = parse.GetValue(keepOpt);
+            var beforeRaw = parse.GetValue(beforeOpt);
+            var asins = parse.GetValue(asinOpt) ?? Array.Empty<string>();
+
+            DateTimeOffset? before = null;
+            if (!string.IsNullOrEmpty(beforeRaw))
+            {
+                if (!DateTimeOffset.TryParse(beforeRaw, out var parsed))
+                {
+                    CliEnvironment.Error.WriteLine($"oahu-cli: --before '{beforeRaw}' is not a valid date.");
+                    return ExitCodes.UsageError;
+                }
+                before = parsed;
+            }
+
+            if (keep is null && before is null && asins.Length == 0)
+            {
+                CliEnvironment.Error.WriteLine("oahu-cli: history delete requires at least one of --keep, --before, --asin.");
+                return ExitCodes.UsageError;
+            }
+            if (keep is { } k && k < 0)
+            {
+                CliEnvironment.Error.WriteLine("oahu-cli: --keep must be >= 0.");
+                return ExitCodes.UsageError;
+            }
+
+            var historyPath = Path.Combine(CliPaths.SharedUserDataDir, "history.jsonl");
+            var store = new JsonlHistoryStore(historyPath);
+
+            if (globals.DryRun)
+            {
+                int wouldDelete = 0;
+                await foreach (var rec in store.ReadAllAsync(ct).ConfigureAwait(false))
+                {
+                    var matchesAsin = asins.Length > 0 && asins.Any(a => string.Equals(a, rec.Asin, StringComparison.OrdinalIgnoreCase));
+                    var matchesBefore = before is { } b && rec.CompletedAt < b;
+                    if (matchesAsin || matchesBefore)
+                    {
+                        wouldDelete++;
+                    }
+                }
+                var dryWriter = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
+                dryWriter.WriteResource("history-delete-result", new Dictionary<string, object?>
+                {
+                    ["deleted"] = 0,
+                    ["wouldDelete"] = wouldDelete,
+                    ["dryRun"] = true,
+                });
+                return ExitCodes.Success;
+            }
+
+            var deleted = await store.DeleteAsync(asins, before, keep, ct).ConfigureAwait(false);
+
+            var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
+            writer.WriteResource("history-delete-result", new Dictionary<string, object?>
+            {
+                ["deleted"] = deleted,
+            });
+            return ExitCodes.Success;
+        });
+        return c;
     }
 
     public static IReadOnlyDictionary<string, object?> ToDictionary(JobRecord record) => new Dictionary<string, object?>
@@ -59,7 +134,7 @@ public static class HistoryCommand
                 if (!DateTimeOffset.TryParse(sinceRaw, out var parsed))
                 {
                     CliEnvironment.Error.WriteLine($"oahu-cli: --since '{sinceRaw}' is not a valid date.");
-                    return 2;
+                    return ExitCodes.UsageError;
                 }
                 since = parsed;
             }
@@ -100,7 +175,7 @@ public static class HistoryCommand
                 new OutputColumn("status", "Status"),
                 new OutputColumn("completedAt", "Completed"),
             });
-            return 0;
+            return ExitCodes.Success;
         });
         return c;
     }
@@ -127,10 +202,10 @@ public static class HistoryCommand
             if (hit is null)
             {
                 CliEnvironment.Error.WriteLine($"oahu-cli: no history record with id '{id}'.");
-                return 1;
+                return ExitCodes.GenericFailure;
             }
             writer.WriteResource("history-record", ToDictionary(hit));
-            return 0;
+            return ExitCodes.Success;
         });
         return c;
     }
@@ -161,7 +236,7 @@ public static class HistoryCommand
             if (hit is null)
             {
                 CliEnvironment.Error.WriteLine($"oahu-cli: no history record with id '{id}'.");
-                return 1;
+                return ExitCodes.GenericFailure;
             }
 
             var request = new JobRequest

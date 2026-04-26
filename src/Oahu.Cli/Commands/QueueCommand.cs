@@ -4,6 +4,8 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Threading.Tasks;
+using Oahu.Cli.App.Errors;
+using Oahu.Cli.App.Library;
 using Oahu.Cli.App.Models;
 using Oahu.Cli.App.Paths;
 using Oahu.Cli.App.Queue;
@@ -62,25 +64,82 @@ public static class QueueCommand
                 new OutputColumn("quality", "Quality"),
                 new OutputColumn("addedAt", "Added"),
             });
-            return 0;
+            return ExitCodes.Success;
         });
         return c;
     }
 
     private static Command CreateAdd(Func<ParseResult, GlobalOptions> resolveGlobals)
     {
-        var asinArg = new Argument<string[]>("asin") { Arity = ArgumentArity.OneOrMore, Description = "One or more ASINs (use '-' to read one ASIN per line from stdin)." };
+        var asinArg = new Argument<string[]>("asin") { Arity = ArgumentArity.ZeroOrMore, Description = "One or more ASINs (use '-' to read one ASIN per line from stdin). Omit to search by --title." };
         var titleOpt = new Option<string?>("--title")
         {
-            Description = "Optional title (used when the library cache hasn't been synced yet). Only meaningful when adding a single ASIN.",
+            Description = "When ASINs are supplied: tag for the new entry. When no ASINs are supplied: case-insensitive substring search against the library; a single match is added.",
         };
-        var c = new Command("add", "Add one or more ASINs to the queue.") { asinArg, titleOpt };
+        var c = new Command("add", "Add one or more ASINs to the queue, or resolve a single title via the library cache.") { asinArg, titleOpt };
         c.SetAction(async (parse, ct) =>
         {
             var globals = resolveGlobals(parse);
             var asins = parse.GetValue(asinArg) ?? Array.Empty<string>();
             var title = parse.GetValue(titleOpt);
             var svc = CliServiceFactory.QueueServiceFactory();
+            var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
+
+            // Title-based add: no positionals, --title supplied → search the library.
+            if (asins.Length == 0)
+            {
+                if (string.IsNullOrWhiteSpace(title))
+                {
+                    CliEnvironment.Error.WriteLine("oahu-cli: queue add requires an ASIN or --title.");
+                    return ExitCodes.UsageError;
+                }
+                if (title.Length < 4)
+                {
+                    CliEnvironment.Error.WriteLine("oahu-cli: --title must be at least 4 characters when used as a search term.");
+                    return ExitCodes.UsageError;
+                }
+
+                var library = CliServiceFactory.LibraryServiceFactory();
+                var items = await library.ListAsync(new LibraryFilter { Search = title, AvailableOnly = true }, ct).ConfigureAwait(false);
+                var matches = new List<LibraryItem>();
+                foreach (var i in items)
+                {
+                    if ((i.Title?.IndexOf(title, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0
+                        || (i.Subtitle?.IndexOf(title, StringComparison.OrdinalIgnoreCase) ?? -1) >= 0)
+                    {
+                        matches.Add(i);
+                    }
+                }
+                if (matches.Count == 0)
+                {
+                    CliEnvironment.Error.WriteLine($"oahu-cli: no library item matches title '{title}'. Try `oahu-cli library sync` first.");
+                    return ExitCodes.UsageError;
+                }
+                if (matches.Count > 1)
+                {
+                    CliEnvironment.Error.WriteLine($"oahu-cli: '{title}' matched {matches.Count} items. Disambiguate with --asin:");
+                    foreach (var m in matches.Take(10))
+                    {
+                        CliEnvironment.Error.WriteLine($"  {m.Asin}  {m.Title}");
+                    }
+                    if (matches.Count > 10)
+                    {
+                        CliEnvironment.Error.WriteLine($"  … and {matches.Count - 10} more.");
+                    }
+                    return ExitCodes.UsageError;
+                }
+                var only = matches[0];
+                var ok = await svc.AddAsync(new QueueEntry { Asin = only.Asin, Title = only.Title }, ct).ConfigureAwait(false);
+                writer.WriteResource("queue-add-result", new Dictionary<string, object?>
+                {
+                    ["added"] = ok ? 1 : 0,
+                    ["skipped"] = ok ? 0 : 1,
+                    ["resolvedAsin"] = only.Asin,
+                    ["resolvedTitle"] = only.Title,
+                });
+                return ExitCodes.Success;
+            }
+
             var added = 0;
             var skipped = 0;
 
@@ -106,13 +165,12 @@ public static class QueueCommand
                 }
             }
 
-            var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
             writer.WriteResource("queue-add-result", new Dictionary<string, object?>
             {
                 ["added"] = added,
                 ["skipped"] = skipped,
             });
-            return 0;
+            return ExitCodes.Success;
         });
         return c;
     }
@@ -153,7 +211,7 @@ public static class QueueCommand
                     ["wouldRemove"] = wouldRemove,
                     ["wouldMiss"] = wouldMiss,
                 });
-                return 0;
+                return ExitCodes.Success;
             }
 
             var removed = 0;
@@ -174,7 +232,7 @@ public static class QueueCommand
                 ["removed"] = removed,
                 ["missing"] = missing,
             });
-            return missing > 0 && removed == 0 ? 1 : 0;
+            return missing > 0 && removed == 0 ? ExitCodes.GenericFailure : ExitCodes.Success;
         });
         return c;
     }
@@ -196,7 +254,7 @@ public static class QueueCommand
                 {
                     ["wouldRemove"] = items.Count,
                 });
-                return 0;
+                return ExitCodes.Success;
             }
 
             if (!force && CliEnvironment.IsStdinTty && CliEnvironment.IsStdoutTty)
@@ -206,12 +264,12 @@ public static class QueueCommand
                 if (!string.Equals(line?.Trim(), "y", StringComparison.OrdinalIgnoreCase))
                 {
                     CliEnvironment.Error.WriteLine("Aborted.");
-                    return 0;
+                    return ExitCodes.Success;
                 }
             }
             await svc.ClearAsync(ct).ConfigureAwait(false);
             writer.WriteSuccess("Queue cleared.");
-            return 0;
+            return ExitCodes.Success;
         });
         return c;
     }

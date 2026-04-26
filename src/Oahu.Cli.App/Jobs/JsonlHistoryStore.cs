@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
@@ -101,5 +102,80 @@ public sealed class JsonlHistoryStore
                 yield return rec;
             }
         }
+    }
+
+    /// <summary>
+    /// Deletes history records that match any of the supplied filters,
+    /// rewriting the file atomically. Records are KEPT iff:
+    ///   - their ASIN is NOT in <paramref name="asins"/> (when non-empty), AND
+    ///   - their <c>CompletedAt</c> is NOT before <paramref name="before"/> (when set), AND
+    ///   - they fall within the most recent <paramref name="keep"/> records overall
+    ///     (when set). The <paramref name="keep"/> filter is applied last.
+    /// Returns the number of deleted records.
+    /// </summary>
+    public async Task<int> DeleteAsync(
+        IReadOnlyCollection<string>? asins = null,
+        DateTimeOffset? before = null,
+        int? keep = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(path))
+        {
+            return 0;
+        }
+
+        var asinSet = asins is { Count: > 0 }
+            ? new HashSet<string>(asins, StringComparer.OrdinalIgnoreCase)
+            : null;
+
+        var all = new List<JobRecord>();
+        await foreach (var rec in ReadAllAsync(cancellationToken).ConfigureAwait(false))
+        {
+            all.Add(rec);
+        }
+
+        var kept = new List<JobRecord>(all.Count);
+        foreach (var rec in all)
+        {
+            var matchesAsin = asinSet is not null && asinSet.Contains(rec.Asin);
+            var matchesBefore = before is { } b && rec.CompletedAt < b;
+            if (matchesAsin || matchesBefore)
+            {
+                continue;
+            }
+            kept.Add(rec);
+        }
+
+        if (keep is { } n && kept.Count > n)
+        {
+            kept = kept
+                .OrderByDescending(r => r.CompletedAt)
+                .Take(n)
+                .OrderBy(r => r.CompletedAt)
+                .ToList();
+        }
+
+        lock (writeLock)
+        {
+            var dir = System.IO.Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            var tmp = path + ".tmp." + Guid.NewGuid().ToString("n");
+            using (var fs = new FileStream(tmp, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            using (var writer = new StreamWriter(fs))
+            {
+                foreach (var rec in kept)
+                {
+                    writer.WriteLine(JsonSerializer.Serialize(rec, options));
+                }
+                writer.Flush();
+                fs.Flush(flushToDisk: true);
+            }
+            File.Move(tmp, path, overwrite: true);
+        }
+
+        return all.Count - kept.Count;
     }
 }

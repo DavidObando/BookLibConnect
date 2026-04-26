@@ -8,7 +8,7 @@ namespace Oahu.Cli.App.Jobs;
 /// <summary>
 /// Scripted executor used by tests and (via <c>oahu-cli ui-preview-jobs</c> later)
 /// by humans verifying TUI animations. Walks Licensing → Downloading → Decrypting →
-/// Muxing → Completed with token-checked sleep durations between phases.
+/// Exporting → Completed with token-checked sleep durations between phases.
 /// </summary>
 public sealed class FakeJobExecutor : IJobExecutor
 {
@@ -42,7 +42,7 @@ public sealed class FakeJobExecutor : IJobExecutor
         await Task.Delay(delayPerPhase, cancellationToken).ConfigureAwait(false);
         yield return new JobUpdate { JobId = request.Id, Phase = JobPhase.Decrypting, Progress = 1 };
 
-        yield return new JobUpdate { JobId = request.Id, Phase = JobPhase.Muxing };
+        yield return new JobUpdate { JobId = request.Id, Phase = JobPhase.Exporting };
         await Task.Delay(delayPerPhase, cancellationToken).ConfigureAwait(false);
 
         yield return new JobUpdate { JobId = request.Id, Phase = JobPhase.Completed };

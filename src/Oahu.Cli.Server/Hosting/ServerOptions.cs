@@ -29,6 +29,20 @@ public sealed class ServerOptions
     /// <summary>Optional override for the audit log path (test hook).</summary>
     public string? AuditPath { get; init; }
 
+    /// <summary>
+    /// When set, the HTTP transport binds to a Unix-domain socket at this path
+    /// instead of <see cref="HttpHost"/> / <see cref="HttpPort"/>. Mutually
+    /// exclusive with the TCP options. Not supported on Windows.
+    /// </summary>
+    public string? UnixSocketPath { get; init; }
+
+    /// <summary>
+    /// When true and <see cref="UnixSocketPath"/> is set, the server verifies that
+    /// each incoming HTTP connection's peer UID matches the server's UID and
+    /// rejects mismatched connections with HTTP 403. Linux + macOS only.
+    /// </summary>
+    public bool StrictPeer { get; init; }
+
     /// <summary>Validates loopback constraint and returns the parsed <see cref="IPAddress"/>.</summary>
     public IPAddress ResolveBindAddress()
     {

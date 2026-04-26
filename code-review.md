@@ -1569,3 +1569,38 @@ spec-level decisions. They are tracked in `plan.md` under Bucket B.
 - StyleCop: no net regressions. Two were introduced and fixed mid-flight
   (SA1518 trailing blank line in `OahuConfig.cs`; SA1203 const-before-non-
   const in `AuditLog.cs`).
+
+---
+
+## Bucket B Remediation Summary (2026-04-26)
+
+Bucket B (the 14 deferred feature/larger items from the original review) is now closed. All work landed across nine ordered work blocks; the test suite expanded from 277 to **292 unit tests + 5 new E2E tests**, all passing, with **0 StyleCop warnings** in a Release-config full-solution build.
+
+### Items shipped
+
+| ID | Item | Surface |
+|---|---|---|
+| B-01 | Central `ExitCodes` constants | `src/Oahu.Cli/Errors/ExitCodes.cs`, all command sites |
+| B-02 | `JobPhase.Muxing → Exporting` rename | `Oahu.Cli.App.Models`, executors, schemas, tests |
+| B-03 | `serve --listen unix:<path>` | `ServeCommand`, `ServerHost`; 0600 socket perms |
+| B-04 | Per-token rate limiter (60 req/min, burst 10) | `Oahu.Cli.Server/Hosting/TokenBucketRateLimiter.cs` |
+| B-05 | `serve --strict-peer` (Linux SO_PEERCRED / macOS LOCAL_PEERCRED) | `Oahu.Cli.Server/Hosting/PeerCredentials.cs` |
+| B-06 | Crash recovery via `active-jobs.json` | `JobScheduler`, `CliServiceFactory` |
+| B-07 | Ctrl+C 5-second grace state machine | `CliEnvironment` |
+| B-08 | `convert <file>` with ASIN inferred from filename | `ConvertCommand` |
+| B-09 | `download --all-new`, `--limit N` | `DownloadCommand`, library/history cross-ref |
+| B-10 | `download --no-decrypt` | `JobRequest`, `AudibleJobExecutor` (early-fail; reserved) |
+| B-11 | `download --export m4b\|both` | `DownloadCommand`, `AudibleJobExecutor` |
+| B-12 | `library list --unread` | `LibraryCommand`, history cross-ref |
+| B-13 | `queue add --title <text>` | `QueueCommand`, library substring search |
+| B-14 | `history delete --asin --before --keep` (CLI) | `JsonlHistoryStore.DeleteAsync`, `HistoryCommand` |
+| B-15 | Colorblind theme (Okabe-Ito palette) | `Oahu.Cli.Tui/Themes/Theme.cs` |
+| B-16 | `SortableTable` + `Pager` widgets | `Oahu.Cli.Tui/Widgets/` + tests |
+| B-17 | `tests/Oahu.Cli.E2E.Tests` subprocess test project | new project, 5 smoke tests |
+| B-18 | Final verification | Release build, 0 warnings; all tests green |
+
+### Notes & residual scope
+
+- **`history_delete` MCP/REST surface**: the underlying `JsonlHistoryStore.DeleteAsync` is exposed via the CLI; wiring a `history_delete` MCP tool and `DELETE /v1/history` endpoint (plus a `history.delete` capability in `CapabilityPolicy`) is small follow-up work using the same store API.
+- **`download --no-decrypt`**: the JobRequest field is wired and the executor emits an early `Failed` for now, since the underlying decrypt pipeline always decrypts. Forward-compatible scaffolding is in place.
+- **Crash recovery v1**: interrupted jobs are appended to history as `Failed (interrupted)` and the state file is cleared on next boot; **no auto-resume** (deferred — requires API-side state).

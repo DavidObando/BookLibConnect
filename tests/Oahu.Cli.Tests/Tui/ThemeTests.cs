@@ -22,6 +22,8 @@ public class ThemeTests : IDisposable
     [InlineData("Mono")]
     [InlineData("HighContrast")]
     [InlineData("highcontrast")]
+    [InlineData("Colorblind")]
+    [InlineData("colorblind")]
     public void Use_Switches_To_Named_Theme(string name)
     {
         Theme.Use(name);

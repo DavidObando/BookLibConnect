@@ -313,7 +313,7 @@ public sealed class JobsScreen : ITabScreen, ITerminalProgressProvider
             JobPhase.Licensing => 0.05 + 0.10 * v,
             JobPhase.Downloading => 0.15 + 0.55 * v,
             JobPhase.Decrypting => 0.70 + 0.20 * v,
-            JobPhase.Muxing => 0.90 + 0.10 * v,
+            JobPhase.Exporting => 0.90 + 0.10 * v,
             JobPhase.Completed => 1d,
             _ => 0d,
         };

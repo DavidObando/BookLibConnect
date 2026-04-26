@@ -3,6 +3,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,6 +12,7 @@ using ModelContextProtocol.Server;
 using Oahu.Cli.App.Auth;
 using Oahu.Cli.App.Config;
 using Oahu.Cli.App.Doctor;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.App.Jobs;
 using Oahu.Cli.App.Library;
 using Oahu.Cli.App.Queue;
@@ -63,7 +66,16 @@ public static class ServerHost
     /// </summary>
     public static WebApplication BuildHttpApp(ServerOptions options, ServiceFactories factories)
     {
-        var bindAddr = options.ResolveBindAddress(); // throws on non-loopback.
+        var useUnix = !string.IsNullOrEmpty(options.UnixSocketPath);
+        if (useUnix && OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException(
+                "oahu-cli serve --listen unix:<path> is not supported on Windows. Use TCP loopback instead.");
+        }
+
+        // Validate loopback constraint up front for the TCP path; for the
+        // Unix-socket path we skip the bind-address check entirely.
+        var bindAddr = useUnix ? null : options.ResolveBindAddress();
         var builder = WebApplication.CreateSlimBuilder();
 
         // Quiet ASP.NET Core (avoid corrupting stdout when sharing with stdio MCP).
@@ -78,11 +90,44 @@ public static class ServerHost
             builder.Logging.AddSimpleConsole();
         }
 
+        if (useUnix)
+        {
+            // Remove any stale socket file from a previous run; the server owns
+            // this path while it holds the user-data lock.
+            try
+            {
+                if (File.Exists(options.UnixSocketPath!))
+                {
+                    File.Delete(options.UnixSocketPath!);
+                }
+            }
+            catch (IOException)
+            {
+                // Best-effort: a stuck socket will surface as a Kestrel bind error below.
+            }
+
+            builder.WebHost.ConfigureKestrel(kestrel =>
+            {
+                kestrel.ListenUnixSocket(options.UnixSocketPath!);
+            });
+        }
+
         RegisterShared(builder.Services, options, factories, ServerTransport.Http);
 
         var app = builder.Build();
-        app.Urls.Clear();
-        app.Urls.Add($"http://{(bindAddr.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 ? "[::1]" : bindAddr.ToString())}:{options.HttpPort}");
+
+        if (useUnix)
+        {
+            app.Urls.Clear();
+            // Surface the socket path in the same place TCP urls go so logs read sensibly.
+            app.Urls.Add($"http://unix:{options.UnixSocketPath}");
+        }
+        else
+        {
+            app.Urls.Clear();
+            app.Urls.Add($"http://{(bindAddr!.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 ? "[::1]" : bindAddr.ToString())}:{options.HttpPort}");
+        }
+
         HttpEndpoints.Map(app);
         return app;
     }
@@ -112,7 +157,7 @@ public static class ServerHost
         if (!options.EnableStdio && !options.EnableHttp)
         {
             await Console.Error.WriteLineAsync("oahu-cli serve: must enable at least one of --mcp or --http.").ConfigureAwait(false);
-            return 2;
+            return ExitCodes.UsageError;
         }
 
         // Acquire the cooperative file lock first — fail fast on contention.
@@ -126,7 +171,7 @@ public static class ServerHost
             await Console.Error.WriteLineAsync(ex.Message).ConfigureAwait(false);
             // Exit 6 = single-instance lock contention (per design §10).
             // Exit 4 is reserved for Audible API errors.
-            return 6;
+            return ExitCodes.Locked;
         }
 
         // Ensure the token file exists if HTTP is enabled (so we fail fast on permission issues too).
@@ -139,8 +184,10 @@ public static class ServerHost
             catch (Exception ex)
             {
                 await Console.Error.WriteLineAsync($"oahu-cli serve: token init failed: {ex.Message}").ConfigureAwait(false);
-                // Exit 5 = config / setup failure (token file unwritable, permissions, etc).
-                return 5;
+                // Token init failure is a setup/environment issue; reuse the
+                // generic-failure exit code (the design table reserves 5 for
+                // decryption errors specifically).
+                return ExitCodes.GenericFailure;
             }
         }
 
@@ -159,6 +206,24 @@ public static class ServerHost
             {
                 httpApp = BuildHttpApp(options, factories);
                 await httpApp.StartAsync(cancellationToken).ConfigureAwait(false);
+
+                // Lock down a freshly-bound Unix socket so only the owning UID
+                // can connect. Kestrel's default umask is process-inherited, so
+                // we re-apply 0600 explicitly. No-op on Windows (won't get here
+                // anyway: BuildHttpApp throws PNS for unix on Windows).
+                if (!string.IsNullOrEmpty(options.UnixSocketPath) && !OperatingSystem.IsWindows())
+                {
+                    try
+                    {
+                        File.SetUnixFileMode(options.UnixSocketPath!, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                    }
+                    catch (Exception ex)
+                    {
+                        await Console.Error.WriteLineAsync(
+                            $"oahu-cli serve: warning: could not chmod 0600 on '{options.UnixSocketPath}': {ex.Message}").ConfigureAwait(false);
+                    }
+                }
+
                 var addresses = string.Join(", ", httpApp.Urls);
                 await Console.Error.WriteLineAsync($"oahu-cli serve: HTTP listening on {addresses}").ConfigureAwait(false);
             }
@@ -171,17 +236,34 @@ public static class ServerHost
             {
                 await httpApp.WaitForShutdownAsync(cancellationToken).ConfigureAwait(false);
             }
-            return 0;
+            return ExitCodes.Success;
         }
         catch (OperationCanceledException)
         {
-            return 0;
+            return ExitCodes.Success;
         }
         finally
         {
             if (httpApp is not null)
             {
                 await httpApp.DisposeAsync().ConfigureAwait(false);
+            }
+
+            // Remove the Unix-socket file when the server exits cleanly.
+            // Best-effort: a missing file is fine, and we don't want to mask a
+            // real error from the inner block.
+            if (!string.IsNullOrEmpty(options.UnixSocketPath))
+            {
+                try
+                {
+                    File.Delete(options.UnixSocketPath!);
+                }
+                catch (IOException)
+                {
+                }
+                catch (UnauthorizedAccessException)
+                {
+                }
             }
         }
     }
@@ -196,10 +278,12 @@ public static class ServerHost
         services.AddSingleton(_ => factories.Config());
         services.AddSingleton(_ => factories.Doctor());
 
+        services.AddSingleton(options);
         services.AddSingleton<OahuTools>();
         services.AddSingleton(new TokenStore(options.TokenPath));
         services.AddSingleton(new AuditLog(options.AuditPath));
         services.AddSingleton(new CapabilityPolicy(transport, options.Unattended));
+        services.AddSingleton<TokenBucketRateLimiter>();
         services.AddSingleton<ToolDispatcher>();
     }
 

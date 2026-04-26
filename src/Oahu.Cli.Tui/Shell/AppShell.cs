@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.Tui.Auth;
 using Oahu.Cli.Tui.Logging;
 using Oahu.Cli.Tui.Screens;
@@ -223,9 +224,9 @@ public sealed class AppShell : IAppShellNavigator
                         switch (timedAction)
                         {
                             case ShellAction.Exit:
-                                return 0;
+                                return ExitCodes.Success;
                             case ShellAction.ExitSigInt:
-                                return 130;
+                                return ExitCodes.Cancelled;
                         }
                     }
                     Render();
@@ -248,9 +249,9 @@ public sealed class AppShell : IAppShellNavigator
                                 Render();
                                 break;
                             case ShellAction.Exit:
-                                return 0;
+                                return ExitCodes.Success;
                             case ShellAction.ExitSigInt:
-                                return 130;
+                                return ExitCodes.Cancelled;
                         }
                     }
                     continue;
@@ -259,7 +260,7 @@ public sealed class AppShell : IAppShellNavigator
                 var key = keyReader.ReadKey();
                 if (key is null)
                 {
-                    return 0;
+                    return ExitCodes.Success;
                 }
                 var action = Dispatch(key.Value);
                 switch (action)
@@ -268,9 +269,9 @@ public sealed class AppShell : IAppShellNavigator
                         Render();
                         break;
                     case ShellAction.Exit:
-                        return 0;
+                        return ExitCodes.Success;
                     case ShellAction.ExitSigInt:
-                        return 130;
+                        return ExitCodes.Cancelled;
                 }
             }
         }

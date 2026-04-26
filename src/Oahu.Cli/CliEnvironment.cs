@@ -14,6 +14,29 @@ public static class CliEnvironment
 {
     private static int restoreInstalled;
     private static Action? restoreAction;
+    private static int sigintCount;
+    private static System.Threading.Timer? graceTimer;
+
+    private static void ForceExit130()
+    {
+        try
+        {
+            graceTimer?.Dispose();
+        }
+        catch
+        {
+            // best-effort
+        }
+        try
+        {
+            RunRestore();
+        }
+        catch
+        {
+            // best-effort
+        }
+        Environment.Exit(130);
+    }
 
     /// <summary>True when the user explicitly disabled colour via <c>NO_COLOR</c>.</summary>
     public static bool NoColorRequested { get; private set; }
@@ -121,9 +144,36 @@ public static class CliEnvironment
 
         Console.CancelKeyPress += (_, e) =>
         {
-            // Phase 1: cooperative — let System.CommandLine's cancellation see Ctrl+C.
-            // Phase 6 (TUI) replaces this with the progressive Ctrl+C state machine.
-            RunRestore();
+            // Progressive Ctrl+C state machine (design §10):
+            //   1st press → cooperative cancel + 5s grace timer.
+            //   2nd press OR timer expiry → force-exit with code 130.
+            // System.CommandLine has already set e.Cancel = true on its own
+            // handler before we run, so the runtime won't terminate the
+            // process for the first press; we only need to force-exit on the
+            // second press / timer.
+            var n = System.Threading.Interlocked.Increment(ref sigintCount);
+            if (n == 1)
+            {
+                try
+                {
+                    Console.Error.WriteLine("oahu-cli: cancelling… press Ctrl+C again to force-quit (5s grace).");
+                }
+                catch
+                {
+                    // stderr might be closed; nothing useful we can do.
+                }
+
+                graceTimer = new System.Threading.Timer(
+                    _ => ForceExit130(),
+                    null,
+                    TimeSpan.FromSeconds(5),
+                    System.Threading.Timeout.InfiniteTimeSpan);
+                RunRestore();
+            }
+            else
+            {
+                ForceExit130();
+            }
         };
 
         AppDomain.CurrentDomain.ProcessExit += (_, _) => RunRestore();

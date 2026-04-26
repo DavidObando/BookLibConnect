@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Linq;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.Tui.Hooks;
 using Oahu.Cli.Tui.Themes;
 using Oahu.Cli.Tui.Widgets;
@@ -61,7 +62,7 @@ public static class UiPreviewCommand
 
             // Reset to Default so the next command isn't affected by the preview.
             Theme.Reset();
-            return 0;
+            return ExitCodes.Success;
         });
 
         return cmd;

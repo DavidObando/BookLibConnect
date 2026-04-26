@@ -91,11 +91,31 @@ public class AuthLibraryEndToEndTests : IDisposable
     }
 
     [Fact]
-    public async Task LibraryUnread_NotImplemented_Errors()
+    public async Task LibraryUnread_FiltersByMissingHistory()
     {
-        var (exit, _, stderr) = await RunAsync("library", "list", "--unread");
-        Assert.Equal(1, exit);
-        Assert.Contains("--unread is not implemented", stderr);
+        var lib = new FakeLibraryService(new[]
+        {
+            new LibraryItem { Asin = "AREAD", Title = "Read Book" },
+            new LibraryItem { Asin = "AUNREAD", Title = "Unread Book" },
+        });
+        CliServiceFactory.LibraryServiceFactory = () => lib;
+
+        var fakeJobs = new Oahu.Cli.Tests.Tui.FakeJobService();
+        fakeJobs.SeedHistory(new JobRecord
+        {
+            Id = "j1",
+            Asin = "AREAD",
+            Title = "Read Book",
+            TerminalPhase = JobPhase.Completed,
+            StartedAt = DateTimeOffset.UtcNow,
+            CompletedAt = DateTimeOffset.UtcNow,
+        });
+        CliServiceFactory.JobServiceFactory = () => fakeJobs;
+
+        var (exit, stdout, _) = await RunAsync("library", "list", "--unread", "--json");
+        Assert.Equal(0, exit);
+        Assert.Contains("AUNREAD", stdout);
+        Assert.DoesNotContain("AREAD\"", stdout);
     }
 
     [Fact]

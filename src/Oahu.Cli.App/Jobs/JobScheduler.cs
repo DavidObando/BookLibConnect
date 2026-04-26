@@ -18,6 +18,18 @@ public sealed class JobSchedulerOptions
 
     /// <summary>Bound on the worker channel; <see cref="IJobService.SubmitAsync"/> async-waits when full.</summary>
     public int ChannelCapacity { get; init; } = 64;
+
+    /// <summary>
+    /// Optional path to a JSON file that tracks active jobs across process
+    /// restarts. When set, the scheduler atomically rewrites the file after
+    /// every phase transition; on startup, any entries it finds are treated
+    /// as "interrupted" — appended to history with phase
+    /// <see cref="JobPhase.Failed"/> and message
+    /// <c>"interrupted (recovered on startup)"</c>, then cleared. Resumption
+    /// is intentionally NOT attempted in v1: re-driving an Audible download
+    /// from an unknown phase is risky without API-side checkpointing.
+    /// </summary>
+    public string? ActiveJobsStatePath { get; init; }
 }
 
 /// <summary>
@@ -49,6 +61,11 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
         this.history = history;
         this.options = options ?? new JobSchedulerOptions();
         this.logger = logger ?? NullLogger<JobScheduler>.Instance;
+
+        // Crash recovery: any jobs left in the active-state file from a prior
+        // process are reported as Failed(interrupted) and dropped. Done before
+        // workers start so recovered entries can't race the active map.
+        RecoverInterruptedJobs();
 
         work = Channel.CreateBounded<JobRequest>(new BoundedChannelOptions(this.options.ChannelCapacity)
         {
@@ -295,6 +312,8 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
             }
         }
 
+        PersistActiveJobs();
+
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
@@ -342,6 +361,106 @@ public sealed class JobScheduler : IJobService, IAsyncDisposable
     {
         await Task.CompletedTask.ConfigureAwait(false);
         yield break;
+    }
+
+    private void RecoverInterruptedJobs()
+    {
+        var path = options.ActiveJobsStatePath;
+        if (string.IsNullOrEmpty(path) || !System.IO.File.Exists(path))
+        {
+            return;
+        }
+
+        List<PersistedJob>? entries = null;
+        try
+        {
+            entries = AtomicFile.ReadJson<List<PersistedJob>>(path);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Could not read active-jobs state file '{Path}'; ignoring.", path);
+        }
+
+        if (entries is { Count: > 0 } && history is not null)
+        {
+            foreach (var e in entries)
+            {
+                try
+                {
+                    history.Append(new JobRecord
+                    {
+                        Id = e.Id,
+                        Asin = e.Asin,
+                        Title = e.Title ?? string.Empty,
+                        TerminalPhase = JobPhase.Failed,
+                        StartedAt = e.StartedAt,
+                        CompletedAt = DateTimeOffset.UtcNow,
+                        ErrorMessage = "interrupted (recovered on startup)",
+                        ProfileAlias = e.ProfileAlias,
+                        Quality = e.Quality,
+                    });
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Could not append recovery record for job {Id}.", e.Id);
+                }
+            }
+        }
+
+        try
+        {
+            System.IO.File.Delete(path);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Could not clear active-jobs state file '{Path}'.", path);
+        }
+    }
+
+    private void PersistActiveJobs()
+    {
+        var path = options.ActiveJobsStatePath;
+        if (string.IsNullOrEmpty(path))
+        {
+            return;
+        }
+        try
+        {
+            var snapshot = jobs.Select(kv => new PersistedJob
+            {
+                Id = kv.Value.Request.Id,
+                Asin = kv.Value.Request.Asin,
+                Title = kv.Value.Request.Title,
+                StartedAt = kv.Value.StartedAt,
+                ProfileAlias = kv.Value.Request.ProfileAlias,
+                Quality = kv.Value.Request.Quality,
+                LastPhase = kv.Value.LastPhase,
+            }).ToList();
+            AtomicFile.WriteAllJson(path, snapshot);
+        }
+        catch (Exception ex)
+        {
+            // Persistence is best-effort: never let a state-file IO failure
+            // bring down the scheduler thread.
+            logger.LogWarning(ex, "Could not persist active-jobs state file '{Path}'.", path);
+        }
+    }
+
+    private sealed class PersistedJob
+    {
+        public string Id { get; set; } = string.Empty;
+
+        public string Asin { get; set; } = string.Empty;
+
+        public string? Title { get; set; }
+
+        public DateTimeOffset StartedAt { get; set; }
+
+        public string? ProfileAlias { get; set; }
+
+        public DownloadQuality Quality { get; set; }
+
+        public JobPhase LastPhase { get; set; }
     }
 
     private sealed class JobLifecycle
