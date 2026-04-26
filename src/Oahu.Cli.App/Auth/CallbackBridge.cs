@@ -26,22 +26,27 @@ public static class CallbackBridge
         {
             CaptchaCallback = imageBytes =>
                 broker.SolveCaptchaAsync(new CaptchaChallenge(imageBytes), cancellationToken)
+                    .ConfigureAwait(false)
                     .GetAwaiter().GetResult(),
 
             MfaCallback = () =>
                 broker.SolveMfaAsync(new MfaChallenge(), cancellationToken)
+                    .ConfigureAwait(false)
                     .GetAwaiter().GetResult(),
 
             CvfCallback = () =>
                 broker.SolveCvfAsync(new CvfChallenge(), cancellationToken)
+                    .ConfigureAwait(false)
                     .GetAwaiter().GetResult(),
 
             ApprovalCallback = () =>
                 broker.ConfirmApprovalAsync(new ApprovalChallenge(), cancellationToken)
+                    .ConfigureAwait(false)
                     .GetAwaiter().GetResult(),
 
             ExternalLoginCallback = uri =>
                 broker.CompleteExternalLoginAsync(new ExternalLoginChallenge(uri), cancellationToken)
+                    .ConfigureAwait(false)
                     .GetAwaiter().GetResult(),
 
             // No interactive de-registration confirmation in the CLI:

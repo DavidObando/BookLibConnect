@@ -42,14 +42,12 @@ public static class CliPaths
             "Downloads");
 
     /// <summary>
-    /// User-data directory shared with the Avalonia GUI (<c>Oahu.Aux.ApplEnv.LocalApplDirectory</c>
-    /// equivalent — i.e. <c>%LOCALAPPDATA%\oahu</c> on Windows, <c>~/.local/share/oahu</c> on
-    /// Linux, <c>~/Library/Application Support/oahu</c> on macOS).
+    /// User-data directory shared with the Avalonia GUI. Mirrors
+    /// <c>Oahu.Aux.ApplEnv.LocalApplDirectory</c> exactly so both binaries read/write the
+    /// same location (case-sensitive on Linux/macOS — the GUI's entry assembly name
+    /// "Oahu" determines the directory casing).
     /// </summary>
-    public static string SharedUserDataDir { get; } =
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            AppName);
+    public static string SharedUserDataDir { get; } = Oahu.Aux.ApplEnv.LocalApplDirectory;
 
     public static string ConfigFile => Path.Combine(ConfigDir, "config.json");
 

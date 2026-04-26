@@ -5,6 +5,7 @@ using System.CommandLine.Parsing;
 using System.Linq;
 using System.Threading.Tasks;
 using Oahu.Cli.App.Auth;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.App.Models;
 using Oahu.Cli.Output;
 
@@ -91,18 +92,18 @@ public static class AuthCommand
                 var svc = CliServiceFactory.AuthServiceFactory();
                 var session = await svc.LoginAsync(region, broker, preAmazon, ct).ConfigureAwait(false);
                 writer.WriteResource("auth-login-result", ToDictionary(session));
-                return 0;
+                return ExitCodes.Success;
             }
             catch (NonInteractiveCallbackException ex)
             {
                 CliEnvironment.Error.WriteLine($"Sign-in needs '{ex.Kind}' input but stdin is not a TTY.");
                 CliEnvironment.Error.WriteLine("Re-run from an interactive terminal, or sign in via the Oahu GUI.");
-                return 3;
+                return ExitCodes.AuthError;
             }
             catch (Exception ex)
             {
                 CliEnvironment.Error.WriteLine($"Sign-in failed: {ex.Message}");
-                return 3;
+                return ExitCodes.AuthError;
             }
         });
         return c;
@@ -139,7 +140,7 @@ public static class AuthCommand
                 new OutputColumn("isActive", "Active"),
             });
 
-            return sessions.Count == 0 ? 3 : 0;
+            return sessions.Count == 0 ? ExitCodes.AuthError : ExitCodes.Success;
         });
         return c;
     }
@@ -163,7 +164,7 @@ public static class AuthCommand
                 if (active is null)
                 {
                     CliEnvironment.Error.WriteLine("No active profile. Pass --profile <alias>.");
-                    return 3;
+                    return ExitCodes.AuthError;
                 }
                 alias = active.ProfileAlias;
             }
@@ -174,19 +175,19 @@ public static class AuthCommand
                 {
                     ["wouldLogout"] = alias,
                 });
-                return 0;
+                return ExitCodes.Success;
             }
 
             try
             {
                 await svc.LogoutAsync(alias!, ct).ConfigureAwait(false);
                 writer.WriteSuccess($"Signed out of '{alias}'.");
-                return 0;
+                return ExitCodes.Success;
             }
             catch (Exception ex)
             {
                 CliEnvironment.Error.WriteLine($"Sign-out failed: {ex.Message}");
-                return 1;
+                return ExitCodes.GenericFailure;
             }
         });
         return c;

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text.Json;
 
@@ -29,15 +30,36 @@ public static class AtomicFile
             Directory.CreateDirectory(dir);
         }
 
-        var tmp = path + ".tmp";
-        // Write + flush(true): fsync the file's bytes so the rename does not promote a partially written file.
-        using (var stream = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.None))
+        // Use a unique temp file per write so two concurrent writers (within or across processes)
+        // don't clobber each other's staging file before the rename promotes it.
+        var tmp = $"{path}.{Guid.NewGuid():N}.tmp";
+        try
         {
-            JsonSerializer.Serialize(stream, value, options ?? DefaultJsonOptions);
-            stream.Flush(flushToDisk: true);
-        }
+            // Write + flush(true): fsync the file's bytes so the rename does not promote a partially written file.
+            using (var stream = new FileStream(tmp, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                JsonSerializer.Serialize(stream, value, options ?? DefaultJsonOptions);
+                stream.Flush(flushToDisk: true);
+            }
 
-        File.Move(tmp, path, overwrite: true);
+            File.Move(tmp, path, overwrite: true);
+        }
+        catch
+        {
+            // Clean up the staging file on any failure so we don't leak partial files.
+            try
+            {
+                if (File.Exists(tmp))
+                {
+                    File.Delete(tmp);
+                }
+            }
+            catch
+            {
+                // best-effort cleanup
+            }
+            throw;
+        }
     }
 
     /// <summary>Read JSON from <paramref name="path"/>, returning <c>default</c> if the file does not exist.</summary>

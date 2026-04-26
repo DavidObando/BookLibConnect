@@ -4,6 +4,7 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
+using Oahu.Cli.App.Errors;
 
 namespace Oahu.Cli.Commands;
 
@@ -44,7 +45,7 @@ public static class ParseErrorRewriter
 
         error.WriteLine();
         error.WriteLine(HelpHint);
-        return 2;
+        return ExitCodes.UsageError;
     }
 
     /// <summary>

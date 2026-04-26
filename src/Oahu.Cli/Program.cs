@@ -2,6 +2,7 @@ using System;
 using System.CommandLine;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.Commands;
 using Oahu.Cli.Logging;
 
@@ -64,7 +65,7 @@ public static class Program
         catch (OperationCanceledException)
         {
             // Ctrl+C in command mode (per §10): exit code 130.
-            return 130;
+            return ExitCodes.Cancelled;
         }
         catch (Exception ex)
         {
@@ -78,7 +79,7 @@ public static class Program
             {
                 // ignore secondary failures
             }
-            return 1;
+            return ExitCodes.GenericFailure;
         }
         finally
         {

@@ -1,6 +1,7 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using Oahu.Cli.App.Errors;
 
 namespace Oahu.Cli.Commands;
 
@@ -39,7 +40,7 @@ public static class CompletionCommand
             var shell = parse.GetValue(shellArg)!;
             var script = Render(shell);
             CliEnvironment.Out.Write(script);
-            return 0;
+            return ExitCodes.Success;
         });
         return cmd;
     }

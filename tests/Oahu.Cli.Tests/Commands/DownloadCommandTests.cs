@@ -71,7 +71,7 @@ public class DownloadCommandTests : IDisposable
         Assert.Contains("\"phase\": \"Licensing\"", stdout);
         Assert.Contains("\"phase\": \"Downloading\"", stdout);
         Assert.Contains("\"phase\": \"Decrypting\"", stdout);
-        Assert.Contains("\"phase\": \"Muxing\"", stdout);
+        Assert.Contains("\"phase\": \"Exporting\"", stdout);
         Assert.Contains("\"phase\": \"Completed\"", stdout);
         Assert.Contains("\"resource\": \"download-summary\"", stdout);
         Assert.Contains("\"completed\": 1", stdout);

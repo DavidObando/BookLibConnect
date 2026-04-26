@@ -19,13 +19,14 @@ namespace Oahu.Cli.App.Credentials;
 public sealed class MacOsKeychainCredentialStore : ICredentialStore
 {
     private const string DefaultService = "oahu-cli";
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
     private readonly string serviceName;
     private readonly string securityBinary;
 
     public MacOsKeychainCredentialStore(string? serviceName = null, string? securityBinary = null)
     {
         this.serviceName = serviceName ?? DefaultService;
-        this.securityBinary = securityBinary ?? "/usr/bin/security";
+        this.securityBinary = securityBinary ?? ResolveSecurityBinary();
     }
 
     public string Provider => "keychain";
@@ -51,6 +52,12 @@ public sealed class MacOsKeychainCredentialStore : ICredentialStore
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(account);
         ArgumentNullException.ThrowIfNull(secret);
+
+        // NOTE: `security add-generic-password -w <secret>` exposes the secret via argv (visible to
+        // `ps` and crash dumps for any process owned by the current user). The macOS `security` tool
+        // does not offer a stdin-fed equivalent for generic-password creation, so we accept this
+        // tradeoff for the v1 shell-out approach. A future change can move to the native Keychain
+        // Services API via P/Invoke to keep the secret entirely in this process's address space.
         var (code, _, _) = await RunAsync(
             new[] { "add-generic-password", "-U", "-s", serviceName, "-a", account, "-w", secret },
             cancellationToken).ConfigureAwait(false);
@@ -98,12 +105,87 @@ public sealed class MacOsKeychainCredentialStore : ICredentialStore
         {
             psi.ArgumentList.Add(a);
         }
+
+        // Bound the wait so a hung Keychain agent (e.g., headless / locked / GUI prompt
+        // that nobody answers) cannot deadlock the CLI forever. The user-visible token
+        // is "operation timed out", surfaced through the existing exception path.
+        using var timeoutCts = new CancellationTokenSource(DefaultTimeout);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+        var token = linkedCts.Token;
+
         using var proc = Process.Start(psi)
             ?? throw new CredentialStoreUnavailableException($"Could not start {securityBinary}.");
-        var stdoutTask = proc.StandardOutput.ReadToEndAsync(ct);
-        var stderrTask = proc.StandardError.ReadToEndAsync(ct);
-        await proc.WaitForExitAsync(ct).ConfigureAwait(false);
-        return (proc.ExitCode, await stdoutTask.ConfigureAwait(false), await stderrTask.ConfigureAwait(false));
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync(token);
+        var stderrTask = proc.StandardError.ReadToEndAsync(token);
+        try
+        {
+            await proc.WaitForExitAsync(token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            try
+            {
+                if (!proc.HasExited)
+                {
+                    proc.Kill(entireProcessTree: true);
+                }
+            }
+            catch
+            {
+                // best-effort
+            }
+            throw;
+        }
+
+        // Drain stdio after the process is gone; otherwise disposing the proc tears the
+        // pipes down beneath the still-running ReadToEndAsync tasks, throwing
+        // ObjectDisposedException from inside their continuations.
+        string stdout;
+        string stderr;
+        try
+        {
+            stdout = await stdoutTask.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            stdout = string.Empty;
+        }
+        try
+        {
+            stderr = await stderrTask.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            stderr = string.Empty;
+        }
+        return (proc.ExitCode, stdout, stderr);
+    }
+
+    private static string ResolveSecurityBinary()
+    {
+        // Default location on every supported macOS release; fall back to PATH so users
+        // with a non-standard install (e.g. command-line-tools-only) still resolve it.
+        if (System.IO.File.Exists("/usr/bin/security"))
+        {
+            return "/usr/bin/security";
+        }
+        var pathEnv = Environment.GetEnvironmentVariable("PATH");
+        if (!string.IsNullOrEmpty(pathEnv))
+        {
+            foreach (var dir in pathEnv.Split(System.IO.Path.PathSeparator))
+            {
+                if (string.IsNullOrEmpty(dir))
+                {
+                    continue;
+                }
+                var candidate = System.IO.Path.Combine(dir, "security");
+                if (System.IO.File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+        }
+        return "/usr/bin/security";
     }
 }
 

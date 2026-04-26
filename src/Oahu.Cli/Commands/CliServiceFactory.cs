@@ -88,9 +88,12 @@ public static class CliServiceFactory
             var historyPath = Path.Combine(CliPaths.SharedUserDataDir, "history.jsonl");
             Directory.CreateDirectory(Path.GetDirectoryName(historyPath)!);
             var history = new JsonlHistoryStore(historyPath);
-            var options = OverrideMaxParallelism is { } p
-                ? new JobSchedulerOptions { MaxParallelism = p }
-                : null;
+            var activeJobsPath = Path.Combine(CliPaths.SharedUserDataDir, "active-jobs.json");
+            var options = new JobSchedulerOptions
+            {
+                MaxParallelism = OverrideMaxParallelism ?? 1,
+                ActiveJobsStatePath = activeJobsPath,
+            };
             jobSingleton = new JobScheduler(new AudibleJobExecutor(), history, options);
             return jobSingleton;
         }

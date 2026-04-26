@@ -42,9 +42,9 @@ public sealed class UserDataLock : IDisposable
                 Path,
                 FileMode.OpenOrCreate,
                 FileAccess.ReadWrite,
-                FileShare.Read,
+                FileShare.Read | FileShare.Delete,
                 bufferSize: 4096,
-                FileOptions.WriteThrough);
+                FileOptions.WriteThrough | FileOptions.DeleteOnClose);
         }
         catch (IOException ex)
         {
@@ -92,8 +92,10 @@ public sealed class UserDataLock : IDisposable
         }
         try
         {
+            // FileOptions.DeleteOnClose handles unlink atomically when this stream closes,
+            // so there's no race window where another process could acquire the lock
+            // pointing at our about-to-be-deleted file.
             s.Close();
-            File.Delete(Path);
         }
         catch
         {

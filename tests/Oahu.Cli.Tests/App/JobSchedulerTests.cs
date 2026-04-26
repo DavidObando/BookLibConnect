@@ -57,7 +57,7 @@ public class JobSchedulerTests : IDisposable
         Assert.Contains(observed, u => u.Phase == JobPhase.Licensing);
         Assert.Contains(observed, u => u.Phase == JobPhase.Downloading);
         Assert.Contains(observed, u => u.Phase == JobPhase.Decrypting);
-        Assert.Contains(observed, u => u.Phase == JobPhase.Muxing);
+        Assert.Contains(observed, u => u.Phase == JobPhase.Exporting);
         Assert.Equal(JobPhase.Completed, observed[^1].Phase);
     }
 

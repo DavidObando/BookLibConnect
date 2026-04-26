@@ -5,6 +5,7 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Threading.Tasks;
 using Oahu.Cli.App.Config;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.App.Models;
 using Oahu.Cli.App.Paths;
 using Oahu.Cli.Output;
@@ -83,7 +84,7 @@ public static class ConfigCommand
             if (string.IsNullOrEmpty(key))
             {
                 writer.WriteResource("config", ToDictionary(cfg));
-                return 0;
+                return ExitCodes.Success;
             }
 
             var dict = ToDictionary(cfg);
@@ -91,10 +92,10 @@ public static class ConfigCommand
             {
                 CliEnvironment.Error.WriteLine($"oahu-cli: unknown config key '{key}'.");
                 CliEnvironment.Error.WriteLine($"Known keys: {string.Join(", ", Keys)}");
-                return 2;
+                return ExitCodes.UsageError;
             }
             writer.WriteResource("config-value", new Dictionary<string, object?> { ["key"] = key, ["value"] = value });
-            return 0;
+            return ExitCodes.Success;
         });
         return get;
     }
@@ -120,12 +121,12 @@ public static class ConfigCommand
             catch (ArgumentException ex)
             {
                 CliEnvironment.Error.WriteLine($"oahu-cli: {ex.Message}");
-                return 2;
+                return ExitCodes.UsageError;
             }
             await svc.SaveAsync(updated, ct).ConfigureAwait(false);
             var writer = OutputWriterFactory.Create(BuildContext(globals));
             writer.WriteSuccess($"Set {key} = {value}");
-            return 0;
+            return ExitCodes.Success;
         });
         return set;
     }
@@ -139,7 +140,7 @@ public static class ConfigCommand
             var p = ResolveConfigFile(globals);
             var writer = OutputWriterFactory.Create(BuildContext(globals));
             writer.WriteResource("config-path", new Dictionary<string, object?> { ["path"] = p });
-            return 0;
+            return ExitCodes.Success;
         });
         return path;
     }

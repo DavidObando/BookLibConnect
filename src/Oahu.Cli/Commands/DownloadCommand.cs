@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.App.Jobs;
 using Oahu.Cli.App.Library;
 using Oahu.Cli.App.Models;
@@ -55,15 +56,27 @@ public static class DownloadCommand
         };
         var exportOpt = new Option<string?>("--export")
         {
-            Description = "Post-decrypt export: 'none' (default) or 'aax'.",
+            Description = "Post-decrypt export: 'none' (default), 'aax', 'm4b', or 'both'.",
         };
         var outputDirOpt = new Option<string?>("--output-dir")
         {
-            Description = "Override the export directory (only used with --export aax).",
+            Description = "Override the export directory (only used with --export aax|m4b|both).",
         };
         var concurrencyOpt = new Option<int?>("--concurrency")
         {
             Description = "Maximum parallel downloads (default: 1). Must be >= 1.",
+        };
+        var noDecryptOpt = new Option<bool>("--no-decrypt")
+        {
+            Description = "Stop after the LocalLocked phase; leave the encrypted .aax on disk.",
+        };
+        var allNewOpt = new Option<bool>("--all-new")
+        {
+            Description = "Submit all library items not yet recorded as successfully downloaded.",
+        };
+        var limitOpt = new Option<int?>("--limit")
+        {
+            Description = "Cap the number of jobs submitted (only with --all-new). Default: 50.",
         };
 
         var cmd = new Command("download", "Download (and decrypt) one or more audiobooks by ASIN.")
@@ -75,6 +88,9 @@ public static class DownloadCommand
             exportOpt,
             outputDirOpt,
             concurrencyOpt,
+            noDecryptOpt,
+            allNewOpt,
+            limitOpt,
         };
 
         cmd.SetAction(async (parse, ct) =>
@@ -87,10 +103,23 @@ public static class DownloadCommand
             var exportRaw = parse.GetValue(exportOpt);
             var outputDir = parse.GetValue(outputDirOpt);
             var concurrency = parse.GetValue(concurrencyOpt);
+            var noDecrypt = parse.GetValue(noDecryptOpt);
+            var allNew = parse.GetValue(allNewOpt);
+            var limit = parse.GetValue(limitOpt) ?? 50;
             if (concurrency is { } cVal && cVal < 1)
             {
                 CliEnvironment.Error.WriteLine("oahu-cli: --concurrency must be >= 1.");
-                return 2;
+                return ExitCodes.UsageError;
+            }
+            if (limit < 1)
+            {
+                CliEnvironment.Error.WriteLine("oahu-cli: --limit must be >= 1.");
+                return ExitCodes.UsageError;
+            }
+            if (allNew && (positional.Length > 0 || fromQueue))
+            {
+                CliEnvironment.Error.WriteLine("oahu-cli: --all-new is mutually exclusive with positional ASINs and --from-queue.");
+                return ExitCodes.UsageError;
             }
 
             DownloadQuality? quality = null;
@@ -100,30 +129,37 @@ public static class DownloadCommand
                 {
                     CliEnvironment.Error.WriteLine(
                         $"oahu-cli: --quality '{qualityRaw}' is not valid. Use one of: normal|high|extreme.");
-                    return 2;
+                    return ExitCodes.UsageError;
                 }
                 quality = parsed;
             }
 
             bool exportToAax = false;
+            bool exportToM4b = false;
             if (!string.IsNullOrEmpty(exportRaw))
             {
                 switch (exportRaw.ToLowerInvariant())
                 {
                     case "none":
-                        exportToAax = false;
                         break;
                     case "aax":
                         exportToAax = true;
                         break;
+                    case "m4b":
+                        exportToM4b = true;
+                        break;
+                    case "both":
+                        exportToAax = true;
+                        exportToM4b = true;
+                        break;
                     default:
                         CliEnvironment.Error.WriteLine(
-                            $"oahu-cli: --export '{exportRaw}' is not valid. Use one of: none|aax.");
-                        return 2;
+                            $"oahu-cli: --export '{exportRaw}' is not valid. Use one of: none|aax|m4b|both.");
+                        return ExitCodes.UsageError;
                 }
             }
 
-            var requests = await ResolveRequestsAsync(positional, fromQueue, profile, quality, exportToAax, outputDir, ct).ConfigureAwait(false);
+            var requests = await ResolveRequestsAsync(positional, fromQueue, allNew, limit, profile, quality, exportToAax, exportToM4b, noDecrypt, outputDir, ct).ConfigureAwait(false);
             if (requests.Count == 0)
             {
                 if (fromQueue)
@@ -134,7 +170,7 @@ public static class DownloadCommand
                 {
                     CliEnvironment.Error.WriteLine("oahu-cli: no ASINs supplied. Pass ASINs as arguments or --from-queue.");
                 }
-                return 2;
+                return ExitCodes.UsageError;
             }
 
             var writer = OutputWriterFactory.Create(ConfigCommand.BuildContext(globals));
@@ -142,7 +178,7 @@ public static class DownloadCommand
             if (globals.DryRun)
             {
                 EmitDryRunPlan(writer, requests);
-                return 0;
+                return ExitCodes.Success;
             }
 
             if (concurrency is { } cParallelism)
@@ -225,12 +261,27 @@ public static class DownloadCommand
 
         foreach (var req in requests)
         {
-            await jobService.SubmitAsync(req, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await jobService.SubmitAsync(req, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // Submission failure (e.g. scheduler disposed, channel closed). Cancel the
+                // observer so we don't hang waiting for terminals that will never arrive,
+                // and surface the failure for this request.
+                terminals[req.Id] = new JobUpdate { JobId = req.Id, Phase = JobPhase.Failed, Message = ex.Message };
+                observerCts.Cancel();
+            }
         }
 
         try
         {
             await observerTask.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // expected if we cancelled above
         }
         finally
         {
@@ -239,15 +290,25 @@ public static class DownloadCommand
 
         WriteSummary(writer, requests, terminals);
 
-        bool anyFailed = terminals.Values.Any(u => u.Phase is JobPhase.Failed or JobPhase.Canceled);
+        bool anyFailed = terminals.Values.Any(u => u.Phase == JobPhase.Failed);
+        bool anyCanceled = terminals.Values.Any(u => u.Phase == JobPhase.Canceled);
         bool allCompleted = terminals.Count == ids.Count
             && terminals.Values.All(u => u.Phase == JobPhase.Completed);
 
         if (allCompleted)
         {
-            return 0;
+            return ExitCodes.Success;
         }
-        return anyFailed ? 1 : 1;
+        if (anyFailed)
+        {
+            return ExitCodes.GenericFailure;
+        }
+        if (anyCanceled)
+        {
+            // 130 = SIGINT-style termination per design §10.
+            return ExitCodes.Cancelled;
+        }
+        return ExitCodes.GenericFailure;
     }
 
     private static bool IsTerminal(JobPhase p) =>
@@ -363,15 +424,24 @@ public static class DownloadCommand
     private static Task<IReadOnlyList<JobRequest>> ResolveRequestsAsync(
         string[] positional,
         bool fromQueue,
+        bool allNew,
+        int limit,
         string? profileAlias,
         DownloadQuality? quality,
         bool exportToAax,
+        bool exportToM4b,
+        bool noDecrypt,
         string? outputDir,
         CancellationToken cancellationToken)
     {
+        if (allNew)
+        {
+            return ResolveAllNewAsync(limit, profileAlias, quality, exportToAax, exportToM4b, noDecrypt, outputDir, cancellationToken);
+        }
+
         if (fromQueue)
         {
-            return ResolveFromQueueAsync(profileAlias, quality, exportToAax, outputDir, cancellationToken);
+            return ResolveFromQueueAsync(profileAlias, quality, exportToAax, exportToM4b, noDecrypt, outputDir, cancellationToken);
         }
 
         var inputs = ExpandStdin(positional)
@@ -383,7 +453,7 @@ public static class DownloadCommand
         var list = new List<JobRequest>(inputs.Length);
         foreach (var asin in inputs)
         {
-            list.Add(BuildRequest(asin, asin, profileAlias, quality, exportToAax, outputDir));
+            list.Add(BuildRequest(asin, asin, profileAlias, quality, exportToAax, exportToM4b, noDecrypt, outputDir));
         }
         return Task.FromResult<IReadOnlyList<JobRequest>>(list);
     }
@@ -392,6 +462,8 @@ public static class DownloadCommand
         string? profileAlias,
         DownloadQuality? quality,
         bool exportToAax,
+        bool exportToM4b,
+        bool noDecrypt,
         string? outputDir,
         CancellationToken cancellationToken)
     {
@@ -401,18 +473,59 @@ public static class DownloadCommand
         var list = new List<JobRequest>(entries.Count);
         foreach (var e in entries)
         {
-            list.Add(BuildRequest(e.Asin, string.IsNullOrEmpty(e.Title) ? e.Asin : e.Title, profileAlias ?? e.ProfileAlias, quality ?? e.Quality, exportToAax, outputDir));
+            list.Add(BuildRequest(e.Asin, string.IsNullOrEmpty(e.Title) ? e.Asin : e.Title, profileAlias ?? e.ProfileAlias, quality ?? e.Quality, exportToAax, exportToM4b, noDecrypt, outputDir));
         }
         return list;
     }
 
-    private static JobRequest BuildRequest(string asin, string title, string? profileAlias, DownloadQuality? quality, bool exportToAax, string? outputDir) => new()
+    private static async Task<IReadOnlyList<JobRequest>> ResolveAllNewAsync(
+        int limit,
+        string? profileAlias,
+        DownloadQuality? quality,
+        bool exportToAax,
+        bool exportToM4b,
+        bool noDecrypt,
+        string? outputDir,
+        CancellationToken cancellationToken)
+    {
+        var library = CliServiceFactory.LibraryServiceFactory();
+        var jobs = CliServiceFactory.JobServiceFactory();
+
+        var items = await library.ListAsync(filter: null, cancellationToken).ConfigureAwait(false);
+        var seenAsins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        await foreach (var rec in jobs.ReadHistoryAsync(cancellationToken).ConfigureAwait(false))
+        {
+            if (rec.TerminalPhase == JobPhase.Completed)
+            {
+                seenAsins.Add(rec.Asin);
+            }
+        }
+
+        var list = new List<JobRequest>();
+        foreach (var item in items)
+        {
+            if (seenAsins.Contains(item.Asin))
+            {
+                continue;
+            }
+            list.Add(BuildRequest(item.Asin, string.IsNullOrEmpty(item.Title) ? item.Asin : item.Title, profileAlias, quality, exportToAax, exportToM4b, noDecrypt, outputDir));
+            if (list.Count >= limit)
+            {
+                break;
+            }
+        }
+        return list;
+    }
+
+    private static JobRequest BuildRequest(string asin, string title, string? profileAlias, DownloadQuality? quality, bool exportToAax, bool exportToM4b, bool noDecrypt, string? outputDir) => new()
     {
         Asin = asin,
         Title = title,
         ProfileAlias = profileAlias,
         Quality = quality ?? DownloadQuality.High,
         ExportToAax = exportToAax,
+        ExportToM4b = exportToM4b,
+        NoDecrypt = noDecrypt,
         OutputDir = outputDir,
     };
 
@@ -422,9 +535,24 @@ public static class DownloadCommand
         {
             if (input == "-")
             {
-                string? line;
-                while ((line = Console.In.ReadLine()) is not null)
+                // Read entire stdin synchronously up-front. We are inside a synchronous
+                // iterator, but stdin reads are bounded by the user's input — typically
+                // pasted ASIN lists — so this does not introduce noticeable latency.
+                while (true)
                 {
+                    string? line = null;
+                    try
+                    {
+                        line = Console.In.ReadLine();
+                    }
+                    catch (IOException)
+                    {
+                        // Treat torn pipe as EOF.
+                    }
+                    if (line is null)
+                    {
+                        break;
+                    }
                     yield return line;
                 }
             }

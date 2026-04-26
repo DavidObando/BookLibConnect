@@ -4,6 +4,7 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Linq;
 using System.Threading.Tasks;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.App.Models;
 using Oahu.Cli.Output;
 
@@ -22,12 +23,12 @@ namespace Oahu.Cli.Commands;
 /// </para>
 ///
 /// <para>
-/// The design (§4.1) lists <c>convert &lt;file&gt;</c>; we deliberately accept
-/// ASINs instead because <see cref="Oahu.Core.AaxExporter"/> is
-/// <c>Book</c>-driven (needs library metadata, chapters, and cover) and there
-/// is no current path to reconstruct that from a bare file. A future
-/// <c>library export</c> command could replace this if the file-based form
-/// becomes important.
+/// Accepts ASINs as positional args. As a convenience, if a positional arg is
+/// a path to a local <c>.aax</c> / <c>.aaxc</c> file whose name matches the
+/// Audible naming convention <c>&lt;ASIN&gt;_xxx.aax[c]</c>, the ASIN is
+/// inferred from the filename and the file is converted in-place. Other
+/// file-based convert flows are not supported because <see cref="Oahu.Core.AaxExporter"/>
+/// requires per-book license metadata that is keyed by ASIN.
 /// </para>
 /// </summary>
 public static class ConvertCommand
@@ -37,7 +38,7 @@ public static class ConvertCommand
         var asinArg = new Argument<string[]>("asin")
         {
             Arity = ArgumentArity.ZeroOrMore,
-            Description = "One or more ASINs to convert. Use '-' to read one ASIN per line from stdin.",
+            Description = "One or more ASINs (or paths to <ASIN>_xxx.aax files). Use '-' to read one ASIN per line from stdin.",
         };
         var outputDirOpt = new Option<string?>("--output-dir")
         {
@@ -72,19 +73,37 @@ public static class ConvertCommand
             if (concurrency is { } cVal && cVal < 1)
             {
                 CliEnvironment.Error.WriteLine("oahu-cli: --concurrency must be >= 1.");
-                return 2;
+                return ExitCodes.UsageError;
             }
 
             var distinct = asins
                 .Select(s => s.Trim())
                 .Where(s => !string.IsNullOrEmpty(s))
+                .Select(TryResolveAsinFromPath)
+                .Where(s => s.Resolved is not null)
+                .Select(s => s.Resolved!)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
+
+            // Surface any inputs we couldn't resolve to an ASIN so the user
+            // gets a concrete error rather than silent dropping.
+            var unresolved = asins
+                .Select(s => s.Trim())
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Where(s => TryResolveAsinFromPath(s).Resolved is null)
+                .ToArray();
+            if (unresolved.Length > 0)
+            {
+                CliEnvironment.Error.WriteLine(
+                    $"oahu-cli: could not infer ASIN from: {string.Join(", ", unresolved)}. "
+                    + "Pass an ASIN, or a file named '<ASIN>_xxx.aax[c]'.");
+                return ExitCodes.UsageError;
+            }
 
             if (distinct.Length == 0)
             {
                 CliEnvironment.Error.WriteLine("oahu-cli: no ASINs supplied.");
-                return 2;
+                return ExitCodes.UsageError;
             }
 
             var requests = distinct
@@ -104,7 +123,7 @@ public static class ConvertCommand
             if (globals.DryRun)
             {
                 DownloadCommand.EmitDryRunPlan(writer, requests);
-                return 0;
+                return ExitCodes.Success;
             }
 
             if (concurrency is { } cParallelism)
@@ -116,5 +135,65 @@ public static class ConvertCommand
         });
 
         return cmd;
+    }
+
+    /// <summary>
+    /// Maps a positional input — either an ASIN or a path to an Audible
+    /// <c>&lt;ASIN&gt;_xxx.aax[c]</c> file — to the underlying ASIN. We treat
+    /// the input as a path only if it contains a directory separator or ends
+    /// with an Audible file extension; otherwise we accept it as an ASIN
+    /// verbatim and let the executor reject any unknown ASIN.
+    /// Returns <c>(input, null)</c> when neither form yields an ASIN.
+    /// </summary>
+    internal static (string Input, string? Resolved) TryResolveAsinFromPath(string raw)
+    {
+        var looksLikePath =
+            raw.IndexOfAny(new[] { '/', '\\' }) >= 0
+            || raw.EndsWith(".aax", StringComparison.OrdinalIgnoreCase)
+            || raw.EndsWith(".aaxc", StringComparison.OrdinalIgnoreCase);
+
+        if (!looksLikePath)
+        {
+            return (raw, raw);
+        }
+
+        try
+        {
+            var fileName = System.IO.Path.GetFileName(raw);
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                var underscore = fileName.IndexOf('_');
+                if (underscore > 0)
+                {
+                    var candidate = fileName.Substring(0, underscore);
+                    if (LooksLikeAsin(candidate))
+                    {
+                        return (raw, candidate.ToUpperInvariant());
+                    }
+                }
+            }
+        }
+        catch (ArgumentException)
+        {
+            // GetFileName throws on invalid path chars; treat as unresolved.
+        }
+
+        return (raw, null);
+    }
+
+    private static bool LooksLikeAsin(string s)
+    {
+        if (s is not { Length: 10 })
+        {
+            return false;
+        }
+        foreach (var c in s)
+        {
+            if (!char.IsLetterOrDigit(c))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

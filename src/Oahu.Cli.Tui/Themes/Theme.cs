@@ -19,6 +19,7 @@ public sealed class Theme
         Themes.Default,
         Themes.Mono,
         Themes.HighContrast,
+        Themes.Colorblind,
     };
 
     public required string Name { get; init; }
@@ -140,5 +141,30 @@ public static class Themes
         BackgroundSecondary = new(Color.Black),
         DiffAdd = new(Color.Lime),
         DiffRemove = new(Color.Red),
+    };
+
+    /// <summary>
+    /// Colorblind-safe theme using the Okabe-Ito palette: avoids red/green
+    /// pairings that the most common forms of color vision deficiency
+    /// (deuteranopia, protanopia) confuse. Status semantics are conveyed by
+    /// blue (info), bluish-green (success), orange/yellow (warning), and
+    /// vermillion (error) — all distinguishable by deuteranopes/protanopes.
+    /// </summary>
+    public static Theme Colorblind { get; } = new()
+    {
+        Name = "Colorblind",
+        TextPrimary = new(Color.White),
+        TextSecondary = new(Color.Grey85),
+        TextTertiary = new(Color.Grey50),
+        StatusInfo = new(Color.SkyBlue1),
+        StatusSuccess = new(Color.MediumSpringGreen),
+        StatusWarning = new(Color.Orange1),
+        StatusError = new(Color.IndianRed1),
+        Brand = new(Color.MediumPurple1),
+        Selected = new(Color.Yellow),
+        BorderNeutral = new(Color.Grey50),
+        BackgroundSecondary = new(Color.Grey15),
+        DiffAdd = new(Color.SkyBlue1),
+        DiffRemove = new(Color.Orange1),
     };
 }

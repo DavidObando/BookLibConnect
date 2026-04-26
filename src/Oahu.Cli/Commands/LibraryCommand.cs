@@ -4,6 +4,7 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Linq;
 using System.Threading.Tasks;
+using Oahu.Cli.App.Errors;
 using Oahu.Cli.App.Library;
 using Oahu.Cli.App.Models;
 using Oahu.Cli.Output;
@@ -54,7 +55,7 @@ public static class LibraryCommand
         var seriesOpt = new Option<string?>("--series") { Description = "Exact match against the series name." };
         var unreadOpt = new Option<bool>("--unread")
         {
-            Description = "Restrict to unread titles. (Not yet implemented — always errors in 4b.1.)",
+            Description = "Restrict to titles with no successful download in history.jsonl.",
         };
         var limitOpt = new Option<int?>("--limit") { Description = "Cap the number of results." };
         var allOpt = new Option<bool>("--all")
@@ -70,8 +71,45 @@ public static class LibraryCommand
 
             if (parse.GetValue(unreadOpt))
             {
-                CliEnvironment.Error.WriteLine("--unread is not implemented yet (oahu-cli phase 4b.2).");
-                return 1;
+                // "Unread" in v1 = ASIN has no Completed record in history.jsonl
+                // (any profile). LibraryItem has no listened/finished signal,
+                // so absence-of-download is the only deterministic test.
+                var jobs = CliServiceFactory.JobServiceFactory();
+                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                await foreach (var rec in jobs.ReadHistoryAsync(ct).ConfigureAwait(false))
+                {
+                    if (rec.TerminalPhase == JobPhase.Completed)
+                    {
+                        seen.Add(rec.Asin);
+                    }
+                }
+
+                var svc2 = CliServiceFactory.LibraryServiceFactory();
+                var filter2 = new LibraryFilter
+                {
+                    Search = parse.GetValue(filterOpt),
+                    Author = parse.GetValue(authorOpt),
+                    Series = parse.GetValue(seriesOpt),
+                    AvailableOnly = !parse.GetValue(allOpt),
+                };
+                IEnumerable<LibraryItem> unread = (await svc2.ListAsync(filter2, ct).ConfigureAwait(false))
+                    .Where(i => !seen.Contains(i.Asin));
+                var limit2 = parse.GetValue(limitOpt);
+                if (limit2 is { } n2 && n2 > 0)
+                {
+                    unread = unread.Take(n2);
+                }
+                var unreadRows = unread.Select(i => ToDictionary(i)).ToList();
+                writer.WriteCollection(ListSchemaResource, unreadRows, new[]
+                {
+                    new OutputColumn("asin", "ASIN"),
+                    new OutputColumn("title", "Title"),
+                    new OutputColumn("authors", "Authors"),
+                    new OutputColumn("series", "Series"),
+                    new OutputColumn("runtimeMinutes", "Runtime (min)"),
+                    new OutputColumn("isAvailable", "Available"),
+                });
+                return ExitCodes.Success;
             }
 
             var filter = new LibraryFilter
@@ -101,7 +139,7 @@ public static class LibraryCommand
                 new OutputColumn("isAvailable", "Available"),
             });
 
-            return 0;
+            return ExitCodes.Success;
         });
         return c;
     }
@@ -126,7 +164,7 @@ public static class LibraryCommand
                 if (active is null)
                 {
                     CliEnvironment.Error.WriteLine("No active profile. Sign in with `oahu-cli auth login` first, or pass --profile.");
-                    return 3;
+                    return ExitCodes.AuthError;
                 }
                 alias = active.ProfileAlias;
             }
@@ -141,12 +179,12 @@ public static class LibraryCommand
                     ["itemCount"] = count,
                     ["full"] = parse.GetValue(fullOpt),
                 });
-                return 0;
+                return ExitCodes.Success;
             }
             catch (Exception ex)
             {
                 CliEnvironment.Error.WriteLine($"Sync failed: {ex.Message}");
-                return 4;
+                return ExitCodes.AudibleApiError;
             }
         });
         return c;
@@ -166,10 +204,10 @@ public static class LibraryCommand
             if (item is null)
             {
                 CliEnvironment.Error.WriteLine($"No library entry with ASIN '{asin}'. Run `oahu-cli library sync` if you haven't recently.");
-                return 1;
+                return ExitCodes.GenericFailure;
             }
             writer.WriteResource(ShowSchemaResource, ToDictionary(item));
-            return 0;
+            return ExitCodes.Success;
         });
         return c;
     }
