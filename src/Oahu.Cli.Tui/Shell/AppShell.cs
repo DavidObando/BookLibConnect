@@ -16,6 +16,11 @@ namespace Oahu.Cli.Tui.Shell;
 ///
 /// Phase 6 deliverable: an empty-but-navigable shell.
 /// Phase 7 additions: modal overlays, mutable header state, broker polling.
+/// Phase 8 additions: tab-lifecycle hooks (<see cref="ITabScreen.OnActivated"/> /
+/// <see cref="ITabScreen.OnDeactivated"/> / <see cref="ITabScreen.OnShutdown"/>),
+/// <see cref="IAppShellNavigator"/> implementation for screens that need to
+/// switch tabs / open modals / raise toasts, and OSC 9;4 progress emission via
+/// <see cref="ITerminalProgressProvider"/>.
 ///
 ///   • Header (app name, profile/region, activity verb, version)
 ///   • Tab strip (Home, Library, Queue, Jobs, History, Settings)
@@ -25,7 +30,7 @@ namespace Oahu.Cli.Tui.Shell;
 ///   • Progressive Ctrl+C state machine
 ///   • Alt-screen entry / exit with full restoration on crash
 /// </summary>
-public sealed class AppShell
+public sealed class AppShell : IAppShellNavigator
 {
     /// <summary>
     /// Source of key presses. The production path uses <see cref="ConsoleKeyReader"/>;
@@ -54,6 +59,9 @@ public sealed class AppShell
             return true;
         }
     }
+
+    /// <summary>OSC 9;4 clear sequence — removes the terminal title-bar / dock progress indicator.</summary>
+    public const string TerminalProgressClearSequence = "\u001b]9;4;0;0\u001b\\";
 
     private readonly IAnsiConsole console;
     private readonly AppShellOptions options;
@@ -108,9 +116,76 @@ public sealed class AppShell
     /// <summary>Switch to a specific tab by index.</summary>
     public void SwitchTab(int index)
     {
-        if (index >= 0 && index < tabs.Count)
+        if (index >= 0 && index < tabs.Count && index != activeTab)
         {
-            activeTab = index;
+            ChangeActiveTab(index);
+        }
+    }
+
+    /// <summary>Switch to the tab whose <see cref="ITabScreen.NumberKey"/> matches.</summary>
+    public void SwitchToTab(char numberKey)
+    {
+        for (var i = 0; i < tabs.Count; i++)
+        {
+            if (tabs[i].NumberKey == numberKey)
+            {
+                SwitchTab(i);
+                return;
+            }
+        }
+    }
+
+    /// <summary>Show a transient toast (warning style). Cleared on next key press.</summary>
+    public void ShowToast(string message)
+    {
+        toast = message ?? string.Empty;
+        toastShownAt = DateTimeOffset.UtcNow;
+    }
+
+#pragma warning disable SA1202 // Helpers grouped near related public methods.
+    private static void EmitTerminalSequence(string seq)
+    {
+        try
+        {
+            Console.Out.Write(seq);
+            Console.Out.Flush();
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    private void ChangeActiveTab(int newIndex)
+    {
+        var oldIndex = activeTab;
+        if (oldIndex >= 0 && oldIndex < tabs.Count)
+        {
+            try
+            {
+                tabs[oldIndex].OnDeactivated();
+            }
+            catch
+            {
+                // Swallow lifecycle errors — UI must keep running.
+            }
+
+            // If the deactivating tab was emitting OSC 9;4 progress, clear it.
+            if (tabs[oldIndex] is ITerminalProgressProvider)
+            {
+                EmitTerminalSequence(TerminalProgressClearSequence);
+            }
+        }
+
+        activeTab = newIndex;
+
+        try
+        {
+            tabs[newIndex].OnActivated(this);
+        }
+        catch
+        {
+            // ignored
         }
     }
 
@@ -121,47 +196,82 @@ public sealed class AppShell
     public int Run(IKeyReader keyReader)
     {
         ArgumentNullException.ThrowIfNull(keyReader);
-        Render();
-        while (true)
+        try
         {
-            // Poll for broker modal requests before blocking for input.
-            PollBroker();
-
-            if (needsTimedRefresh)
+            try
             {
-                // When a screen is loading, use a timed read so the render
-                // loop can re-render the spinner (~100ms ticks).
-                if (keyReader.TryReadKey(100, out var timedKey))
+                tabs[activeTab].OnActivated(this);
+            }
+            catch
+            {
+                // Lifecycle errors must not break the run loop.
+            }
+
+            Render();
+            while (true)
+            {
+                // Poll for broker modal requests before blocking for input.
+                PollBroker();
+
+                if (needsTimedRefresh)
                 {
-                    var timedAction = Dispatch(timedKey);
-                    switch (timedAction)
+                    // When a screen is loading, use a timed read so the render
+                    // loop can re-render the spinner (~100ms ticks).
+                    if (keyReader.TryReadKey(100, out var timedKey))
                     {
-                        case ShellAction.Exit:
-                            return 0;
-                        case ShellAction.ExitSigInt:
-                            return 130;
+                        var timedAction = Dispatch(timedKey);
+                        switch (timedAction)
+                        {
+                            case ShellAction.Exit:
+                                return 0;
+                            case ShellAction.ExitSigInt:
+                                return 130;
+                        }
                     }
+                    Render();
+                    continue;
                 }
-                Render();
-                continue;
+
+                var key = keyReader.ReadKey();
+                if (key is null)
+                {
+                    return 0;
+                }
+                var action = Dispatch(key.Value);
+                switch (action)
+                {
+                    case ShellAction.Continue:
+                        Render();
+                        break;
+                    case ShellAction.Exit:
+                        return 0;
+                    case ShellAction.ExitSigInt:
+                        return 130;
+                }
+            }
+        }
+        finally
+        {
+            // Run lifecycle teardown for every tab (give every screen a chance
+            // to cancel observers, dispose handles, clear OSC, etc.).
+            for (var i = 0; i < tabs.Count; i++)
+            {
+                try
+                {
+                    if (i == activeTab)
+                    {
+                        tabs[i].OnDeactivated();
+                    }
+                    tabs[i].OnShutdown();
+                }
+                catch
+                {
+                    // Swallow — we're tearing down anyway.
+                }
             }
 
-            var key = keyReader.ReadKey();
-            if (key is null)
-            {
-                return 0;
-            }
-            var action = Dispatch(key.Value);
-            switch (action)
-            {
-                case ShellAction.Continue:
-                    Render();
-                    break;
-                case ShellAction.Exit:
-                    return 0;
-                case ShellAction.ExitSigInt:
-                    return 130;
-            }
+            // Always clear any in-flight terminal progress indicator.
+            EmitTerminalSequence(TerminalProgressClearSequence);
         }
     }
 
@@ -263,7 +373,10 @@ public sealed class AppShell
             var idx = key.KeyChar - '1';
             if (idx < tabs.Count)
             {
-                activeTab = idx;
+                if (idx != activeTab)
+                {
+                    ChangeActiveTab(idx);
+                }
                 return ShellAction.Continue;
             }
         }
@@ -271,10 +384,10 @@ public sealed class AppShell
         switch (key.Key)
         {
             case ConsoleKey.Tab when (key.Modifiers & ConsoleModifiers.Shift) != 0:
-                activeTab = (activeTab - 1 + tabs.Count) % tabs.Count;
+                ChangeActiveTab((activeTab - 1 + tabs.Count) % tabs.Count);
                 return ShellAction.Continue;
             case ConsoleKey.Tab:
-                activeTab = (activeTab + 1) % tabs.Count;
+                ChangeActiveTab((activeTab + 1) % tabs.Count);
                 return ShellAction.Continue;
             case ConsoleKey.L when (key.Modifiers & ConsoleModifiers.Control) != 0:
                 // Ctrl+L: clear / redraw artifacts.
@@ -394,18 +507,30 @@ public sealed class AppShell
             BuildHintBar(screen).Write(target);
         }
 
+        // OSC 9;4 progress sequence (terminal title-bar / dock indicator).
+        // Active screen may opt-in by implementing ITerminalProgressProvider.
+        var oscSequence = (screen as ITerminalProgressProvider)?.GetTerminalProgressSequence();
+
         if (useBuffer && sw is not null)
         {
             // Inject \e[K before every \n so each line clears trailing chars,
             // then write \e[H (home) + frame + \e[K\e[J (erase rest) atomically.
+            // OSC 9;4 (if any) appended last so it doesn't interfere with the
+            // visible frame.
             var frame = sw.ToString().Replace("\n", "\u001b[K\n");
-            Console.Out.Write($"\u001b[H{frame}\u001b[K\u001b[J");
+            Console.Out.Write($"\u001b[H{frame}\u001b[K\u001b[J{oscSequence}");
+            Console.Out.Flush();
+        }
+        else if (!string.IsNullOrEmpty(oscSequence))
+        {
+            // Tests / redirected stdout: still let progress assertions see it.
+            Console.Out.Write(oscSequence);
             Console.Out.Flush();
         }
 
-        // If the active screen is loading data, switch to a timed poll so
-        // the spinner animates and the UI stays responsive.
-        needsTimedRefresh = screen.IsLoading || (activeBroker?.HasPending ?? false);
+        // Tab is allowed to ask for periodic redraws (e.g. JobsScreen
+        // observing live updates) even if it isn't loading.
+        needsTimedRefresh = screen.NeedsTimedRefresh || (activeBroker?.HasPending ?? false);
     }
 
     private string BuildHeader(int width)

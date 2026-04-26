@@ -52,6 +52,27 @@ public sealed class InMemoryQueueService : IQueueService
         }
     }
 
+    public Task<bool> MoveAsync(string asin, int delta, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(asin);
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (@lock)
+        {
+            var idx = entries.FindIndex(e => string.Equals(e.Asin, asin, StringComparison.OrdinalIgnoreCase));
+            if (idx < 0)
+            {
+                return Task.FromResult(false);
+            }
+            var target = idx + delta;
+            if (target < 0 || target >= entries.Count || target == idx)
+            {
+                return Task.FromResult(false);
+            }
+            (entries[idx], entries[target]) = (entries[target], entries[idx]);
+            return Task.FromResult(true);
+        }
+    }
+
     public Task ClearAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

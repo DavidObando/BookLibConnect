@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using Oahu.Cli.App.Auth;
 using Oahu.Cli.App.Config;
+using Oahu.Cli.App.Jobs;
 using Oahu.Cli.App.Library;
+using Oahu.Cli.App.Queue;
 using Oahu.Cli.Tui.Shell;
 using Spectre.Console;
 using Spectre.Console.Rendering;
@@ -60,41 +62,25 @@ public static class DefaultTabs
     };
 
     /// <summary>
-    /// Create real tabs with services wired in. Home, Library, and Settings
-    /// get real implementations; Queue, Jobs, History remain placeholders
-    /// until Phase 8.
+    /// Create real tabs with services wired in. Phase 8: Queue, Jobs, History
+    /// are now real screens backed by <see cref="IQueueService"/> and
+    /// <see cref="IJobService"/>.
     /// </summary>
     public static IReadOnlyList<ITabScreen> CreateReal(
         AppShellState state,
         Func<IAuthService> authServiceFactory,
         Func<ILibraryService> libraryServiceFactory,
-        Func<IConfigService> configServiceFactory)
+        Func<IConfigService> configServiceFactory,
+        Func<IQueueService> queueServiceFactory,
+        Func<IJobService> jobServiceFactory)
     {
         return new ITabScreen[]
         {
             new HomeScreen(state, authServiceFactory, libraryServiceFactory),
             new LibraryScreen(state, libraryServiceFactory),
-            new PlaceholderScreen
-            {
-                Title = "Queue",
-                NumberKey = '3',
-                Heading = "Queue",
-                Body = "Ordered list of jobs waiting to run; reorder, remove, start.",
-            },
-            new PlaceholderScreen
-            {
-                Title = "Jobs",
-                NumberKey = '4',
-                Heading = "Jobs",
-                Body = "Live in-flight jobs, with download / decrypt / mux / export progress.",
-            },
-            new PlaceholderScreen
-            {
-                Title = "History",
-                NumberKey = '5',
-                Heading = "History",
-                Body = "Completed and failed jobs; re-run, view error, open file.",
-            },
+            new QueueScreen(queueServiceFactory, jobServiceFactory),
+            new JobsScreen(jobServiceFactory),
+            new HistoryScreen(jobServiceFactory),
             new SettingsScreen(configServiceFactory),
         };
     }

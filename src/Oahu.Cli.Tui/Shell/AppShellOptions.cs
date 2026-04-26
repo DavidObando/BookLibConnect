@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Oahu.Cli.App.Jobs;
+using Oahu.Cli.App.Queue;
 using Oahu.Cli.Tui.Logging;
 
 namespace Oahu.Cli.Tui.Shell;
@@ -35,4 +37,10 @@ public sealed class AppShellOptions
     /// from this instead of the init-only properties. Phase 7+.
     /// </summary>
     public AppShellState? State { get; init; }
+
+    /// <summary>Resolver for the persistent download queue. Phase 8+.</summary>
+    public Func<IQueueService>? QueueServiceFactory { get; init; }
+
+    /// <summary>Resolver for the job scheduler. Phase 8+.</summary>
+    public Func<IJobService>? JobServiceFactory { get; init; }
 }
