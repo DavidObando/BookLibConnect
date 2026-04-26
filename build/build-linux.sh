@@ -13,6 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SRC_DIR="$REPO_ROOT/src"
 PROJECT="$SRC_DIR/Oahu.App/Oahu.App.csproj"
+CLI_PROJECT="$SRC_DIR/Oahu.Cli/Oahu.Cli.csproj"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -66,10 +67,25 @@ dotnet publish "$PROJECT" \
   -p:PublishTrimmed=false \
   --output "$PUBLISH_DIR"
 
+# Publish oahu-cli into the same folder so it ships alongside the GUI.
+# Shared assemblies (Oahu.*, .NET runtime, etc.) are byte-identical between
+# the two publishes; per-app deps.json/runtimeconfig.json files are named
+# after the assembly so they don't collide (Oahu.* vs oahu-cli.*).
+echo "==> Publishing oahu-cli..."
+dotnet publish "$CLI_PROJECT" \
+  --configuration "$CONFIGURATION" \
+  --runtime "$RUNTIME" \
+  --self-contained true \
+  -p:PublishTrimmed=false \
+  --output "$PUBLISH_DIR"
+
 echo "  Published to: $PUBLISH_DIR"
 
-# Make the executable actually executable
+# Make the executables actually executable
 chmod +x "$PUBLISH_DIR/$APP_NAME"
+if [[ -f "$PUBLISH_DIR/oahu-cli" ]]; then
+  chmod +x "$PUBLISH_DIR/oahu-cli"
+fi
 
 # Create a tarball
 TARBALL_NAME="${APP_NAME}-${APP_VERSION}-${RUNTIME}.tar.gz"

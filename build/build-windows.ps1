@@ -87,11 +87,17 @@ $SrcDir    = Join-Path $RepoRoot "src"
 
 $Project    = Join-Path $SrcDir "Oahu.App/Oahu.App.csproj"
 $ProjectDir = "Oahu.App"
+$CliProject = Join-Path $SrcDir "Oahu.Cli/Oahu.Cli.csproj"
 
 $PublishDir = Join-Path $OutputDir "publish"
 
 if (-not (Test-Path $Project)) {
     Write-Error "Project file not found: $Project"
+    exit 1
+}
+
+if (-not (Test-Path $CliProject)) {
+    Write-Error "Project file not found: $CliProject"
     exit 1
 }
 
@@ -156,6 +162,30 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "  Published to: $PublishDir" -ForegroundColor Green
 
+# Publish oahu-cli into the same folder so it ships alongside the GUI.
+# Shared assemblies (Oahu.*, .NET runtime, etc.) are byte-identical between
+# the two publishes; per-app deps.json/runtimeconfig.json files are named
+# after the assembly so they don't collide (Oahu.* vs oahu-cli.*).
+Write-Host "==> Publishing oahu-cli..." -ForegroundColor Yellow
+
+$cliDotnetArgs = @(
+    "publish", $CliProject,
+    "--configuration", $Configuration,
+    "--runtime", $Runtime,
+    "--self-contained", ($SelfContained ? "true" : "false"),
+    "-p:PublishSingleFile=$($SingleFile.IsPresent)",
+    "-p:PublishTrimmed=false",
+    "--output", $PublishDir
+)
+
+& dotnet @cliDotnetArgs
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "dotnet publish (oahu-cli) failed with exit code $LASTEXITCODE"
+    exit $LASTEXITCODE
+}
+
+Write-Host "  oahu-cli published to: $PublishDir" -ForegroundColor Green
+
 # ---------------------------------------------------------------------------
 # Code signing (published binaries)
 # ---------------------------------------------------------------------------
@@ -196,6 +226,16 @@ if ($SigningCertThumbprint) {
         exit $LASTEXITCODE
     }
     Write-Host "  Signed: $exePath" -ForegroundColor Green
+
+    $cliExePath = Join-Path $PublishDir "oahu-cli.exe"
+    if (Test-Path $cliExePath) {
+        & $signtool sign /sha1 $SigningCertThumbprint /fd sha256 /tr $TimestampServer /td sha256 $cliExePath
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Code signing (oahu-cli) failed."
+            exit $LASTEXITCODE
+        }
+        Write-Host "  Signed: $cliExePath" -ForegroundColor Green
+    }
 }
 
 # ---------------------------------------------------------------------------
