@@ -216,5 +216,8 @@ public class HomeScreenTests : IDisposable
 
         public Task<int> SyncAsync(string profileAlias, System.Threading.CancellationToken ct = default)
             => Task.FromResult(0);
+
+        public Task EnsureFreshAsync(System.Threading.CancellationToken ct = default)
+            => Task.CompletedTask;
     }
 }

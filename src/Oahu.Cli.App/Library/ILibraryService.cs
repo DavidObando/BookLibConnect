@@ -31,4 +31,12 @@ public interface ILibraryService
 
     /// <summary>Pulls the latest library snapshot from Audible. Returns the new item count.</summary>
     Task<int> SyncAsync(string profileAlias, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Ensures the local library cache is fresh by performing an incremental refresh
+    /// from Audible (like the GUI does on startup). Idempotent — only contacts Audible
+    /// once per process lifetime. Silently succeeds if no profile is active or if the
+    /// network call fails.
+    /// </summary>
+    Task EnsureFreshAsync(CancellationToken cancellationToken = default);
 }

@@ -57,5 +57,11 @@ public sealed class FakeLibraryService : ILibraryService
         return Task.FromResult(items.Count);
     }
 
+    public Task EnsureFreshAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.CompletedTask;
+    }
+
     public void Seed(LibraryItem item) => items.Add(item);
 }
