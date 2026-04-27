@@ -26,11 +26,8 @@ public sealed class HomeScreen : ITabScreen
     private readonly PulseSpinner signInSpinner = new();
 
     private bool loaded;
-    private bool loading;
-    private Task? loadTask;
     private int libraryCount;
     private string? accountName;
-    private int spinnerTick;
 
     private IAppShellNavigator? navigator;
     private RegionPickerModal? pendingRegionModal;
@@ -50,30 +47,11 @@ public sealed class HomeScreen : ITabScreen
 
     public char NumberKey => '1';
 
-    public bool IsLoading
-    {
-        get
-        {
-            // Reconcile with the background load task so AppShell sees the
-            // current truth when it samples NeedsTimedRefresh right after a
-            // Render call. Without this, a load that finishes between the
-            // spinner being drawn and AppShell reading NeedsTimedRefresh would
-            // leave a frozen spinner on screen until the next keypress.
-            var t = loadTask;
-            if (loading && t is not null && t.IsCompleted)
-            {
-                loading = false;
-                loadTask = null;
-            }
-            return loading;
-        }
-    }
-
     /// <summary>
     /// True while a sign-in is in progress (the shell keeps polling the input
     /// loop so background completion is observed without a key press).
     /// </summary>
-    public bool NeedsTimedRefresh => IsLoading || signInFlow is not null || pendingRegionModal is not null || pendingCredentialsModal is not null;
+    public bool NeedsTimedRefresh => signInFlow is not null || pendingRegionModal is not null || pendingCredentialsModal is not null;
 
     /// <summary>Event raised when the user picks the "sign in" action.</summary>
     public Action? OnSignInRequested { get; set; }
@@ -90,22 +68,20 @@ public sealed class HomeScreen : ITabScreen
         }
     }
 
-    public void OnActivated(IAppShellNavigator navigator)
+    public Task? OnActivatedAsync(IAppShellNavigator navigator)
     {
         this.navigator = navigator;
+        if (!loaded)
+        {
+            loaded = true;
+            return LoadAsync();
+        }
+        return null;
     }
 
     public IRenderable Render(int width, int height)
     {
-        EnsureLoaded();
         DriveSignInFlow();
-
-        // Check if background load completed
-        if (loading && loadTask is not null && loadTask.IsCompleted)
-        {
-            loading = false;
-            loadTask = null;
-        }
 
         var lines = new List<IRenderable>();
 
@@ -125,17 +101,7 @@ public sealed class HomeScreen : ITabScreen
                 lines.Add(new Markup($"[{secondary}]{Markup.Escape(accountName)}[/]"));
             }
             lines.Add(new Markup(string.Empty));
-            if (loading)
-            {
-                spinnerTick++;
-                var spinChars = new[] { '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' };
-                var ch = spinChars[spinnerTick % spinChars.Length];
-                lines.Add(new Markup($"[{brand}]{ch}[/] [{secondary}]Loading…[/]"));
-            }
-            else
-            {
-                lines.Add(new Markup($"[{secondary}]Library: {libraryCount} title{(libraryCount == 1 ? "" : "s")}[/]"));
-            }
+            lines.Add(new Markup($"[{secondary}]Library: {libraryCount} title{(libraryCount == 1 ? "" : "s")}[/]"));
             lines.Add(new Markup(string.Empty));
             lines.Add(new Markup($"[{tertiary}]Quick actions:[/]"));
             lines.Add(new Markup($"  [{brand}]2[/] [{secondary}]Browse library[/]"));
@@ -203,49 +169,37 @@ public sealed class HomeScreen : ITabScreen
             var items = lib.ListAsync().GetAwaiter().GetResult();
             libraryCount = items.Count;
             loaded = true;
-            loading = false;
         }
         catch
         {
             loaded = true;
-            loading = false;
             // Swallow — the TUI must not crash.
         }
     }
 
-    /// <summary>Lazy-load data on first render (non-blocking).</summary>
-    internal void EnsureLoaded()
+    /// <summary>Load data asynchronously (returned to shell for tracking).</summary>
+    private Task LoadAsync()
     {
-        if (!loaded && !loading)
+        return Task.Run(() =>
         {
-            loading = true;
-            loadTask = Task.Run(() =>
+            try
             {
-                try
+                var auth = authServiceFactory();
+                var session = auth.GetActiveAsync().GetAwaiter().GetResult();
+                if (session is not null)
                 {
-                    var auth = authServiceFactory();
-                    var session = auth.GetActiveAsync().GetAwaiter().GetResult();
-                    if (session is not null)
-                    {
-                        accountName = session.AccountName;
-                    }
+                    accountName = session.AccountName;
+                }
 
-                    var lib = libraryServiceFactory();
-                    var items = lib.ListAsync().GetAwaiter().GetResult();
-                    libraryCount = items.Count;
-                    loaded = true;
-                }
-                catch
-                {
-                    loaded = true;
-                    // Swallow — the TUI must not crash.
-                }
-                finally
-                {
-                    loading = false;
-                }
-            });
-        }
+                var lib = libraryServiceFactory();
+                var items = lib.ListAsync().GetAwaiter().GetResult();
+                libraryCount = items.Count;
+            }
+            catch
+            {
+                // Swallow — the TUI must not crash.
+            }
+        });
     }
 
     private void BeginSignIn()
@@ -365,7 +319,6 @@ public sealed class HomeScreen : ITabScreen
                 accountName = result.Session.AccountName;
                 libraryCount = result.LibraryCount;
                 loaded = true;
-                loading = false;
                 navigator.ShowToast($"Signed in as {result.Session.ProfileAlias} · {result.LibraryCount} title{(result.LibraryCount == 1 ? string.Empty : "s")}");
                 TeardownSignInFlow();
                 return;

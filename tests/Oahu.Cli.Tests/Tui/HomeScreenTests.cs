@@ -72,7 +72,7 @@ public class HomeScreenTests : IDisposable
     {
         var screen = CreateScreen();
         var nav = new RecordingNavigator();
-        screen.OnActivated(nav);
+        screen.OnActivatedAsync(nav);
 
         screen.HandleKey(Key('s', ConsoleKey.S));
 
@@ -85,7 +85,7 @@ public class HomeScreenTests : IDisposable
     {
         var screen = CreateScreen();
         var nav = new RecordingNavigator();
-        screen.OnActivated(nav);
+        screen.OnActivatedAsync(nav);
 
         screen.HandleKey(Key('s', ConsoleKey.S));
         var modal = (Oahu.Cli.Tui.Auth.RegionPickerModal)nav.LastModal!;
@@ -105,7 +105,7 @@ public class HomeScreenTests : IDisposable
         // modal was still pending, so the next `s` press silently did nothing.
         var screen = CreateScreen();
         var nav = new RecordingNavigator();
-        screen.OnActivated(nav);
+        screen.OnActivatedAsync(nav);
 
         screen.HandleKey(Key('s', ConsoleKey.S));
         var firstModal = nav.LastModal;
@@ -127,7 +127,7 @@ public class HomeScreenTests : IDisposable
     {
         var screen = CreateScreen();
         var nav = new RecordingNavigator();
-        screen.OnActivated(nav);
+        screen.OnActivatedAsync(nav);
 
         screen.HandleKey(Key('s', ConsoleKey.S));
         var region = (Oahu.Cli.Tui.Auth.RegionPickerModal)nav.LastModal!;
@@ -148,7 +148,7 @@ public class HomeScreenTests : IDisposable
     {
         var screen = CreateScreen();
         var nav = new RecordingNavigator();
-        screen.OnActivated(nav);
+        screen.OnActivatedAsync(nav);
 
         screen.HandleKey(Key('s', ConsoleKey.S));
         var region = (Oahu.Cli.Tui.Auth.RegionPickerModal)nav.LastModal!;
@@ -185,6 +185,7 @@ public class HomeScreenTests : IDisposable
         public void ShowToast(string message) => LastToast = message;
         public void DismissModal() { DismissCalled = true; LastModal = null; }
         public void SetBroker(Oahu.Cli.Tui.Auth.TuiCallbackBroker? broker) => LastBroker = broker;
+        public void TrackLoad(System.Threading.Tasks.Task loadTask) { }
     }
 
     private sealed class FakeAuthService : IAuthService

@@ -39,8 +39,6 @@ public sealed class JobsScreen : ITabScreen, ITerminalProgressProvider
 
     public char NumberKey => '4';
 
-    public bool IsLoading => false;
-
     /// <summary>Always true while observer is running so externally-started jobs render promptly.</summary>
     public bool NeedsTimedRefresh => observerCts is not null && !observerCts.IsCancellationRequested;
 

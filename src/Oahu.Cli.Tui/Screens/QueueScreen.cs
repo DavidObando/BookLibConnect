@@ -26,8 +26,6 @@ public sealed class QueueScreen : ITabScreen
     private int scrollOffset;
     private int lastListHeight = 20;
 
-    private bool loading;
-    private Task? loadTask;
     private bool busy;
     private string? statusMessage;
     private int spinnerTick;
@@ -44,26 +42,7 @@ public sealed class QueueScreen : ITabScreen
 
     public char NumberKey => '3';
 
-    public bool IsLoading
-    {
-        get
-        {
-            // Reconcile with the background load task so AppShell sees the
-            // current truth when it samples NeedsTimedRefresh right after a
-            // Render call. Without this, a load that finishes between the
-            // spinner being drawn and AppShell reading NeedsTimedRefresh would
-            // leave a frozen spinner on screen until the next keypress.
-            var t = loadTask;
-            if (loading && t is not null && t.IsCompleted)
-            {
-                loading = false;
-                loadTask = null;
-            }
-            return loading;
-        }
-    }
-
-    public bool NeedsTimedRefresh => IsLoading || busy;
+    public bool NeedsTimedRefresh => busy;
 
     public IReadOnlyList<QueueEntry> Entries => entries;
 
@@ -83,10 +62,10 @@ public sealed class QueueScreen : ITabScreen
         }
     }
 
-    public void OnActivated(IAppShellNavigator navigator)
+    public Task? OnActivatedAsync(IAppShellNavigator navigator)
     {
         this.navigator = navigator;
-        Reload();
+        return LoadAsync();
     }
 
     public void OnDeactivated()
@@ -96,18 +75,6 @@ public sealed class QueueScreen : ITabScreen
 
     public IRenderable Render(int width, int height)
     {
-        // Pump background load completions.
-        if (loading && loadTask is not null && loadTask.IsCompleted)
-        {
-            loading = false;
-            loadTask = null;
-        }
-
-        if (loading)
-        {
-            return RenderSpinner("Loading queue…");
-        }
-
         var primary = Tokens.Tokens.TextPrimary.Value.ToMarkup();
         var secondary = Tokens.Tokens.TextSecondary.Value.ToMarkup();
         var tertiary = Tokens.Tokens.TextTertiary.Value.ToMarkup();
@@ -221,14 +188,9 @@ public sealed class QueueScreen : ITabScreen
         return false;
     }
 
-    private void Reload()
+    private Task LoadAsync()
     {
-        if (loading)
-        {
-            return;
-        }
-        loading = true;
-        loadTask = Task.Run(async () =>
+        return Task.Run(async () =>
         {
             try
             {
@@ -242,6 +204,11 @@ public sealed class QueueScreen : ITabScreen
                 entries = Array.Empty<QueueEntry>();
             }
         });
+    }
+
+    private void Reload()
+    {
+        navigator?.TrackLoad(LoadAsync());
     }
 
     private void MoveSelected(int delta)
@@ -398,19 +365,6 @@ public sealed class QueueScreen : ITabScreen
         {
             scrollOffset = cursor - visibleHeight + 1;
         }
-    }
-
-    private IRenderable RenderSpinner(string label)
-    {
-        spinnerTick++;
-        var spinChars = new[] { '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' };
-        var ch = spinChars[spinnerTick % spinChars.Length];
-        var b = Tokens.Tokens.Brand.Value.ToMarkup();
-        var s = Tokens.Tokens.TextSecondary.Value.ToMarkup();
-        return new Padder(new Rows(new IRenderable[]
-        {
-            new Markup($"[{b}]{ch}[/] [{s}]{Markup.Escape(label)}[/]"),
-        })).Padding(2, 1, 2, 1);
     }
 
     private static string Truncate(string s, int max) =>

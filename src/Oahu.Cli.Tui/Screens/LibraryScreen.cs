@@ -29,10 +29,7 @@ public sealed class LibraryScreen : ITabScreen
     private int scrollOffset;
     private int lastListHeight = 20;
     private bool loaded;
-    private bool loading;
-    private Task? loadTask;
     private bool searchMode;
-    private int spinnerTick;
 
     private IAppShellNavigator? navigator;
     private Task? enqueueTask;
@@ -55,25 +52,6 @@ public sealed class LibraryScreen : ITabScreen
     public string Title => "Library";
 
     public char NumberKey => '2';
-
-    public bool IsLoading
-    {
-        get
-        {
-            // Reconcile with the background load task so AppShell sees the
-            // current truth when it samples NeedsTimedRefresh right after a
-            // Render call. Without this, a load that finishes between the
-            // spinner being drawn and AppShell reading NeedsTimedRefresh would
-            // leave a frozen spinner on screen until the next keypress.
-            var t = loadTask;
-            if (loading && t is not null && t.IsCompleted)
-            {
-                loading = false;
-                loadTask = null;
-            }
-            return loading;
-        }
-    }
 
     public int Cursor => cursor;
 
@@ -105,28 +83,19 @@ public sealed class LibraryScreen : ITabScreen
         }
     }
 
-    public void OnActivated(IAppShellNavigator navigator)
+    public Task? OnActivatedAsync(IAppShellNavigator navigator)
     {
         this.navigator = navigator;
+        if (!loaded)
+        {
+            loaded = true;
+            return LoadAsync();
+        }
+        return null;
     }
 
     public IRenderable Render(int width, int height)
     {
-        EnsureLoaded();
-
-        // Check if background load completed
-        if (loading && loadTask is not null && loadTask.IsCompleted)
-        {
-            loading = false;
-            loadTask = null;
-        }
-
-        // Show loading spinner while data is being fetched
-        if (loading)
-        {
-            return RenderLoadingSpinner();
-        }
-
         var lines = new List<IRenderable>();
 
         var primary = Tokens.Tokens.TextPrimary.Value.ToMarkup();
@@ -283,43 +252,32 @@ public sealed class LibraryScreen : ITabScreen
             var lib = libraryServiceFactory();
             allItems = lib.ListAsync().GetAwaiter().GetResult();
             loaded = true;
-            loading = false;
             ApplyFilter();
         }
         catch
         {
             loaded = true;
-            loading = false;
             // Swallow to keep TUI stable.
         }
     }
 
-    internal void EnsureLoaded()
+    /// <summary>Load library items asynchronously (returned to shell for tracking).</summary>
+    private Task LoadAsync()
     {
-        if (!loaded && !loading)
+        return Task.Run(() =>
         {
-            loading = true;
-            loadTask = Task.Run(() =>
+            try
             {
-                try
-                {
-                    var lib = libraryServiceFactory();
-                    var items = lib.ListAsync().GetAwaiter().GetResult();
-                    allItems = items;
-                    loaded = true;
-                    ApplyFilter();
-                }
-                catch
-                {
-                    loaded = true;
-                    // Swallow to keep TUI stable.
-                }
-                finally
-                {
-                    loading = false;
-                }
-            });
-        }
+                var lib = libraryServiceFactory();
+                var items = lib.ListAsync().GetAwaiter().GetResult();
+                allItems = items;
+                ApplyFilter();
+            }
+            catch
+            {
+                // Swallow to keep TUI stable.
+            }
+        });
     }
 
     /// <summary>Background task spawned by <c>q</c>; exposed for tests.</summary>
@@ -410,19 +368,6 @@ public sealed class LibraryScreen : ITabScreen
 
         selected.Clear();
         return true;
-    }
-
-    private IRenderable RenderLoadingSpinner()
-    {
-        spinnerTick++;
-        var spinChars = new[] { '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' };
-        var ch = spinChars[spinnerTick % spinChars.Length];
-        var b = Tokens.Tokens.Brand.Value.ToMarkup();
-        var s = Tokens.Tokens.TextSecondary.Value.ToMarkup();
-        return new Padder(new Rows(new IRenderable[]
-        {
-            new Markup($"[{b}]{ch}[/] [{s}]Loading library…[/]"),
-        })).Padding(2, 1, 2, 1);
     }
 
     private void ApplyFilter()
