@@ -19,6 +19,8 @@ namespace Oahu.Cli.App.Library;
 public sealed class CoreLibraryService : ILibraryService
 {
     private readonly AudibleClient client;
+    private readonly SemaphoreSlim refreshGate = new(1, 1);
+    private bool refreshed;
 
     public CoreLibraryService()
         : this(CoreEnvironment.Client)
@@ -36,7 +38,7 @@ public sealed class CoreLibraryService : ILibraryService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await CoreEnvironment.EnsureProfileLoadedAsync().ConfigureAwait(false);
+        await EnsureFreshAsync(cancellationToken).ConfigureAwait(false);
         var api = client.Api;
         if (api is null)
         {
@@ -58,7 +60,7 @@ public sealed class CoreLibraryService : ILibraryService
         ArgumentException.ThrowIfNullOrWhiteSpace(asin);
         cancellationToken.ThrowIfCancellationRequested();
 
-        await CoreEnvironment.EnsureProfileLoadedAsync().ConfigureAwait(false);
+        await EnsureFreshAsync(cancellationToken).ConfigureAwait(false);
         var api = client.Api;
         if (api is null)
         {
@@ -122,6 +124,49 @@ public sealed class CoreLibraryService : ILibraryService
 
         var books = api.GetBooks();
         return books?.Count() ?? 0;
+    }
+
+    /// <inheritdoc/>
+    public async Task EnsureFreshAsync(CancellationToken cancellationToken = default)
+    {
+        if (refreshed)
+        {
+            return;
+        }
+
+        await refreshGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (refreshed)
+            {
+                return;
+            }
+
+            await CoreEnvironment.EnsureProfileLoadedAsync().ConfigureAwait(false);
+            var api = client.Api;
+            if (api is null)
+            {
+                // No active profile — nothing to refresh.
+                refreshed = true;
+                return;
+            }
+
+            // Incremental refresh (resync: false) like the GUI does on startup.
+            // Only fetches items newer than the last sync point.
+            await api.GetLibraryAsync(resync: false).ConfigureAwait(false);
+            refreshed = true;
+        }
+        catch
+        {
+            // Network/auth failures are non-fatal for EnsureFreshAsync — the user
+            // still gets whatever is in the local cache. An explicit `library sync`
+            // surfaces errors properly.
+            refreshed = true;
+        }
+        finally
+        {
+            refreshGate.Release();
+        }
     }
 
     private static IEnumerable<LibraryItem> ApplyFilter(IEnumerable<LibraryItem> items, LibraryFilter filter)

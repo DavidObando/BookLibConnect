@@ -233,5 +233,8 @@ public class LibraryScreenTests : IDisposable
 
         public Task<int> SyncAsync(string profileAlias, CancellationToken ct = default)
             => Task.FromResult(0);
+
+        public Task EnsureFreshAsync(CancellationToken ct = default)
+            => Task.CompletedTask;
     }
 }

@@ -93,6 +93,20 @@ public static class TuiCommand
             // Swallow — fresh install has no profiles.
         }
 
+        // Refresh the library incrementally from Audible (like the GUI does on
+        // startup) so newly purchased books appear immediately. The guard inside
+        // EnsureFreshAsync makes this a no-op if any later command already
+        // triggered a refresh. Failures are silently ignored.
+        try
+        {
+            var lib = CliServiceFactory.LibraryServiceFactory();
+            lib.EnsureFreshAsync().GetAwaiter().GetResult();
+        }
+        catch
+        {
+            // Non-fatal — TUI still works with stale cache.
+        }
+
         var tabs = DefaultTabs.CreateReal(
             state,
             CliServiceFactory.AuthServiceFactory,
