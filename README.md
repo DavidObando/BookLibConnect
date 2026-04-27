@@ -16,6 +16,57 @@ Oahu is an Audible downloader app for Windows, macOS, and Linux. Forked from [au
 - Detailed progress monitoring.
 - Optionally exports as .aax files.
 
+## Clients
+
+Oahu ships two independent front-ends — a graphical app and a terminal app — both built on the same core libraries.
+
+### GUI (Avalonia)
+
+The cross-platform desktop app (`Oahu.App`) provides a traditional graphical interface for browsing your library, queuing downloads, and monitoring progress.
+
+### CLI + TUI (`oahu-cli`)
+
+A single binary that operates in three modes:
+
+| Mode | Invocation | Description |
+|------|-----------|-------------|
+| **TUI** | `oahu-cli` or `oahu-cli tui` | Full-screen interactive terminal UI (Spectre.Console) — browse library, queue downloads, monitor jobs, inspect history. |
+| **Command** | `oahu-cli <subcommand>` | Scriptable one-shot commands with JSON output, exit codes, and pipe-friendly behaviour. |
+| **Server** | `oahu-cli serve` | Long-lived process exposing MCP (stdio) and/or loopback HTTP+SSE transports for AI hosts and local tooling. |
+
+#### Available commands
+
+```
+oahu-cli auth login|logout|status   Manage Audible authentication
+oahu-cli library list|sync          Browse and refresh your book library
+oahu-cli download <ASIN…>          Download and decrypt books
+oahu-cli convert <file…>           Convert .aax/.aaxc to .m4b
+oahu-cli queue add|list|remove      Manage the download queue
+oahu-cli history                    View download/conversion history
+oahu-cli config get|set|list        View and update settings
+oahu-cli doctor                     Diagnose environment issues
+oahu-cli serve --mcp|--http         Start the MCP/HTTP integration server
+oahu-cli completion                 Generate shell completions
+```
+
+#### MCP / HTTP server
+
+The `serve` command exposes the full CLI surface for programmatic use:
+
+- **MCP-stdio** — for AI assistants (Claude Desktop, Continue, etc.)
+- **Loopback HTTP REST + SSE** — for scripts, automation, and local tooling (defaults to `127.0.0.1:8765`)
+
+```sh
+# Stdio MCP (for AI hosts)
+oahu-cli serve --mcp --unattended
+
+# Loopback HTTP
+oahu-cli serve --http
+
+# Both transports at once
+oahu-cli serve --mcp --http
+```
+
 
 ## Download
 Go to the [Releases](https://github.com/DavidObando/Oahu/releases) section of this repository to download installers for Windows (arm64, x64), DMG images for macOS (arm64, x64), or tarballs with the compiled binaries for Linux and macOS (arm64, x64).
@@ -37,7 +88,7 @@ Oahu will run on Windows 64bit, macOS, or Linux. Minimum Windows version is 7. M
 
 ### Building from source
 
-The repository now ships a single cross-platform Avalonia client (Windows, macOS, Linux).
+The repository ships a cross-platform Avalonia GUI client and a CLI/TUI client (Windows, macOS, Linux).
 
 ```bash
 # Build the full solution
@@ -46,21 +97,27 @@ dotnet build Oahu.sln
 # Run the Avalonia app
 dotnet run --project src/Oahu.App/Oahu.App.csproj
 
+# Run the CLI (launches TUI by default)
+dotnet run --project src/Oahu.Cli/Oahu.Cli.csproj
+
+# Run a CLI subcommand
+dotnet run --project src/Oahu.Cli/Oahu.Cli.csproj -- library list --json
+
 # Publish for macOS (Apple Silicon)
 dotnet publish src/Oahu.App/Oahu.App.csproj \
-  -r osx-arm64 -c Release --self-contained -p:PublishTrimmed=true
+  -r osx-arm64 -c Release --self-contained
 
 # Publish for macOS (Intel)
 dotnet publish src/Oahu.App/Oahu.App.csproj \
-  -r osx-x64 -c Release --self-contained -p:PublishTrimmed=true
+  -r osx-x64 -c Release --self-contained
 
 # Publish for Windows
 dotnet publish src/Oahu.App/Oahu.App.csproj \
-  -r win-x64 -c Release --self-contained -p:PublishTrimmed=true
+  -r win-x64 -c Release --self-contained
 
 # Publish for Linux
 dotnet publish src/Oahu.App/Oahu.App.csproj \
-  -r linux-x64 -c Release --self-contained -p:PublishTrimmed=true
+  -r linux-x64 -c Release --self-containe
 ```
 
 ### Build scripts
@@ -80,7 +137,7 @@ Platform-specific build scripts are provided in the `build/` directory:
 
 ### Project Architecture
 
-The solution is organized into 6 projects:
+The solution is organized into 11 projects:
 
 | Project | Depends on | Description |
 |---|---|---|
@@ -88,8 +145,13 @@ The solution is organized into 6 projects:
 | `Oahu.Decrypt` | — | AAX/AAXC decryption (MP4/MPEG-4 parsing, frame filters, crypto) |
 | `Oahu.Data` | Foundation | EF Core + SQLite database (entities, migrations) |
 | `Oahu.Core` | Decrypt, Foundation, Data | Core business logic (Audible API, auth, library, download/decrypt) |
+| `Oahu.SystemManagement` | Foundation | Platform-specific hardware ID providers (Windows, macOS, Linux) |
 | `Oahu.UI` | Foundation, Data, Core | Avalonia MVVM ViewModels + Views |
-| `Oahu.App` | Foundation, Data, Core, UI | Application entry point + platform-specific hardware ID providers |
+| `Oahu.App` | Foundation, Data, Core, UI, SystemManagement | GUI application entry point (Avalonia) |
+| `Oahu.Cli.App` | Foundation, Data, Core, SystemManagement | CLI use-case layer (auth, library, queue, jobs, config) — headless, fully testable |
+| `Oahu.Cli.Tui` | Cli.App | TUI design system over Spectre.Console (widgets, screens, themes, keymap) |
+| `Oahu.Cli.Server` | Cli.App | MCP + loopback HTTP/SSE server for AI hosts and local tooling |
+| `Oahu.Cli` | Cli.App, Cli.Tui, Cli.Server | CLI entry point, argument parsing (System.CommandLine), command handlers |
 
 ## Acknowledgments
 - [audiamus](https://github.com/audiamus/BookLibConnect) for his original implementation of BookLibConnect. This repository is a fork of audiamus' work.
