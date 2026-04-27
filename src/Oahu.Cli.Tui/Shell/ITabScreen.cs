@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Oahu.Cli.Tui.Auth;
 using Spectre.Console.Rendering;
 
@@ -35,21 +36,31 @@ public interface ITabScreen
     IEnumerable<KeyValuePair<string, string?>> Hints { get; }
 
     /// <summary>
-    /// True when the screen is loading data asynchronously. The shell
-    /// switches to a timed-poll input loop so the spinner animates.
-    /// </summary>
-    bool IsLoading => false;
-
-    /// <summary>
     /// True when the screen wants the shell to re-render on a 100 ms tick
-    /// even while no key has been pressed. Defaults to <see cref="IsLoading"/>;
-    /// JobsScreen overrides this to keep ticking while observing.
+    /// even while no key has been pressed (e.g. JobsScreen observing live
+    /// updates, or a mutation spinner). The shell also ticks automatically
+    /// while a shell-managed load task is pending, so screens do not need
+    /// to return <c>true</c> for activation loads.
     /// </summary>
-    bool NeedsTimedRefresh => IsLoading;
+    bool NeedsTimedRefresh => false;
 
     /// <summary>Called when this tab becomes the active one (default: no-op).</summary>
     void OnActivated(IAppShellNavigator navigator)
     {
+    }
+
+    /// <summary>
+    /// Async activation hook. The shell calls this instead of
+    /// <see cref="OnActivated"/> when switching tabs. Return a non-null
+    /// <see cref="Task"/> to indicate that data is loading; the shell
+    /// renders a loading spinner and guarantees timed refresh until the
+    /// task completes (and one frame after). The default implementation
+    /// delegates to <see cref="OnActivated"/> and returns <c>null</c>.
+    /// </summary>
+    Task? OnActivatedAsync(IAppShellNavigator navigator)
+    {
+        OnActivated(navigator);
+        return null;
     }
 
     /// <summary>Called when this tab is no longer the active one (default: no-op).</summary>
@@ -89,6 +100,14 @@ public interface IAppShellNavigator
     /// modal-request callbacks raised by background auth operations.
     /// </summary>
     void SetBroker(TuiCallbackBroker? broker);
+
+    /// <summary>
+    /// Ask the shell to track a background load task (e.g. a screen-initiated
+    /// reload via F5). The shell renders a loading spinner and guarantees
+    /// timed refresh until the task completes. Replaces any previously
+    /// tracked load for the active screen.
+    /// </summary>
+    void TrackLoad(Task loadTask);
 }
 
 /// <summary>

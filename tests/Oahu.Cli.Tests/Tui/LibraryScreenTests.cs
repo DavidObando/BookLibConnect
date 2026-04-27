@@ -135,7 +135,7 @@ public class LibraryScreenTests : IDisposable
             new[] { MakeItem("A1", "Alpha", "Auth1"), MakeItem("A2", "Beta", "Auth2"), MakeItem("A3", "Gamma") },
             queue);
         var nav = new NullNavigator();
-        screen.OnActivated(nav);
+        _ = screen.OnActivatedAsync(nav);
         screen.Reload();
 
         // Select A1 and A3.
@@ -164,7 +164,7 @@ public class LibraryScreenTests : IDisposable
             new[] { MakeItem("A1", "Alpha"), MakeItem("A2", "Beta") },
             queue);
         var nav = new NullNavigator();
-        screen.OnActivated(nav);
+        _ = screen.OnActivatedAsync(nav);
         screen.Reload();
 
         // Move to second item and press q with no selection.
@@ -188,7 +188,7 @@ public class LibraryScreenTests : IDisposable
             new[] { MakeItem("A1", "Alpha"), MakeItem("A2", "Beta") },
             queue);
         var nav = new NullNavigator();
-        screen.OnActivated(nav);
+        _ = screen.OnActivatedAsync(nav);
         screen.Reload();
 
         screen.HandleKey(Key('a', ConsoleKey.A)); // select all

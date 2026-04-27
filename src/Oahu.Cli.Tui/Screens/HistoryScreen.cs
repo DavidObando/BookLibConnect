@@ -26,8 +26,6 @@ public sealed class HistoryScreen : ITabScreen
     private int scrollOffset;
     private int lastListHeight = 20;
 
-    private bool loading;
-    private Task? loadTask;
     private bool busy;
     private bool jsonMode;
     private string? statusMessage;
@@ -44,26 +42,7 @@ public sealed class HistoryScreen : ITabScreen
 
     public char NumberKey => '5';
 
-    public bool IsLoading
-    {
-        get
-        {
-            // Reconcile with the background load task so AppShell sees the
-            // current truth when it samples NeedsTimedRefresh right after a
-            // Render call. Without this, a load that finishes between the
-            // spinner being drawn and AppShell reading NeedsTimedRefresh would
-            // leave a frozen spinner on screen until the next keypress.
-            var t = loadTask;
-            if (loading && t is not null && t.IsCompleted)
-            {
-                loading = false;
-                loadTask = null;
-            }
-            return loading;
-        }
-    }
-
-    public bool NeedsTimedRefresh => IsLoading || busy;
+    public bool NeedsTimedRefresh => busy;
 
     public IReadOnlyList<JobRecord> Records => records;
 
@@ -81,13 +60,14 @@ public sealed class HistoryScreen : ITabScreen
         }
     }
 
-    public void OnActivated(IAppShellNavigator navigator)
+    public Task? OnActivatedAsync(IAppShellNavigator navigator)
     {
         this.navigator = navigator;
-        if (records.Count == 0 && !loading)
+        if (records.Count == 0)
         {
-            Reload();
+            return LoadAsync();
         }
+        return null;
     }
 
     public void OnDeactivated()
@@ -96,17 +76,6 @@ public sealed class HistoryScreen : ITabScreen
 
     public IRenderable Render(int width, int height)
     {
-        if (loading && loadTask is not null && loadTask.IsCompleted)
-        {
-            loading = false;
-            loadTask = null;
-        }
-
-        if (loading)
-        {
-            return RenderSpinner("Loading history…");
-        }
-
         var primary = Tokens.Tokens.TextPrimary.Value.ToMarkup();
         var secondary = Tokens.Tokens.TextSecondary.Value.ToMarkup();
         var tertiary = Tokens.Tokens.TextTertiary.Value.ToMarkup();
@@ -242,14 +211,9 @@ public sealed class HistoryScreen : ITabScreen
         return false;
     }
 
-    private void Reload()
+    private Task LoadAsync()
     {
-        if (loading)
-        {
-            return;
-        }
-        loading = true;
-        loadTask = Task.Run(async () =>
+        return Task.Run(async () =>
         {
             try
             {
@@ -271,6 +235,11 @@ public sealed class HistoryScreen : ITabScreen
                 records = Array.Empty<JobRecord>();
             }
         });
+    }
+
+    private void Reload()
+    {
+        navigator?.TrackLoad(LoadAsync());
     }
 
     private void RetrySelected()
@@ -319,19 +288,6 @@ public sealed class HistoryScreen : ITabScreen
         {
             scrollOffset = cursor - visibleHeight + 1;
         }
-    }
-
-    private IRenderable RenderSpinner(string label)
-    {
-        spinnerTick++;
-        var spinChars = new[] { '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' };
-        var ch = spinChars[spinnerTick % spinChars.Length];
-        var b = Tokens.Tokens.Brand.Value.ToMarkup();
-        var s = Tokens.Tokens.TextSecondary.Value.ToMarkup();
-        return new Padder(new Rows(new IRenderable[]
-        {
-            new Markup($"[{b}]{ch}[/] [{s}]{Markup.Escape(label)}[/]"),
-        })).Padding(2, 1, 2, 1);
     }
 
     private static string Truncate(string s, int max) =>

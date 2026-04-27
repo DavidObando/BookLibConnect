@@ -42,20 +42,14 @@ public class QueueScreenTests : IDisposable
     private QueueScreen NewScreen(IQueueService q, IJobService? j = null) =>
         new(() => q, () => j ?? new FakeJobService());
 
-    private static async Task WaitForLoad(QueueScreen s)
+    private static async Task WaitForLoad(QueueScreen s, NullNavigator nav)
     {
-        // OnActivated kicks off load; pump Render() until it completes.
-        for (var i = 0; i < 50; i++)
+        // OnActivatedAsync returns the load task; await it directly.
+        var task = s.OnActivatedAsync(nav);
+        if (task is not null)
         {
-            // Trigger the completion check.
-            s.Render(120, 30);
-            if (!s.IsLoading)
-            {
-                return;
-            }
-            await Task.Delay(20);
+            await task;
         }
-        throw new TimeoutException("queue did not finish loading");
     }
 
     [Fact]
@@ -66,8 +60,7 @@ public class QueueScreenTests : IDisposable
         await q.AddAsync(E("A2"));
 
         var s = NewScreen(q);
-        s.OnActivated(new NullNavigator());
-        await WaitForLoad(s);
+        await WaitForLoad(s, new NullNavigator());
 
         Assert.Equal(2, s.Entries.Count);
         Assert.Equal(new[] { "A1", "A2" }, s.Entries.Select(e => e.Asin).ToArray());
@@ -82,8 +75,7 @@ public class QueueScreenTests : IDisposable
         await q.AddAsync(E("A3"));
 
         var s = NewScreen(q);
-        s.OnActivated(new NullNavigator());
-        await WaitForLoad(s);
+        await WaitForLoad(s, new NullNavigator());
 
         Assert.True(s.HandleKey(Key('\0', ConsoleKey.DownArrow, ConsoleModifiers.Shift)));
         for (var i = 0; i < 50 && s.NeedsTimedRefresh; i++)
@@ -103,8 +95,7 @@ public class QueueScreenTests : IDisposable
         await q.AddAsync(E("A2"));
 
         var s = NewScreen(q);
-        s.OnActivated(new NullNavigator());
-        await WaitForLoad(s);
+        await WaitForLoad(s, new NullNavigator());
 
         Assert.True(s.HandleKey(Key('x', ConsoleKey.X)));
         for (var i = 0; i < 50 && s.NeedsTimedRefresh; i++)
@@ -125,8 +116,7 @@ public class QueueScreenTests : IDisposable
         var nav = new NullNavigator();
 
         var s = NewScreen(q, fakeJob);
-        s.OnActivated(nav);
-        await WaitForLoad(s);
+        await WaitForLoad(s, nav);
 
         Assert.True(s.HandleKey(Key('\r', ConsoleKey.Enter)));
         for (var i = 0; i < 50 && s.NeedsTimedRefresh; i++)
@@ -242,16 +232,10 @@ public class HistoryScreenTests
         fake.SeedHistory(older, newer);
 
         var s = new HistoryScreen(() => fake);
-        s.OnActivated(new NullNavigator());
-
-        for (var i = 0; i < 50; i++)
+        var task = s.OnActivatedAsync(new NullNavigator());
+        if (task is not null)
         {
-            s.Render(120, 30);
-            if (!s.IsLoading)
-            {
-                break;
-            }
-            await Task.Delay(20);
+            await task;
         }
 
         Assert.Equal(2, s.Records.Count);
@@ -277,15 +261,10 @@ public class HistoryScreenTests
         var nav = new NullNavigator();
 
         var s = new HistoryScreen(fake.AsFactory());
-        s.OnActivated(nav);
-        for (var i = 0; i < 50; i++)
+        var task = s.OnActivatedAsync(nav);
+        if (task is not null)
         {
-            s.Render(120, 30);
-            if (!s.IsLoading)
-            {
-                break;
-            }
-            await Task.Delay(20);
+            await task;
         }
 
         Assert.True(s.HandleKey(new ConsoleKeyInfo('r', ConsoleKey.R, false, false, false)));
@@ -342,6 +321,7 @@ internal sealed class NullNavigator : IAppShellNavigator
     public string? LastToast { get; private set; }
     public bool DismissCalled { get; private set; }
     public Oahu.Cli.Tui.Auth.TuiCallbackBroker? LastBroker { get; private set; }
+    public System.Threading.Tasks.Task? LastTrackedLoad { get; private set; }
 
     public IModal? ActiveModal => LastModal;
     public void SwitchToTab(char numberKey) => LastSwitch = numberKey;
@@ -349,6 +329,7 @@ internal sealed class NullNavigator : IAppShellNavigator
     public void ShowToast(string message) => LastToast = message;
     public void DismissModal() { DismissCalled = true; LastModal = null; }
     public void SetBroker(Oahu.Cli.Tui.Auth.TuiCallbackBroker? broker) => LastBroker = broker;
+    public void TrackLoad(System.Threading.Tasks.Task loadTask) => LastTrackedLoad = loadTask;
 }
 
 internal sealed class LifecycleTabScreen : ITabScreen
@@ -362,8 +343,6 @@ internal sealed class LifecycleTabScreen : ITabScreen
     public string Title { get; }
 
     public char NumberKey { get; }
-
-    public bool IsLoading => false;
 
     public IEnumerable<KeyValuePair<string, string?>> Hints => Array.Empty<KeyValuePair<string, string?>>();
 

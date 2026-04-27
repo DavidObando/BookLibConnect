@@ -68,6 +68,7 @@ public sealed class AppShell : IAppShellNavigator
     private readonly AppShellOptions options;
     private readonly IReadOnlyList<ITabScreen> tabs;
     private readonly CtrlCState ctrlC;
+    private readonly PulseSpinner loadSpinner = new();
 
     private int activeTab;
     private int lastRenderedTab = -1;
@@ -77,6 +78,13 @@ public sealed class AppShell : IAppShellNavigator
     private IModal? activeModal;
     private TuiCallbackBroker? activeBroker;
     private volatile bool needsTimedRefresh;
+
+    // Shell-managed loading: the shell tracks the async load task returned by
+    // OnActivatedAsync (or TrackLoad) and renders a spinner while it's pending.
+    // screenLoadPending is only cleared inside Render() after the task completes,
+    // which guarantees at least one post-load render before blocking on input.
+    private System.Threading.Tasks.Task? screenLoadTask;
+    private bool screenLoadPending;
 
     public AppShell(IAnsiConsole console, AppShellOptions? options = null)
     {
@@ -113,6 +121,17 @@ public sealed class AppShell : IAppShellNavigator
 
     /// <summary>Set a broker to poll for modal requests from background auth.</summary>
     public void SetBroker(TuiCallbackBroker? broker) => activeBroker = broker;
+
+    /// <inheritdoc />
+    public void TrackLoad(System.Threading.Tasks.Task loadTask)
+    {
+        ArgumentNullException.ThrowIfNull(loadTask);
+        screenLoadTask = loadTask;
+        screenLoadPending = true;
+    }
+
+    /// <summary>True when a shell-managed load task is pending (for test assertions).</summary>
+    public bool IsLoadPending => screenLoadPending;
 
     /// <summary>Switch to a specific tab by index.</summary>
     public void SwitchTab(int index)
@@ -180,9 +199,18 @@ public sealed class AppShell : IAppShellNavigator
 
         activeTab = newIndex;
 
+        // Clear any stale load state from the previous screen.
+        screenLoadTask = null;
+        screenLoadPending = false;
+
         try
         {
-            tabs[newIndex].OnActivated(this);
+            var task = tabs[newIndex].OnActivatedAsync(this);
+            if (task is not null)
+            {
+                screenLoadTask = task;
+                screenLoadPending = true;
+            }
         }
         catch
         {
@@ -204,7 +232,12 @@ public sealed class AppShell : IAppShellNavigator
         {
             try
             {
-                tabs[activeTab].OnActivated(this);
+                var task = tabs[activeTab].OnActivatedAsync(this);
+                if (task is not null)
+                {
+                    screenLoadTask = task;
+                    screenLoadPending = true;
+                }
             }
             catch
             {
@@ -553,7 +586,7 @@ public sealed class AppShell : IAppShellNavigator
         }.Write(target);
         target.Write(new Rule { Style = new Style(Tokens.Tokens.BorderNeutral) });
 
-        // Body: modal > logs > tab screen.
+        // Body: modal > logs > shell-managed loading spinner > tab screen.
         if (activeModal is not null)
         {
             target.Write(activeModal.Render(width, bodyHeight));
@@ -561,6 +594,22 @@ public sealed class AppShell : IAppShellNavigator
         else if (logsOpen && options.LogBuffer is { } buf)
         {
             target.Write(RenderLogsOverlay(buf, width, bodyHeight));
+        }
+        else if (screenLoadPending)
+        {
+            // Reconcile: if the task has completed, clear pending so this
+            // frame renders the actual screen content (not the spinner).
+            var lt = screenLoadTask;
+            if (lt is not null && lt.IsCompleted)
+            {
+                screenLoadPending = false;
+                screenLoadTask = null;
+                target.Write(screen.Render(width, bodyHeight));
+            }
+            else
+            {
+                target.Write(RenderLoadSpinner(screen.Title));
+            }
         }
         else
         {
@@ -603,9 +652,10 @@ public sealed class AppShell : IAppShellNavigator
             Console.Out.Flush();
         }
 
-        // Tab is allowed to ask for periodic redraws (e.g. JobsScreen
-        // observing live updates) even if it isn't loading.
-        needsTimedRefresh = screen.NeedsTimedRefresh || (activeBroker?.HasPending ?? false);
+        // Shell-managed load tasks drive timed refresh independently of
+        // the screen's own NeedsTimedRefresh (which covers screen-specific
+        // continuous refresh like JobsScreen's observer or mutation spinners).
+        needsTimedRefresh = screenLoadPending || screen.NeedsTimedRefresh || (activeBroker?.HasPending ?? false);
     }
 
     private string BuildHeader(int width)
@@ -686,6 +736,17 @@ public sealed class AppShell : IAppShellNavigator
         }
 
         return new Padder(new Rows(lines)).Padding(2, 1, 2, 1);
+    }
+
+    /// <summary>Shell-owned loading spinner rendered while a screen's load task is pending.</summary>
+    private IRenderable RenderLoadSpinner(string screenTitle)
+    {
+        var b = Tokens.Tokens.Brand.Value.ToMarkup();
+        var s = Tokens.Tokens.TextSecondary.Value.ToMarkup();
+        return new Padder(new Rows(new IRenderable[]
+        {
+            new Markup($"{loadSpinner.RenderMarkup()} [{s}]Loading {Markup.Escape(screenTitle.ToLowerInvariant())}…[/]"),
+        })).Padding(2, 1, 2, 1);
     }
 
     /// <summary>Console-backed key reader used by the production path.</summary>
