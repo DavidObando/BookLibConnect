@@ -39,6 +39,7 @@ public sealed class DoctorService : IDoctorService
             CheckLibraryCacheReachable(),
             CheckDiskFree(options.OutputDir ?? CliPaths.DefaultDownloadDir, options.MinFreeBytes),
             CheckCliConfigWritable(),
+            CheckUserSettings(),
         };
 
         if (options.SkipNetwork)
@@ -155,6 +156,86 @@ public sealed class DoctorService : IDoctorService
         }
     }
 
+    /// <summary>
+    /// Verify the GUI-shared <c>usersettings.json</c> has the directories
+    /// downloads / exports actually need at runtime. The defaults are applied
+    /// inside <see cref="Oahu.Core.SettingsDefaults.ApplyDefaults"/> when
+    /// <c>OahuUserSettings.Init</c> runs, so a fresh install passes; this
+    /// check is the safety net that catches a user-edited config that left
+    /// <c>DownloadDirectory</c> blank or pointed at an unwritable path, or
+    /// turned on <c>ExportToAax</c> without setting <c>ExportDirectory</c>.
+    /// </summary>
+    public static DoctorCheck CheckUserSettings()
+    {
+        try
+        {
+            // CoreEnvironment.Initialize is invoked by Program.cs at every CLI
+            // command's entry point (so doctor sees the GUI-shared paths). We
+            // intentionally do NOT call it from here so unit tests can run
+            // CheckUserSettings without mutating process-wide ApplEnv state.
+            var settings = Oahu.Aux.SettingsManager.GetUserSettings<Oahu.Cli.App.Core.OahuUserSettings>();
+
+            var dl = settings.DownloadSettings;
+            var problems = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(dl.DownloadDirectory))
+            {
+                problems.Add("DownloadDirectory is empty");
+            }
+            else if (!CanWriteToDirectory(dl.DownloadDirectory, out var dlError))
+            {
+                problems.Add($"DownloadDirectory '{dl.DownloadDirectory}' is not writable: {dlError}");
+            }
+
+            var ex = settings.ExportSettings;
+            // ExportDirectory only matters when the user opted in to AAX export.
+            // Surfacing it as Error when ExportToAax is true and the directory
+            // is invalid prevents a download from succeeding only to have the
+            // export step blow up at the very end.
+            if (ex.ExportToAax == true)
+            {
+                if (string.IsNullOrWhiteSpace(ex.ExportDirectory))
+                {
+                    problems.Add("ExportToAax is enabled but ExportDirectory is empty");
+                }
+                else if (!CanWriteToDirectory(ex.ExportDirectory, out var exError))
+                {
+                    problems.Add($"ExportDirectory '{ex.ExportDirectory}' is not writable: {exError}");
+                }
+            }
+
+            if (problems.Count == 0)
+            {
+                var summary = $"download={dl.DownloadDirectory}";
+                if (ex.ExportToAax == true)
+                {
+                    summary += $"; export={ex.ExportDirectory}";
+                }
+                return new DoctorCheck(
+                    "user-settings",
+                    "User settings populated and valid",
+                    DoctorSeverity.Ok,
+                    summary);
+            }
+
+            return new DoctorCheck(
+                "user-settings",
+                "User settings populated and valid",
+                DoctorSeverity.Error,
+                string.Join("; ", problems),
+                "Adjust the affected paths in the GUI's Settings dialog or directly in usersettings.json under the shared data directory.");
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheck(
+                "user-settings",
+                "User settings populated and valid",
+                DoctorSeverity.Warning,
+                $"could not load usersettings.json: {ex.Message}",
+                "Sign in once with `oahu-cli auth login` (or run the GUI) to materialize the settings file.");
+        }
+    }
+
     public static DoctorCheck CheckDiskFree(string path, long minFreeBytes)
     {
         try
@@ -237,5 +318,23 @@ public sealed class DoctorService : IDoctorService
         };
         c.DefaultRequestHeaders.UserAgent.ParseAdd("oahu-cli/1.0 (+https://github.com/DavidObando/Oahu)");
         return c;
+    }
+
+    private static bool CanWriteToDirectory(string path, out string error)
+    {
+        try
+        {
+            Directory.CreateDirectory(path);
+            var probe = Path.Combine(path, $".oahu-cli-doctor-{Guid.NewGuid():N}");
+            File.WriteAllText(probe, string.Empty);
+            File.Delete(probe);
+            error = string.Empty;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
+        }
     }
 }

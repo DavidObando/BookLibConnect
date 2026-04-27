@@ -123,21 +123,132 @@ public class AuthLibraryEndToEndTests : IDisposable
     {
         var auth = new FakeAuthService();
         CliServiceFactory.AuthServiceFactory = () => auth;
-        var (exit, _, _) = await RunAsync("auth", "login", "uk", "--json");
+        var (exit, _, _) = await RunAsync("auth", "login", "uk", "--browser", "--no-sync", "--json");
         Assert.Equal(0, exit);
         Assert.Single(await auth.ListSessionsAsync());
     }
 
-    private static async Task<(int exit, string stdout, string stderr)> RunAsync(params string[] args)
+    [Fact]
+    public async Task AuthLogin_CredentialsFlow_UsesUsernamePasswordAndSyncs()
+    {
+        var auth = new RecordingFakeAuthService();
+        var lib = new FakeLibraryService(new[]
+        {
+            new LibraryItem { Asin = "A1", Title = "After-login book" },
+        });
+        CliServiceFactory.AuthServiceFactory = () => auth;
+        CliServiceFactory.LibraryServiceFactory = () => lib;
+
+        var (exit, stdout, _) = await RunWithStdinAsync(
+            stdin: "hunter2\n",
+            "auth", "login", "uk",
+            "--username", "user@example.com",
+            "--password-stdin",
+            "--json");
+
+        Assert.Equal(0, exit);
+        Assert.Equal("user@example.com", auth.LastCredentials?.Username);
+        Assert.Equal("hunter2", auth.LastCredentials?.Password);
+        Assert.False(auth.BrowserLoginInvoked, "Default flow must not fall back to LoginAsync.");
+        Assert.Contains("\"librarySynced\": true", stdout);
+        Assert.Contains("\"libraryCount\": 1", stdout);
+    }
+
+    [Fact]
+    public async Task AuthLogin_BrowserFlag_UsesBrowserPath()
+    {
+        var auth = new RecordingFakeAuthService();
+        CliServiceFactory.AuthServiceFactory = () => auth;
+        CliServiceFactory.LibraryServiceFactory = () => new FakeLibraryService();
+
+        var (exit, _, _) = await RunAsync("auth", "login", "us", "--browser", "--no-sync", "--json");
+
+        Assert.Equal(0, exit);
+        Assert.True(auth.BrowserLoginInvoked);
+        Assert.Null(auth.LastCredentials);
+    }
+
+    [Fact]
+    public async Task AuthLogin_NoStdinAndNoCreds_ExitsAuthError()
+    {
+        var auth = new RecordingFakeAuthService();
+        CliServiceFactory.AuthServiceFactory = () => auth;
+
+        // Empty stdin: when CliEnvironment.IsStdinTty is true the prompt fires
+        // and ReadLine returns null/empty → "Email is required"; when it's
+        // false, ResolveCredentials throws NonInteractiveCallbackException
+        // → "stdin is not a TTY". Either way the command must exit 3 and never
+        // reach the auth service.
+        var (exit, _, stderr) = await RunWithStdinAsync(
+            stdin: string.Empty,
+            "auth", "login", "us", "--json");
+
+        Assert.Equal(3, exit);
+        Assert.Null(auth.LastCredentials);
+        Assert.False(auth.BrowserLoginInvoked);
+        Assert.Contains("Sign-in", stderr);
+    }
+
+    private sealed class RecordingFakeAuthService : IAuthService
+    {
+        private readonly FakeAuthService inner = new();
+
+        public AuthCredentials? LastCredentials { get; private set; }
+
+        public bool BrowserLoginInvoked { get; private set; }
+
+        public Task<IReadOnlyList<AuthSession>> ListSessionsAsync(CancellationToken cancellationToken = default)
+            => inner.ListSessionsAsync(cancellationToken);
+
+        public Task<AuthSession?> GetActiveAsync(CancellationToken cancellationToken = default)
+            => inner.GetActiveAsync(cancellationToken);
+
+        public Task<AuthSession> LoginAsync(
+            CliRegion region,
+            IAuthCallbackBroker broker,
+            bool preAmazonUsername = false,
+            CancellationToken cancellationToken = default)
+        {
+            BrowserLoginInvoked = true;
+            return inner.LoginAsync(region, broker, preAmazonUsername, cancellationToken);
+        }
+
+        public Task<AuthSession> LoginWithCredentialsAsync(
+            CliRegion region,
+            IAuthCallbackBroker broker,
+            AuthCredentials credentials,
+            bool preAmazonUsername = false,
+            CancellationToken cancellationToken = default)
+        {
+            LastCredentials = credentials;
+            return inner.LoginWithCredentialsAsync(region, broker, credentials, preAmazonUsername, cancellationToken);
+        }
+
+        public Task LogoutAsync(string profileAlias, CancellationToken cancellationToken = default)
+            => inner.LogoutAsync(profileAlias, cancellationToken);
+
+        public Task<AuthSession> RefreshAsync(string profileAlias, CancellationToken cancellationToken = default)
+            => inner.RefreshAsync(profileAlias, cancellationToken);
+    }
+
+    private static Task<(int exit, string stdout, string stderr)> RunAsync(params string[] args) =>
+        RunWithStdinAsync(stdin: null, args);
+
+    private static async Task<(int exit, string stdout, string stderr)> RunWithStdinAsync(string? stdin, params string[] args)
     {
         var origOut = Console.Out;
         var origErr = Console.Error;
+        var origIn = Console.In;
         var origCliOut = CliEnvironment.Out;
         var origCliErr = CliEnvironment.Error;
         var sw = new System.IO.StringWriter();
         var ew = new System.IO.StringWriter();
         Console.SetOut(sw);
         Console.SetError(ew);
+        if (stdin is not null)
+        {
+            Console.SetIn(new System.IO.StringReader(stdin));
+        }
         CliEnvironment.Out = sw;
         CliEnvironment.Error = ew;
         try
@@ -151,6 +262,7 @@ public class AuthLibraryEndToEndTests : IDisposable
         {
             Console.SetOut(origOut);
             Console.SetError(origErr);
+            Console.SetIn(origIn);
             CliEnvironment.Out = origCliOut;
             CliEnvironment.Error = origCliErr;
         }

@@ -777,7 +777,14 @@ Visual treatment of the toast (replaces hints for ~2 s):
 ```
 
 Two presses always exits, but a single press never wipes the alt-screen
-when only the inner operation needs to stop.
+when only the inner operation needs to stop. The cooperative two-press
+exit returns process code `0` — `Ctrl+C` is the documented quit gesture
+and no in-flight work is being interrupted at the moment of the second
+press (the only branch that opens the exit window is the
+"otherwise/idle" branch above). `Shift+Q` is the discoverable, non-SIGINT
+alternative that also exits `0`. Code `130` is reserved for the runtime
+force-exit fallback in `CliEnvironment` (when the cooperative state
+machine fails to drain in time) and for command-mode `Ctrl+C`.
 
 ---
 

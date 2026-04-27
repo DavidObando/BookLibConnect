@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Oahu.Cli.Tui.Auth;
 using Spectre.Console.Rendering;
 
 namespace Oahu.Cli.Tui.Shell;
@@ -76,6 +77,18 @@ public interface IAppShellNavigator
 
     /// <summary>Show a transient one-line toast (warning style).</summary>
     void ShowToast(string message);
+
+    /// <summary>The modal currently shown by the shell, or null when none.</summary>
+    IModal? ActiveModal { get; }
+
+    /// <summary>Dismiss the active modal, if any.</summary>
+    void DismissModal();
+
+    /// <summary>
+    /// Attach (or detach with <c>null</c>) the broker the shell polls for
+    /// modal-request callbacks raised by background auth operations.
+    /// </summary>
+    void SetBroker(TuiCallbackBroker? broker);
 }
 
 /// <summary>

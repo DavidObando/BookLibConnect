@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Oahu.Cli.App.Auth;
 using Oahu.Cli.App.Errors;
@@ -74,7 +75,30 @@ public static class AuthCommand
             Description = "Use the legacy pre-Amazon Audible username flow (rare).",
         };
 
-        var c = new Command("login", "Sign in to an Audible marketplace.") { regionArg, regionOpt, preAmazonOpt };
+        var usernameOpt = new Option<string?>("--username", "-u")
+        {
+            Description = "Audible / Amazon account email. Prompted interactively when omitted.",
+        };
+
+        var passwordStdinOpt = new Option<bool>("--password-stdin")
+        {
+            Description = "Read the account password from the first line of stdin (for non-interactive use).",
+        };
+
+        var browserOpt = new Option<bool>("--browser")
+        {
+            Description = "Use the legacy browser-redirect sign-in flow instead of credentials.",
+        };
+
+        var noSyncOpt = new Option<bool>("--no-sync")
+        {
+            Description = "Skip the post-sign-in library sync.",
+        };
+
+        var c = new Command("login", "Sign in to an Audible marketplace.")
+        {
+            regionArg, regionOpt, preAmazonOpt, usernameOpt, passwordStdinOpt, browserOpt, noSyncOpt,
+        };
         c.SetAction(async (parse, ct) =>
         {
             var globals = resolveGlobals(parse);
@@ -82,6 +106,8 @@ public static class AuthCommand
             var regionToken = parse.GetValue(regionOpt) ?? parse.GetValue(regionArg) ?? "us";
             var region = ParseRegion(regionToken);
             var preAmazon = parse.GetValue(preAmazonOpt);
+            var browser = parse.GetValue(browserOpt);
+            var noSync = parse.GetValue(noSyncOpt);
 
             IAuthCallbackBroker broker = CliEnvironment.IsStdinTty
                 ? new StdinCallbackBroker(Console.In, CliEnvironment.Error, interactive: true)
@@ -90,14 +116,72 @@ public static class AuthCommand
             try
             {
                 var svc = CliServiceFactory.AuthServiceFactory();
-                var session = await svc.LoginAsync(region, broker, preAmazon, ct).ConfigureAwait(false);
-                writer.WriteResource("auth-login-result", ToDictionary(session));
+
+                AuthSession session;
+                if (browser)
+                {
+                    // Legacy browser-based sign-in: build login URI, user pastes
+                    // the redirect URL via the broker.
+                    session = await svc.LoginAsync(region, broker, preAmazon, ct).ConfigureAwait(false);
+                }
+                else
+                {
+                    // Default: programmatic (username + password) sign-in to
+                    // mirror the TUI/GUI flow. Any CAPTCHA/MFA/CVF/approval
+                    // challenges are routed through the broker.
+                    var credentials = ResolveCredentials(parse, usernameOpt, passwordStdinOpt);
+                    session = await svc.LoginWithCredentialsAsync(
+                        region, broker, credentials, preAmazon, ct).ConfigureAwait(false);
+                }
+
+                int? libraryCount = null;
+                string? syncWarning = null;
+                if (!noSync)
+                {
+                    try
+                    {
+                        var library = CliServiceFactory.LibraryServiceFactory();
+                        libraryCount = await library.SyncAsync(session.ProfileAlias, ct).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Sign-in itself succeeded — credentials are stored on
+                        // disk via CoreAuthService.CompleteRegistrationAsync.
+                        // Report the sync failure but don't fail the command:
+                        // the user can re-run `oahu-cli library sync` later.
+                        syncWarning = ex.Message;
+                        CliEnvironment.Error.WriteLine(
+                            $"Sign-in succeeded but library sync failed: {ex.Message}");
+                        CliEnvironment.Error.WriteLine(
+                            "Run `oahu-cli library sync` to retry.");
+                    }
+                }
+
+                var dict = new Dictionary<string, object?>(ToDictionary(session))
+                {
+                    ["librarySynced"] = !noSync && syncWarning is null,
+                };
+                if (libraryCount is int count)
+                {
+                    dict["libraryCount"] = count;
+                }
+                if (syncWarning is not null)
+                {
+                    dict["syncError"] = syncWarning;
+                }
+                writer.WriteResource("auth-login-result", dict);
                 return ExitCodes.Success;
             }
             catch (NonInteractiveCallbackException ex)
             {
                 CliEnvironment.Error.WriteLine($"Sign-in needs '{ex.Kind}' input but stdin is not a TTY.");
-                CliEnvironment.Error.WriteLine("Re-run from an interactive terminal, or sign in via the Oahu GUI.");
+                CliEnvironment.Error.WriteLine(
+                    "Re-run from an interactive terminal, supply --username and --password-stdin, "
+                    + "or sign in via the Oahu TUI/GUI.");
                 return ExitCodes.AuthError;
             }
             catch (Exception ex)
@@ -107,6 +191,88 @@ public static class AuthCommand
             }
         });
         return c;
+    }
+
+    private static AuthCredentials ResolveCredentials(
+        ParseResult parse,
+        Option<string?> usernameOpt,
+        Option<bool> passwordStdinOpt)
+    {
+        var username = parse.GetValue(usernameOpt);
+        var passwordFromStdin = parse.GetValue(passwordStdinOpt);
+
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            if (!CliEnvironment.IsStdinTty)
+            {
+                throw new NonInteractiveCallbackException("username");
+            }
+            CliEnvironment.Error.Write("Audible / Amazon email: ");
+            username = Console.In.ReadLine()?.Trim();
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                throw new InvalidOperationException("Email is required.");
+            }
+        }
+
+        string password;
+        if (passwordFromStdin)
+        {
+            // Read exactly one line; works for `echo $PW | oahu-cli auth login --password-stdin`.
+            password = Console.In.ReadLine() ?? string.Empty;
+        }
+        else if (CliEnvironment.IsStdinTty)
+        {
+            CliEnvironment.Error.Write("Password: ");
+            password = ReadMaskedPassword();
+            CliEnvironment.Error.WriteLine();
+        }
+        else
+        {
+            throw new NonInteractiveCallbackException("password");
+        }
+
+        if (string.IsNullOrEmpty(password))
+        {
+            throw new InvalidOperationException("Password is required.");
+        }
+
+        return new AuthCredentials(username!, password);
+    }
+
+    private static string ReadMaskedPassword()
+    {
+        var sb = new StringBuilder();
+        while (true)
+        {
+            ConsoleKeyInfo key;
+            try
+            {
+                key = Console.ReadKey(intercept: true);
+            }
+            catch (InvalidOperationException)
+            {
+                // Stdin redirected after IsStdinTty check; fall back to ReadLine.
+                return Console.In.ReadLine() ?? string.Empty;
+            }
+
+            if (key.Key == ConsoleKey.Enter)
+            {
+                return sb.ToString();
+            }
+            if (key.Key == ConsoleKey.Backspace)
+            {
+                if (sb.Length > 0)
+                {
+                    sb.Length--;
+                }
+                continue;
+            }
+            if (key.KeyChar != '\0' && !char.IsControl(key.KeyChar))
+            {
+                sb.Append(key.KeyChar);
+            }
+        }
     }
 
     private static Command CreateStatus(Func<ParseResult, GlobalOptions> resolveGlobals)

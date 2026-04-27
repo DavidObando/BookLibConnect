@@ -81,7 +81,43 @@ public class AppShellTests : IDisposable
         var first = shell.Dispatch(Key((char)3, ConsoleKey.C, ConsoleModifiers.Control));
         var second = shell.Dispatch(Key((char)3, ConsoleKey.C, ConsoleModifiers.Control));
         Assert.Equal(ShellAction.Continue, first);
-        Assert.Equal(ShellAction.ExitSigInt, second);
+        // Cooperative Ctrl+C-quit from an idle shell is a clean exit (code 0),
+        // not SIGINT (130). The 130 path is reserved for the runtime
+        // force-exit fallback when the cooperative state machine fails.
+        Assert.Equal(ShellAction.Exit, second);
+    }
+
+    [Fact]
+    public void Shift_Q_Exits_With_Success()
+    {
+        var shell = NewShell();
+        var action = shell.Dispatch(Key('Q', ConsoleKey.Q, ConsoleModifiers.Shift));
+        Assert.Equal(ShellAction.Exit, action);
+    }
+
+    [Fact]
+    public void Plain_Q_Is_Not_A_Global_Quit()
+    {
+        // Regression: plain `q` must remain available for screens (e.g.
+        // LibraryScreen "enqueue"). The shell's switch falls through with
+        // ShellAction.Continue when no screen consumed the key.
+        var shell = NewShell();
+        var action = shell.Dispatch(Key('q', ConsoleKey.Q));
+        Assert.Equal(ShellAction.Continue, action);
+    }
+
+    [Fact]
+    public void Plain_Q_Reaches_Active_Screen_When_Capturing()
+    {
+        var capturingScreen = new InputCapturingScreen();
+        var shell = new AppShell(NewConsole(), new AppShellOptions
+        {
+            Tabs = new ITabScreen[] { capturingScreen },
+        });
+        capturingScreen.Capturing = true;
+        var action = shell.Dispatch(Key('q', ConsoleKey.Q));
+        Assert.Equal(ShellAction.Continue, action);
+        Assert.True(capturingScreen.ReceivedQ, "Screen did not receive the 'q' key");
     }
 
     [Fact]
@@ -125,13 +161,24 @@ public class AppShellTests : IDisposable
     }
 
     [Fact]
-    public void Run_Honours_ExitSigInt_From_Dispatch()
+    public void Run_Returns_Success_When_Ctrl_C_Exits_Idle_Shell()
     {
+        // Cooperative Ctrl+C-quit from an idle shell is a clean exit (0),
+        // not SIGINT (130). 130 is reserved for the runtime force-exit
+        // fallback in CliEnvironment.
         var shell = NewShell();
         var reader = new ScriptedReader(
             Key((char)3, ConsoleKey.C, ConsoleModifiers.Control),
             Key((char)3, ConsoleKey.C, ConsoleModifiers.Control));
-        Assert.Equal(130, shell.Run(reader));
+        Assert.Equal(0, shell.Run(reader));
+    }
+
+    [Fact]
+    public void Run_Honours_Shift_Q_As_Clean_Quit()
+    {
+        var shell = NewShell();
+        var reader = new ScriptedReader(Key('Q', ConsoleKey.Q, ConsoleModifiers.Shift));
+        Assert.Equal(0, shell.Run(reader));
     }
 
     [Fact]
@@ -179,6 +226,7 @@ public class AppShellTests : IDisposable
         public char NumberKey { get; init; } = '1';
         public bool Capturing { get; set; }
         public bool ReceivedL { get; private set; }
+        public bool ReceivedQ { get; private set; }
 
         public IRenderable Render(int width, int height) => new Markup(string.Empty);
 
@@ -187,6 +235,10 @@ public class AppShellTests : IDisposable
             if (key.Key == ConsoleKey.L)
             {
                 ReceivedL = true;
+            }
+            if (key.Key == ConsoleKey.Q)
+            {
+                ReceivedQ = true;
             }
             return Capturing; // Consume all keys when capturing
         }

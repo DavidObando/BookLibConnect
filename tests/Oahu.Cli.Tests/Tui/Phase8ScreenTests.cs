@@ -340,10 +340,15 @@ internal sealed class NullNavigator : IAppShellNavigator
     public char? LastSwitch { get; private set; }
     public IModal? LastModal { get; private set; }
     public string? LastToast { get; private set; }
+    public bool DismissCalled { get; private set; }
+    public Oahu.Cli.Tui.Auth.TuiCallbackBroker? LastBroker { get; private set; }
 
+    public IModal? ActiveModal => LastModal;
     public void SwitchToTab(char numberKey) => LastSwitch = numberKey;
     public void ShowModal(IModal modal) => LastModal = modal;
     public void ShowToast(string message) => LastToast = message;
+    public void DismissModal() { DismissCalled = true; LastModal = null; }
+    public void SetBroker(Oahu.Cli.Tui.Auth.TuiCallbackBroker? broker) => LastBroker = broker;
 }
 
 internal sealed class LifecycleTabScreen : ITabScreen

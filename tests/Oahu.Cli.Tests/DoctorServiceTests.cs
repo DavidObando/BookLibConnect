@@ -34,7 +34,23 @@ public class DoctorServiceTests
         Assert.Contains("library-cache", ids);
         Assert.Contains("disk-free", ids);
         Assert.Contains("cli-config", ids);
+        Assert.Contains("user-settings", ids);
         Assert.Contains("audible-api", ids);
+    }
+
+    [Fact]
+    public void UserSettingsCheck_OkWhenDefaultsApplied()
+    {
+        // After SettingsDefaults.ApplyDefaults runs (via OahuUserSettings.Init,
+        // which SettingsManager triggers on load), DownloadDirectory must be a
+        // non-empty, writable path. Verifies the CLI gets the same default
+        // the GUI has always had.
+        var check = DoctorService.CheckUserSettings();
+        Assert.Equal("user-settings", check.Id);
+        // The check may degrade to Warning when the test process can't load
+        // settings (no GUI shared dir on a CI runner), but never to Error
+        // for a fresh / empty config — the defaults should make it pass.
+        Assert.NotEqual(DoctorSeverity.Error, check.Severity);
     }
 
     [Fact]

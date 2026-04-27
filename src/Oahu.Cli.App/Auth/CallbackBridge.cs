@@ -55,6 +55,21 @@ public static class CallbackBridge
             // behaviour and let the caller surface the soft "previous device
             // de-registered" notice from the EAuthorizeResult.
             DeregisterDeviceConfirmCallback = _ => true,
+
+            // Default the local alias to the customer name when none is set,
+            // matching the GUI's ProfileWizard behaviour
+            // (`AccountAlias = key?.AccountName`). Without this, BookLibrary
+            // never persists an alias for the new profile and subsequent
+            // `GetAccountAliases()` lookups return empty, breaking
+            // alias-based profile resolution in `CoreLibraryService.SyncAsync`.
+            GetAccountAliasFunc = ctxt =>
+            {
+                if (string.IsNullOrWhiteSpace(ctxt.Alias))
+                {
+                    ctxt.Alias = ctxt.CustomerName;
+                }
+                return true;
+            },
         };
     }
 }
