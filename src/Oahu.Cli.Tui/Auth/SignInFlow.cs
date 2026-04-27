@@ -56,25 +56,16 @@ public sealed class SignInFlow : IDisposable
     public TuiCallbackBroker Broker => broker;
 
     /// <summary>Start the login process for the given region on a background thread.</summary>
-    public void Start(CliRegion region)
+    public void Start(CliRegion region, AuthCredentials credentials)
     {
-        cts = new CancellationTokenSource();
-        ErrorMessage = null;
-        state.ActivityVerb = "signing in…";
-        authTask = Task.Run(async () =>
-        {
-            var session = await authService.LoginAsync(region, broker, preAmazonUsername: false, cts.Token).ConfigureAwait(false);
-
-            state.Profile = session.ProfileAlias;
-            state.Region = session.Region.ToString().ToLowerInvariant();
-            state.ActivityVerb = "syncing library…";
-
-            var count = await libraryService.SyncAsync(session.ProfileAlias, cts.Token).ConfigureAwait(false);
-
-            state.ActivityVerb = "idle";
-            return new SignInResult { Session = session, LibraryCount = count };
-        });
+        ArgumentNullException.ThrowIfNull(credentials);
+        StartCore(region, credentials);
     }
+
+    /// <summary>Browser-based start (legacy / fallback). Prefer the credentials overload —
+    /// the TUI default flow asks the user for username + password and routes
+    /// 2FA / CAPTCHA via <see cref="ChallengeModal"/>.</summary>
+    public void StartBrowser(CliRegion region) => StartCore(region, credentials: null);
 
     /// <summary>
     /// Poll the auth task status. Returns a result when complete, null while
@@ -135,5 +126,27 @@ public sealed class SignInFlow : IDisposable
             // already disposed — safe to ignore
         }
         local?.Dispose();
+    }
+
+    private void StartCore(CliRegion region, AuthCredentials? credentials)
+    {
+        cts = new CancellationTokenSource();
+        ErrorMessage = null;
+        state.ActivityVerb = "signing in…";
+        authTask = Task.Run(async () =>
+        {
+            var session = credentials is not null
+                ? await authService.LoginWithCredentialsAsync(region, broker, credentials, preAmazonUsername: false, cts.Token).ConfigureAwait(false)
+                : await authService.LoginAsync(region, broker, preAmazonUsername: false, cts.Token).ConfigureAwait(false);
+
+            state.Profile = session.ProfileAlias;
+            state.Region = session.Region.ToString().ToLowerInvariant();
+            state.ActivityVerb = "syncing library…";
+
+            var count = await libraryService.SyncAsync(session.ProfileAlias, cts.Token).ConfigureAwait(false);
+
+            state.ActivityVerb = "idle";
+            return new SignInResult { Session = session, LibraryCount = count };
+        });
     }
 }

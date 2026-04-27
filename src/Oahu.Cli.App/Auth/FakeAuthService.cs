@@ -62,6 +62,20 @@ public sealed class FakeAuthService : IAuthService
         return Task.FromResult(session);
     }
 
+    public Task<AuthSession> LoginWithCredentialsAsync(
+        CliRegion region,
+        IAuthCallbackBroker broker,
+        AuthCredentials credentials,
+        bool preAmazonUsername = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(credentials);
+
+        // The fake doesn't actually authenticate; treat credentials sign-in as
+        // equivalent to the browser path so tests can drive either.
+        return LoginAsync(region, broker, preAmazonUsername, cancellationToken);
+    }
+
     public Task LogoutAsync(string profileAlias, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(profileAlias);

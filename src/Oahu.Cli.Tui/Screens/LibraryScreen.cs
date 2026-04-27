@@ -56,7 +56,24 @@ public sealed class LibraryScreen : ITabScreen
 
     public char NumberKey => '2';
 
-    public bool IsLoading => loading;
+    public bool IsLoading
+    {
+        get
+        {
+            // Reconcile with the background load task so AppShell sees the
+            // current truth when it samples NeedsTimedRefresh right after a
+            // Render call. Without this, a load that finishes between the
+            // spinner being drawn and AppShell reading NeedsTimedRefresh would
+            // leave a frozen spinner on screen until the next keypress.
+            var t = loadTask;
+            if (loading && t is not null && t.IsCompleted)
+            {
+                loading = false;
+                loadTask = null;
+            }
+            return loading;
+        }
+    }
 
     public int Cursor => cursor;
 

@@ -106,7 +106,19 @@ public sealed class CoreLibraryService : ILibraryService
         // resync=true forces a full library refresh; the CLI surface does not
         // (yet) distinguish full vs incremental, so we do a full pull every
         // time. 4c's job-runner will introduce an incremental option.
-        await api.GetLibraryAsync(resync: true).ConfigureAwait(false);
+        var libraryResponse = await api.GetLibraryAsync(resync: true).ConfigureAwait(false);
+        if (libraryResponse is null)
+        {
+            // AudibleApi.GetLibraryAsync silently returns null on any HTTP error
+            // (see SendForStringAsync's catch in src/Oahu.Core/AudibleApi.cs).
+            // Surface that as a real failure rather than reporting "0 books"
+            // and leaving the user wondering why a fresh sign-in produced
+            // an empty library.
+            throw new InvalidOperationException(
+                $"Library sync for '{profileAlias}' failed: the Audible API returned no data. "
+                + "This usually indicates an authentication or network problem; check the Oahu log "
+                + "(under ~/Library/Application Support/Oahu/log) for HTTP details.");
+        }
 
         var books = api.GetBooks();
         return books?.Count() ?? 0;

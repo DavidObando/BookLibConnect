@@ -68,11 +68,123 @@ public class HomeScreenTests : IDisposable
     }
 
     [Fact]
+    public void S_Key_Opens_Region_Picker_When_Navigator_Available()
+    {
+        var screen = CreateScreen();
+        var nav = new RecordingNavigator();
+        screen.OnActivated(nav);
+
+        screen.HandleKey(Key('s', ConsoleKey.S));
+
+        Assert.NotNull(nav.LastModal);
+        Assert.IsType<Oahu.Cli.Tui.Auth.RegionPickerModal>(nav.LastModal);
+    }
+
+    [Fact]
+    public void Region_Cancel_Tears_Down_Without_Starting_Flow()
+    {
+        var screen = CreateScreen();
+        var nav = new RecordingNavigator();
+        screen.OnActivated(nav);
+
+        screen.HandleKey(Key('s', ConsoleKey.S));
+        var modal = (Oahu.Cli.Tui.Auth.RegionPickerModal)nav.LastModal!;
+        modal.HandleKey(Key((char)0, ConsoleKey.Escape));
+
+        // First Render after completion drives the state machine forward.
+        screen.Render(80, 20);
+
+        Assert.False(screen.NeedsTimedRefresh);
+        Assert.Null(nav.LastBroker);
+    }
+
+    [Fact]
+    public void S_Key_Works_Again_After_External_Modal_Dismissal()
+    {
+        // Repro for the bug where Esc-via-shell left HomeScreen thinking a
+        // modal was still pending, so the next `s` press silently did nothing.
+        var screen = CreateScreen();
+        var nav = new RecordingNavigator();
+        screen.OnActivated(nav);
+
+        screen.HandleKey(Key('s', ConsoleKey.S));
+        var firstModal = nav.LastModal;
+        Assert.NotNull(firstModal);
+
+        // Simulate AppShell's external dismiss (Ctrl+C path) without ever
+        // setting modal.IsComplete.
+        nav.DismissModal();
+        screen.Render(80, 20);
+
+        // Now `s` should open a fresh region picker.
+        screen.HandleKey(Key('s', ConsoleKey.S));
+        Assert.NotNull(nav.LastModal);
+        Assert.NotSame(firstModal, nav.LastModal);
+    }
+
+    [Fact]
+    public void Region_Selection_Advances_To_Credentials_Modal()
+    {
+        var screen = CreateScreen();
+        var nav = new RecordingNavigator();
+        screen.OnActivated(nav);
+
+        screen.HandleKey(Key('s', ConsoleKey.S));
+        var region = (Oahu.Cli.Tui.Auth.RegionPickerModal)nav.LastModal!;
+        region.HandleKey(Key((char)0, ConsoleKey.Enter));
+
+        // Render runs the state machine: it should swap the modal to
+        // CredentialsModal (default to programmatic / username+password flow,
+        // matching the Avalonia GUI's "direct login" path).
+        screen.Render(80, 20);
+
+        Assert.NotNull(nav.LastModal);
+        Assert.IsType<Oahu.Cli.Tui.Auth.CredentialsModal>(nav.LastModal);
+        Assert.Null(nav.LastBroker);
+    }
+
+    [Fact]
+    public void S_Key_Works_Again_After_External_Credentials_Dismissal()
+    {
+        var screen = CreateScreen();
+        var nav = new RecordingNavigator();
+        screen.OnActivated(nav);
+
+        screen.HandleKey(Key('s', ConsoleKey.S));
+        var region = (Oahu.Cli.Tui.Auth.RegionPickerModal)nav.LastModal!;
+        region.HandleKey(Key((char)0, ConsoleKey.Enter));
+        screen.Render(80, 20);
+
+        Assert.IsType<Oahu.Cli.Tui.Auth.CredentialsModal>(nav.LastModal);
+
+        nav.DismissModal();
+        screen.Render(80, 20);
+
+        screen.HandleKey(Key('s', ConsoleKey.S));
+        Assert.IsType<Oahu.Cli.Tui.Auth.RegionPickerModal>(nav.LastModal);
+    }
+
+    [Fact]
     public void Title_Is_Home()
     {
         var screen = CreateScreen();
         Assert.Equal("Home", screen.Title);
         Assert.Equal('1', screen.NumberKey);
+    }
+
+    private sealed class RecordingNavigator : IAppShellNavigator
+    {
+        public IModal? LastModal { get; private set; }
+        public string? LastToast { get; private set; }
+        public bool DismissCalled { get; private set; }
+        public Oahu.Cli.Tui.Auth.TuiCallbackBroker? LastBroker { get; private set; }
+
+        public IModal? ActiveModal => LastModal;
+        public void SwitchToTab(char numberKey) { }
+        public void ShowModal(IModal modal) => LastModal = modal;
+        public void ShowToast(string message) => LastToast = message;
+        public void DismissModal() { DismissCalled = true; LastModal = null; }
+        public void SetBroker(Oahu.Cli.Tui.Auth.TuiCallbackBroker? broker) => LastBroker = broker;
     }
 
     private sealed class FakeAuthService : IAuthService

@@ -34,12 +34,11 @@ public static class CliPaths
     /// Default download directory used by the GUI; the CLI honours the same default.
     /// <c>~/Music/Oahu/Downloads</c> on all platforms.
     /// </summary>
-    public static string DefaultDownloadDir { get; } =
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "Music",
-            "Oahu",
-            "Downloads");
+    /// <remarks>
+    /// Delegates to <see cref="Oahu.Core.SettingsDefaults.DefaultDownloadDirectory"/>
+    /// so there is exactly one source of truth shared with the Avalonia GUI.
+    /// </remarks>
+    public static string DefaultDownloadDir => Oahu.Core.SettingsDefaults.DefaultDownloadDirectory;
 
     /// <summary>
     /// User-data directory shared with the Avalonia GUI. Mirrors

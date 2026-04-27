@@ -192,7 +192,10 @@ public sealed class AppShell : IAppShellNavigator
 
     /// <summary>
     /// Run the shell against an injected key reader. Returns the process exit code
-    /// (always <c>0</c> for a clean quit; <c>130</c> for a Ctrl+C exit).
+    /// — <c>0</c> for a clean quit (Shift+Q or cooperative Ctrl+C from an idle
+    /// shell). The <c>130</c> (SIGINT) code is reserved for the runtime
+    /// force-exit path in <see cref="Oahu.Cli.CliEnvironment"/> when the
+    /// cooperative state machine fails to drain in time.
     /// </summary>
     public int Run(IKeyReader keyReader)
     {
@@ -253,6 +256,15 @@ public sealed class AppShell : IAppShellNavigator
                             case ShellAction.ExitSigInt:
                                 return ExitCodes.Cancelled;
                         }
+                    }
+                    else if (activeModal is not null)
+                    {
+                        // No key arrived — keep the modal's spinner / status
+                        // animating instead of freezing the frame between
+                        // background callbacks (design doc §16.1: dialog
+                        // StatusLine pulses at ~12 FPS while awaiting a
+                        // broker callback).
+                        Render();
                     }
                     continue;
                 }
@@ -337,23 +349,37 @@ public sealed class AppShell : IAppShellNavigator
                     toastShownAt = DateTimeOffset.UtcNow;
                     return ShellAction.Continue;
                 case CtrlCAction.Exit:
-                    return ShellAction.ExitSigInt;
+                    // Cooperative exit from an idle shell (the only path that
+                    // sets the exit window is PromptToExit, which fires only
+                    // when no job/dialog was active). This is a clean quit —
+                    // the process exits 0, not 130. The 130 path is reserved
+                    // for CliEnvironment's force-exit fallback when the
+                    // cooperative state machine fails to drain in time.
+                    return ShellAction.Exit;
             }
         }
 
         // Modal overlay gets keys first.
         if (activeModal is not null)
         {
-            if (key.Key == ConsoleKey.Escape)
-            {
-                DismissModal();
-                return ShellAction.Continue;
-            }
             activeModal.HandleKey(key);
+
+            // Auto-dismiss when the modal signals completion (Enter, Esc-cancel,
+            // or any other terminal action). Adapters push results via their
+            // own TaskCompletionSource before this point; screens that own a
+            // modal directly (e.g. HomeScreen with the region picker) keep
+            // their own reference and read IsComplete / Result on the next
+            // render. Without this auto-dismiss, completed modals would
+            // linger on screen and starve the owning screen of render ticks.
             if (activeModal.IsComplete)
             {
-                // The caller (sign-in flow, etc.) reads the result.
-                // Modal stays accessible via ActiveModal until explicitly dismissed.
+                DismissModal();
+            }
+            else if (key.Key == ConsoleKey.Escape)
+            {
+                // Fallback: modal chose not to handle Esc — treat it as a
+                // shell-level cancel so the user is never stuck in a modal.
+                DismissModal();
             }
             return ShellAction.Continue;
         }
@@ -424,6 +450,13 @@ public sealed class AppShell : IAppShellNavigator
                     logsOpen = true;
                 }
                 return ShellAction.Continue;
+            case ConsoleKey.Q when (key.Modifiers & ConsoleModifiers.Shift) != 0
+                                && (key.Modifiers & (ConsoleModifiers.Control | ConsoleModifiers.Alt)) == 0:
+                // Shift+Q is the discoverable, non-SIGINT clean-quit gesture.
+                // Plain `q` is reserved for screens (e.g. LibraryScreen
+                // "enqueue") and is handled by the screen-first delegation
+                // above; if a screen consumed it, we never reach this switch.
+                return ShellAction.Exit;
             case ConsoleKey.Q when key.Modifiers == 0:
                 // Plain `q` is *not* a global quit (the active screen may use it).
                 break;
@@ -623,6 +656,7 @@ public sealed class AppShell : IAppShellNavigator
             .Add("Tab", "next")
             .Add("?", "help")
             .Add("L", options.LogBuffer is not null ? "logs" : null)
+            .Add("Q", "quit")
             .Add("Ctrl+C", "quit");
         bar.AddRange(screen.Hints);
         return bar;
@@ -705,7 +739,12 @@ public enum ShellAction
     /// <summary>Clean exit, return code 0.</summary>
     Exit,
 
-    /// <summary>Ctrl+C exit, return code 130.</summary>
+    /// <summary>
+    /// SIGINT-style exit, return code 130. Currently unused by the cooperative
+    /// state machine (Ctrl+C from an idle shell maps to <see cref="Exit"/>);
+    /// reserved for future flows that genuinely abort in-flight work via
+    /// Ctrl+C and want POSIX 130 semantics.
+    /// </summary>
     ExitSigInt,
 }
 

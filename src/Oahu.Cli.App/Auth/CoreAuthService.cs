@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Oahu.Aux;
 using Oahu.Cli.App.Core;
 using Oahu.Cli.App.Models;
 using Oahu.CommonTypes;
@@ -100,27 +101,34 @@ public sealed class CoreAuthService : IAuthService
             () => client.ConfigParseExternalLoginResponseAsync(responseUri, callbacks),
             cancellationToken).ConfigureAwait(false);
 
-        if (result is null || result.NewProfileKey is null)
-        {
-            throw new InvalidOperationException(
-                $"Sign-in failed: {result?.Result.ToString() ?? "no response"}.");
-        }
+        return await CompleteRegistrationAsync(result).ConfigureAwait(false);
+    }
 
-        // EAuthorizeResult.DeregistrationFailed is currently emitted whenever a
-        // previous profile existed even when sign-in succeeded (see comments in
-        // AudibleClient.ConfigParseExternalLoginResponseAsync). Treat it as
-        // success-with-warning; the caller is welcome to surface
-        // result.PrevDeviceName.
-        if (result.Result != EAuthorizeResult.Succ &&
-            result.Result != EAuthorizeResult.DeregistrationFailed)
-        {
-            throw new InvalidOperationException($"Sign-in failed: {result.Result}.");
-        }
+    public async Task<AuthSession> LoginWithCredentialsAsync(
+        CliRegion region,
+        IAuthCallbackBroker broker,
+        AuthCredentials credentials,
+        bool preAmazonUsername = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(broker);
+        ArgumentNullException.ThrowIfNull(credentials);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        var newKey = result.NewProfileKey;
-        var aliases = client.GetAccountAliases()?.ToDictionary(a => a.AccountId, a => a.Alias, StringComparer.Ordinal)
-            ?? new Dictionary<string, string>(StringComparer.Ordinal);
-        return ToSession(newKey, aliases);
+        var coreRegion = ToCoreRegion(region);
+        var callbacks = CallbackBridge.ToCoreCallbacks(broker, cancellationToken);
+        var coreCredentials = new Oahu.Core.Credentials(credentials.Username, credentials.Password);
+
+        // ConfigFromProgrammaticLoginAsync internally Task.Runs to keep the
+        // synchronous CAPTCHA/MFA/CVF callbacks off the calling thread, so it
+        // is safe to await directly here without an extra Task.Run wrapper.
+        var result = await client.ConfigFromProgrammaticLoginAsync(
+            coreRegion,
+            preAmazonUsername,
+            coreCredentials,
+            callbacks).ConfigureAwait(false);
+
+        return await CompleteRegistrationAsync(result).ConfigureAwait(false);
     }
 
     public async Task LogoutAsync(string profileAlias, CancellationToken cancellationToken = default)
@@ -187,6 +195,125 @@ public sealed class CoreAuthService : IAuthService
         CliRegion.Br => ERegion.Br,
         _ => throw new ArgumentOutOfRangeException(nameof(region), region, null),
     };
+
+    /// <summary>
+    /// Shared post-registration translation: validate the <see cref="RegisterResult"/>
+    /// produced by either the browser or programmatic login path and convert it
+    /// into an <see cref="AuthSession"/>. Throws <see cref="InvalidOperationException"/>
+    /// on any non-success outcome.
+    ///
+    /// In addition to translating the result, this:
+    /// <list type="bullet">
+    ///   <item>activates the new profile via <see cref="AudibleClient.ConfigFromFileAsync"/>
+    ///         (mirrors <c>Oahu.App/MainWindow.axaml.cs:144</c>) — this is what
+    ///         creates the local <c>Account</c> row, fires the alias callback,
+    ///         and sets <see cref="AudibleClient.Api"/>;</item>
+    ///   <item>persists the alias key to <c>UserSettings.DownloadSettings.Profile</c>
+    ///         so the next CLI launch auto-loads the same profile.</item>
+    /// </list>
+    /// </summary>
+    private async Task<AuthSession> CompleteRegistrationAsync(RegisterResult? result)
+    {
+        if (result is null || result.NewProfileKey is null)
+        {
+            throw new InvalidOperationException(
+                $"Sign-in failed: {result?.Result.ToString() ?? "no response"}.");
+        }
+
+        // EAuthorizeResult.DeregistrationFailed is currently emitted whenever a
+        // previous profile existed even when sign-in succeeded (see comments in
+        // AudibleClient.ConfigParseExternalLoginResponseAsync). Treat it as
+        // success-with-warning; the caller is welcome to surface
+        // result.PrevDeviceName.
+        if (result.Result != EAuthorizeResult.Succ &&
+            result.Result != EAuthorizeResult.DeregistrationFailed)
+        {
+            throw new InvalidOperationException($"Sign-in failed: {result.Result}.");
+        }
+
+        var newKey = result.NewProfileKey;
+
+        // Activate the profile by loading it from the persisted Audible config.
+        // ConfigFromFileAsync threads our getAccountAliasFunc all the way down
+        // to BookLibrary.SetAccountAlias(ctxt), which uses the *DB* account id
+        // (ctxt.LocalId) — not the Audible profile id (key.Id). That's the only
+        // path that correctly persists the alias for a freshly registered
+        // profile; calling client.SetAccountAlias(key, alias) directly silently
+        // no-ops because the Accounts row hasn't been created yet (it is
+        // created inside SetProfile -> GetAccountAliasContext).
+        //
+        // Mirrors src/Oahu.App/MainWindow.axaml.cs:144 (LoadActiveProfileAsync).
+        var defaultAlias = !string.IsNullOrWhiteSpace(newKey.AccountName)
+            ? newKey.AccountName
+            : newKey.AccountId;
+        bool SetDefaultAlias(AccountAliasContext ctxt)
+        {
+            if (string.IsNullOrWhiteSpace(ctxt.Alias))
+            {
+                ctxt.Alias = defaultAlias;
+            }
+            return true;
+        }
+
+        try
+        {
+            // Filter to the region we just signed into so we don't accidentally
+            // load a different region's profile when several are registered.
+            var aliasKeyHint = new ProfileAliasKey(newKey.Region, accountAlias: null);
+            await client.ConfigFromFileAsync(aliasKeyHint, SetDefaultAlias).ConfigureAwait(false);
+
+            // Mirror src/Oahu.App/MainWindow.axaml.cs:167 — wire the alias
+            // callback onto the API so AudibleApi.EnsureAccountId() can install
+            // the alias on the local Accounts row the first time it's queried
+            // (e.g. inside the very next GetLibraryAsync call). Without this,
+            // a freshly-registered profile whose Accounts row was created with
+            // an empty alias by SetProfile cannot be re-resolved by
+            // CoreLibraryService.SyncAsync's alias-based lookup.
+            if (client.Api is not null)
+            {
+                client.Api.GetAccountAliasFunc = SetDefaultAlias;
+            }
+        }
+        catch
+        {
+            // Activation failure is non-fatal here — the registration itself
+            // succeeded. The next CLI invocation (or an explicit
+            // `oahu-cli auth refresh`) can pick the profile up from the
+            // persisted DownloadSettings.Profile.
+        }
+
+        // Re-read the alias dictionary now that the activation step has had a
+        // chance to insert the Accounts row + alias.
+        var aliases = client.GetAccountAliases()?.ToDictionary(a => a.AccountId, a => a.Alias, StringComparer.Ordinal)
+            ?? new Dictionary<string, string>(StringComparer.Ordinal);
+        if (!aliases.TryGetValue(newKey.AccountId, out var resolvedAlias) || string.IsNullOrWhiteSpace(resolvedAlias))
+        {
+            // Belt-and-braces: if the activation path didn't install the alias
+            // for any reason, do it now via the public API. By this point the
+            // Accounts row exists so SetAccountAlias(key, alias) will succeed.
+            client.SetAccountAlias(newKey, defaultAlias);
+            aliases[newKey.AccountId] = defaultAlias;
+            resolvedAlias = defaultAlias;
+        }
+
+        // Persist DownloadSettings.Profile so the next CLI launch auto-loads
+        // this profile via CoreEnvironment.EnsureProfileLoadedAsync. Mirrors
+        // src/Oahu.App/MainWindow.axaml.cs:155.
+        try
+        {
+            var settings = CoreEnvironment.Settings;
+            settings.DownloadSettings.Profile = new ProfileAliasKey(newKey.Region, resolvedAlias);
+            settings.Save();
+        }
+        catch
+        {
+            // Settings unavailable (test wiring without CoreEnvironment.Initialize):
+            // the in-process session still works because the profile was
+            // activated above.
+        }
+
+        return ToSession(newKey, aliases);
+    }
 
     private async Task<IProfileKey?> ResolveKeyByAliasAsync(string profileAlias)
     {

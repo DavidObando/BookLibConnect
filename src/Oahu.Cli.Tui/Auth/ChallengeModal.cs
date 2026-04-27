@@ -13,6 +13,7 @@ namespace Oahu.Cli.Tui.Auth;
 public sealed class ChallengeModal : IModal<string>
 {
     private readonly TextInput input;
+    private readonly PulseSpinner spinner = new();
 
     public required string Title { get; init; }
 
@@ -73,7 +74,10 @@ public sealed class ChallengeModal : IModal<string>
     public IRenderable Render(int width, int height)
     {
         var lines = new List<IRenderable>();
-        lines.Add(new Markup($"[{Tokens.Tokens.TextPrimary.Value.ToMarkup()} bold]{Markup.Escape(Title)}[/]"));
+        // Heading: PulseSpinner (Phase 6 — design doc §16.3 / §845) signalling
+        // that we are awaiting a broker callback; pairs with the title verb.
+        var spinnerMarkup = spinner.RenderMarkup();
+        lines.Add(new Markup($"{spinnerMarkup} [{Tokens.Tokens.TextPrimary.Value.ToMarkup()} bold]{Markup.Escape(Title)}[/]"));
         lines.Add(new Markup(string.Empty));
         lines.Add(new Markup($"[{Tokens.Tokens.TextSecondary.Value.ToMarkup()}]{Markup.Escape(Instructions)}[/]"));
 

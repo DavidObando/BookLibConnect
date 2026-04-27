@@ -26,6 +26,15 @@ public class OahuUserSettings : IUserSettings, IInitSettings
 
     public void Init()
     {
+        // Apply shared defaults (DownloadDirectory, etc.) before subscribing
+        // to change events so the autosave hook doesn't fire while we are
+        // still hydrating. Centralised in Oahu.Core so the GUI and CLI agree
+        // on what a freshly-loaded usersettings.json looks like — without it,
+        // signing in via the CLI on a fresh install left DownloadDirectory
+        // null and the next download attempt threw inside
+        // Directory.CreateDirectory.
+        SettingsDefaults.ApplyDefaults(DownloadSettings, ExportSettings);
+
         DownloadSettings.ChangedSettings += OnChangedSettings;
         ConfigSettings.ChangedSettings += OnChangedSettings;
         ExportSettings.ChangedSettings += OnChangedSettings;

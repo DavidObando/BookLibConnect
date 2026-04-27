@@ -101,12 +101,9 @@ public static class TuiCommand
             CliServiceFactory.QueueServiceFactory,
             CliServiceFactory.JobServiceFactory);
 
-        // Wire sign-in flow: Home "s" key → region picker → external login → sync
-        if (tabs[0] is HomeScreen home)
-        {
-            home.OnSignInRequested = () => { /* handled in TuiHost via shell modal flow */ };
-        }
-
+        // Sign-in flow is owned by HomeScreen: pressing 's' opens the region
+        // picker modal via the navigator, then SignInFlow drives the broker
+        // and library sync. No additional wiring needed here.
         var opts = new AppShellOptions
         {
             UseAscii = string.Equals(Environment.GetEnvironmentVariable("OAHU_ASCII_ICONS"), "1", StringComparison.Ordinal),
