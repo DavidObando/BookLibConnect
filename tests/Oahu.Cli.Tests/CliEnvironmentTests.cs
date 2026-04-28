@@ -49,4 +49,12 @@ public class CliEnvironmentTests
             Environment.SetEnvironmentVariable("OAHU_NO_TUI", prev);
         }
     }
+
+    [Fact]
+    public void Initialise_EnablesVirtualTerminal_WithoutThrowing()
+    {
+        // EnableWindowsVirtualTerminal is best-effort; on any platform
+        // (Windows, Linux, macOS, CI) Initialise must complete without error.
+        CliEnvironment.Initialise();
+    }
 }
