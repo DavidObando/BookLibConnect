@@ -641,8 +641,17 @@ public sealed class AppShell : IAppShellNavigator
             // then write \e[H (home) + frame + \e[K\e[J (erase rest) atomically.
             // OSC 9;4 (if any) appended last so it doesn't interfere with the
             // visible frame.
+            //
+            // The whole payload is wrapped in DEC mode 2026 (synchronized update)
+            // so the terminal buffers all output and paints the complete frame in
+            // one pass. This prevents blank / partial frames on Windows where
+            // Console.Out's small StreamWriter buffer (256 bytes) causes the frame
+            // to be flushed in many small WriteConsoleW calls; without sync mode
+            // the terminal renders intermediate states between those calls.
+            // Terminals that don't understand mode 2026 silently ignore it.
             var frame = sw.ToString().Replace("\n", "\u001b[K\n");
-            Console.Out.Write($"\u001b[H{frame}\u001b[K\u001b[J{oscSequence}");
+            Console.Out.Write(
+                $"{AltScreen.SyncStartSequence}\u001b[H{frame}\u001b[K\u001b[J{oscSequence}{AltScreen.SyncEndSequence}");
             Console.Out.Flush();
         }
         else if (!string.IsNullOrEmpty(oscSequence))

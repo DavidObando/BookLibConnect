@@ -27,6 +27,12 @@ public static class AltScreen
     /// <summary>Erase from cursor to end of screen — cleans up leftover lines after a shorter frame.</summary>
     public const string EraseToEndSequence = "\u001b[J";
 
+    /// <summary>DEC private mode 2026: begin synchronized update — terminal buffers output until <see cref="SyncEndSequence"/>.</summary>
+    public const string SyncStartSequence = "\u001b[?2026h";
+
+    /// <summary>DEC private mode 2026: end synchronized update — terminal renders the buffered frame atomically.</summary>
+    public const string SyncEndSequence = "\u001b[?2026l";
+
     public static void Enter(TextWriter? writer = null)
     {
         var w = writer ?? Console.Out;
