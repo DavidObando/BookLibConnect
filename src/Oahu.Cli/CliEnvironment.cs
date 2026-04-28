@@ -152,10 +152,12 @@ public static class CliEnvironment
         {
             const int STD_OUTPUT_HANDLE = -11;
             const int STD_ERROR_HANDLE = -12;
+            const uint ENABLE_PROCESSED_OUTPUT = 0x0001;
             const uint ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004;
+            const uint VT_FLAGS = ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 
-            EnableVtForHandle(STD_OUTPUT_HANDLE, ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-            EnableVtForHandle(STD_ERROR_HANDLE, ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+            EnableVtForHandle(STD_OUTPUT_HANDLE, VT_FLAGS);
+            EnableVtForHandle(STD_ERROR_HANDLE, VT_FLAGS);
         }
         catch
         {
