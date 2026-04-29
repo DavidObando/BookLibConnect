@@ -643,16 +643,11 @@ public sealed class AppShell : IAppShellNavigator
             // OSC 9;4 (if any) appended last so it doesn't interfere with the
             // visible frame.
             //
-            // IMPORTANT: \r must be stripped first. On Windows StringWriter emits
-            // \r\n; if we only replace \n the result is \r\e[K\n which moves the
-            // cursor to column 1 before erasing, wiping every line's content.
-            //
             // The whole payload is wrapped in DEC mode 2026 (synchronized update)
             // so the terminal buffers all output and paints the complete frame in
             // one pass, eliminating partial-frame flicker. Terminals that don't
             // understand mode 2026 silently ignore it.
-            var raw = sw.ToString();
-            var frame = raw.Replace("\r\n", "\n").Replace("\r", "").Replace("\n", "\u001b[K\n");
+            var frame = AltScreen.InjectEraseBeforeNewlines(sw.ToString());
             Console.Out.Write(
                 $"{AltScreen.SyncStartSequence}\u001b[H{frame}\u001b[K\u001b[J{oscSequence}{AltScreen.SyncEndSequence}");
             Console.Out.Flush();

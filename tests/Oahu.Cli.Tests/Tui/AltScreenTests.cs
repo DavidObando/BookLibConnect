@@ -34,21 +34,16 @@ public class AltScreenTests
     /// producing a blank screen.
     /// </summary>
     [Fact]
-    public void FramePostProcess_CrLf_MustNotProduceCrEscK()
+    public void InjectEraseBeforeNewlines_CrLf_MustNotProduceCrEscK()
     {
         // Simulate a Windows-style StringWriter (CRLF newlines).
-        var sw = new StringWriter();
-        sw.NewLine = "\r\n";
+        var sw = new StringWriter { NewLine = "\r\n" };
         sw.Write("Header");
         sw.WriteLine();
         sw.Write("Body");
         sw.WriteLine();
 
-        var raw = sw.ToString();
-
-        // The correct post-process: normalize \r\n → \n, strip stray \r,
-        // then inject \e[K before each \n.
-        var frame = raw.Replace("\r\n", "\n").Replace("\r", "").Replace("\n", "\u001b[K\n");
+        var frame = AltScreen.InjectEraseBeforeNewlines(sw.ToString());
 
         Assert.DoesNotContain("\r\u001b[K", frame); // would erase each line
         Assert.Contains("Header\u001b[K\n", frame);
@@ -60,18 +55,31 @@ public class AltScreenTests
     /// the post-process should still inject \e[K before each \n.
     /// </summary>
     [Fact]
-    public void FramePostProcess_LfOnly_InjectsEraseBeforeNewline()
+    public void InjectEraseBeforeNewlines_LfOnly_InjectsEraseBeforeNewline()
     {
-        var sw = new StringWriter();
-        sw.NewLine = "\n";
+        var sw = new StringWriter { NewLine = "\n" };
         sw.Write("Line1");
         sw.WriteLine();
         sw.Write("Line2");
         sw.WriteLine();
 
-        var raw = sw.ToString();
-        var frame = raw.Replace("\r\n", "\n").Replace("\r", "").Replace("\n", "\u001b[K\n");
+        var frame = AltScreen.InjectEraseBeforeNewlines(sw.ToString());
 
         Assert.Equal("Line1\u001b[K\nLine2\u001b[K\n", frame);
+    }
+
+    [Fact]
+    public void InjectEraseBeforeNewlines_StripsLoneCarriageReturns()
+    {
+        var frame = AltScreen.InjectEraseBeforeNewlines("a\rb\nc");
+
+        Assert.Equal("ab\u001b[K\nc", frame);
+    }
+
+    [Fact]
+    public void InjectEraseBeforeNewlines_EmptyOrNull_ReturnsEmpty()
+    {
+        Assert.Equal(string.Empty, AltScreen.InjectEraseBeforeNewlines(string.Empty));
+        Assert.Equal(string.Empty, AltScreen.InjectEraseBeforeNewlines(null!));
     }
 }
