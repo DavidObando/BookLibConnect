@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Oahu.Cli;
@@ -97,17 +98,22 @@ public static class CliEnvironment
             // Some hosts (redirected handles, certain CI runners) refuse — that's fine, fall through.
         }
 
-        // 2. Colour policy. NO_COLOR present (any value) wins unless FORCE_COLOR is also set.
+        // 2. Windows VT — enable ANSI escape sequence processing on the stdout/stderr
+        //    console handles so raw sequences (alt-screen, cursor movement, SGR colours)
+        //    render correctly on conhost and older Windows Terminal builds.
+        EnableWindowsVirtualTerminal();
+
+        // 3. Colour policy. NO_COLOR present (any value) wins unless FORCE_COLOR is also set.
         // https://no-color.org/  — "any non-empty value" but in practice presence is enough.
         NoColorRequested = Environment.GetEnvironmentVariable("NO_COLOR") is not null;
         ForceColorRequested = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FORCE_COLOR"));
 
-        // 3. TTY detection — used by output writers to auto-degrade and by the TUI gate.
+        // 4. TTY detection — used by output writers to auto-degrade and by the TUI gate.
         IsStdoutTty = !Console.IsOutputRedirected;
         IsStderrTty = !Console.IsErrorRedirected;
         IsStdinTty = !Console.IsInputRedirected;
 
-        // 4. Exit-trap: ensure RestoreOnExit fires for Ctrl+C, ProcessExit, AND unhandled exceptions.
+        // 5. Exit-trap: ensure RestoreOnExit fires for Ctrl+C, ProcessExit, AND unhandled exceptions.
         InstallExitTrap();
     }
 
@@ -134,6 +140,53 @@ public static class CliEnvironment
             // Last-resort handler — never throw out of the exit path.
         }
     }
+
+    private static void EnableWindowsVirtualTerminal()
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        try
+        {
+            const int STD_OUTPUT_HANDLE = -11;
+            const int STD_ERROR_HANDLE = -12;
+            const uint ENABLE_PROCESSED_OUTPUT = 0x0001;
+            const uint ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004;
+            const uint VT_FLAGS = ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+
+            EnableVtForHandle(STD_OUTPUT_HANDLE, VT_FLAGS);
+            EnableVtForHandle(STD_ERROR_HANDLE, VT_FLAGS);
+        }
+        catch
+        {
+            // Best effort — very old Windows builds or redirected handles may fail.
+        }
+
+        static void EnableVtForHandle(int handleId, uint vtFlag)
+        {
+            var handle = GetStdHandle(handleId);
+            if (handle == IntPtr.Zero || handle == new IntPtr(-1))
+            {
+                return;
+            }
+
+            if (GetConsoleMode(handle, out var mode))
+            {
+                SetConsoleMode(handle, mode | vtFlag);
+            }
+        }
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GetStdHandle(int nStdHandle);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
 
     private static void InstallExitTrap()
     {

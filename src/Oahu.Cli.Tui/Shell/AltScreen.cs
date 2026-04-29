@@ -27,6 +27,34 @@ public static class AltScreen
     /// <summary>Erase from cursor to end of screen — cleans up leftover lines after a shorter frame.</summary>
     public const string EraseToEndSequence = "\u001b[J";
 
+    /// <summary>DEC private mode 2026: begin synchronized update — terminal buffers output until <see cref="SyncEndSequence"/>.</summary>
+    public const string SyncStartSequence = "\u001b[?2026h";
+
+    /// <summary>DEC private mode 2026: end synchronized update — terminal renders the buffered frame atomically.</summary>
+    public const string SyncEndSequence = "\u001b[?2026l";
+
+    /// <summary>
+    /// Normalize newlines and inject <c>\e[K</c> (erase-to-end-of-line) before each <c>\n</c>
+    /// so each rendered line clears any residual characters from a longer previous frame.
+    ///
+    /// CRLF must be normalized to LF first: on Windows a naive <c>Replace("\n", "\e[K\n")</c>
+    /// over <c>\r\n</c> input produces <c>\r\e[K\n</c>, which moves the cursor to column 1
+    /// before erasing — wiping every line's content. Lone <c>\r</c> is also stripped
+    /// defensively (Spectre.Console's Rule/TabStrip/Markup do not emit bare CRs).
+    /// </summary>
+    public static string InjectEraseBeforeNewlines(string raw)
+    {
+        if (string.IsNullOrEmpty(raw))
+        {
+            return raw ?? string.Empty;
+        }
+
+        return raw
+            .Replace("\r\n", "\n")
+            .Replace("\r", string.Empty)
+            .Replace("\n", "\u001b[K\n");
+    }
+
     public static void Enter(TextWriter? writer = null)
     {
         var w = writer ?? Console.Out;

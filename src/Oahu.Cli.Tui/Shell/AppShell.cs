@@ -557,6 +557,7 @@ public sealed class AppShell : IAppShellNavigator
         if (useBuffer)
         {
             sw = new StringWriter();
+            sw.NewLine = "\n"; // Force LF — the post-process step injects \e[K before each \n.
             target = AnsiConsole.Create(new AnsiConsoleSettings
             {
                 Ansi = AnsiSupport.Yes,
@@ -641,8 +642,14 @@ public sealed class AppShell : IAppShellNavigator
             // then write \e[H (home) + frame + \e[K\e[J (erase rest) atomically.
             // OSC 9;4 (if any) appended last so it doesn't interfere with the
             // visible frame.
-            var frame = sw.ToString().Replace("\n", "\u001b[K\n");
-            Console.Out.Write($"\u001b[H{frame}\u001b[K\u001b[J{oscSequence}");
+            //
+            // The whole payload is wrapped in DEC mode 2026 (synchronized update)
+            // so the terminal buffers all output and paints the complete frame in
+            // one pass, eliminating partial-frame flicker. Terminals that don't
+            // understand mode 2026 silently ignore it.
+            var frame = AltScreen.InjectEraseBeforeNewlines(sw.ToString());
+            Console.Out.Write(
+                $"{AltScreen.SyncStartSequence}\u001b[H{frame}\u001b[K\u001b[J{oscSequence}{AltScreen.SyncEndSequence}");
             Console.Out.Flush();
         }
         else if (!string.IsNullOrEmpty(oscSequence))
